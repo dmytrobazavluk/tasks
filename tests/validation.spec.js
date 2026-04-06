@@ -1,4 +1,4 @@
-`import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { setupPage } from './setup';
 
 test.describe('Form Validation', () => {
