@@ -4,6 +4,7 @@ import { formatDate } from '../utils/dateFormat';
 export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, onUpdateTask }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDetails, setEditDetails] = useState(task.details);
 
@@ -19,6 +20,15 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
     setEditTitle(task.title);
     setEditDetails(task.details);
     setIsEditing(false);
+  };
+
+  const handleConfirmDelete = () => {
+    onDelete(task.id);
+    setIsConfirmingDelete(false);
+  };
+
+  const handleCancelDelete = () => {
+    setIsConfirmingDelete(false);
   };
 
   return (
@@ -94,7 +104,7 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
                       Edit
                     </button>
                     <button
-                      onClick={() => onDelete(task.id)}
+                      onClick={() => setIsConfirmingDelete(true)}
                       className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 hover:bg-red-100 rounded-md transition font-medium"
                     >
                       Delete
@@ -145,6 +155,31 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {isConfirmingDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-4">
+            <h2 className="text-lg font-bold text-gray-800 mb-2">Delete Task?</h2>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this task? This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelDelete}
+                className="flex-1 px-4 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition font-medium"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

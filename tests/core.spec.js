@@ -107,9 +107,13 @@ test.describe('Core Functionality', () => {
     const expandButton = page.locator('button:has-text("▶")').first();
     await expandButton.click();
 
-    // Click delete button
+    // Click delete button to show confirmation
     const deleteButton = page.locator('button:has-text("Delete")').first();
     await deleteButton.click();
+
+    // Confirm deletion in the modal
+    const confirmDeleteButton = page.locator('button:has-text("Delete")').last();
+    await confirmDeleteButton.click();
 
     await expect(page.locator('text=Task to delete')).not.toBeVisible();
     await expect(page.locator('text=No tasks yet')).toBeVisible();
@@ -138,12 +142,20 @@ test.describe('Core Functionality', () => {
     const markDoneButtons = page.locator('button:has-text("Mark Done")');
     await markDoneButtons.nth(0).click();
 
+    // Collapse Task 2 first to avoid multiple delete buttons
+    let collapseButtons = page.locator('button:has-text("▼")');
+    await collapseButtons.first().click();
+
     // Delete first task - need to expand it first
     const expandButton = page.locator('button:has-text("▶")').first();
     await expandButton.click();
 
     const deleteButton = page.locator('button:has-text("Delete")').first();
     await deleteButton.click();
+
+    // Confirm deletion in the modal (click the red delete button)
+    const confirmDeleteButton = page.locator('button.bg-red-600:has-text("Delete")');
+    await confirmDeleteButton.click();
 
     // Verify state
     await expect(page.locator('text=Task 1')).not.toBeVisible();
