@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { formatDate } from '../utils/dateFormat';
 import { COUNTDOWN_CONFIG } from '../config';
 
-export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, onUpdateTask }) {
+export default function TaskItem({ task, showCompleted, onToggle, onDelete, onUpdateDetails, onUpdateTask }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -118,7 +118,7 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
                         onClick={handleUnmarkDone}
                         className="flex-1 px-3 py-2 text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-md transition font-medium"
                       >
-                        Unmark Done{task.removalCountdown && ` (${(task.removalCountdown * COUNTDOWN_CONFIG.decrement).toFixed(1)})`}
+                        Unmark Done{task.removalCountdown && !showCompleted && ` (${(task.removalCountdown * COUNTDOWN_CONFIG.decrement).toFixed(1)})`}
                       </button>
                     ) : (
                       <button

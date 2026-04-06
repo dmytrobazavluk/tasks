@@ -25,6 +25,16 @@ export default function App() {
     }
   }, [tasks, loaded]);
 
+  // Clear countdowns when "show completed" is turned on
+  useEffect(() => {
+    if (showCompleted) {
+      setTasks(tasks.map(task => ({
+        ...task,
+        removalCountdown: null
+      })));
+    }
+  }, [showCompleted]);
+
   const addTask = (title, details = '') => {
     setTasks([...tasks, createTask(title, details)]);
   };
@@ -37,8 +47,8 @@ export default function App() {
     setTasks(tasks.map(task => {
       if (task.id === id) {
         const updatedTask = toggleTaskCompletion(task, !task.completed);
-        // When marking as done, start removal countdown
-        if (updatedTask.completed && !updatedTask.removalCountdown) {
+        // When marking as done, start removal countdown only if "show completed" is off
+        if (updatedTask.completed && !updatedTask.removalCountdown && !showCompleted) {
           // Initialize countdown with configured duration (converted to count of decrements)
           updatedTask.removalCountdown = Math.ceil(COUNTDOWN_CONFIG.duration / COUNTDOWN_CONFIG.decrement);
         } else if (!updatedTask.completed && updatedTask.removalCountdown) {
@@ -90,7 +100,7 @@ export default function App() {
           </button>
         </div>
 
-        <TaskList tasks={filteredTasks} onToggle={toggleTask} onDelete={deleteTask} onUpdateDetails={updateTaskDetails} onUpdateTask={updateTask} />
+        <TaskList tasks={filteredTasks} showCompleted={showCompleted} onToggle={toggleTask} onDelete={deleteTask} onUpdateDetails={updateTaskDetails} onUpdateTask={updateTask} />
 
         {isFormOpen && (
           <TaskForm onAdd={handleAddTask} onClose={() => setIsFormOpen(false)} />
