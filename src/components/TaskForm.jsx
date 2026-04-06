@@ -20,7 +20,7 @@ export default function TaskForm({ onAdd, onClose }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-8 bg-white p-4 rounded-lg shadow">
+    <form onSubmit={handleSubmit} className="mt-6 bg-white p-4 rounded-lg shadow">
       <div className="space-y-3">
         <input
           type="text"
