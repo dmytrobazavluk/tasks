@@ -36,10 +36,14 @@ export default function App() {
     ));
   };
 
-  const updateTaskDetails = (id, details) => {
+  const updateTask = (id, updates) => {
     setTasks(tasks.map(task =>
-      task.id === id ? { ...task, details } : task
+      task.id === id ? { ...task, ...updates } : task
     ));
+  };
+
+  const updateTaskDetails = (id, details) => {
+    updateTask(id, { details });
   };
 
   return (
@@ -47,7 +51,7 @@ export default function App() {
       <div className="max-w-2xl mx-auto p-6">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">Task Planner</h1>
         <TaskForm onAdd={addTask} />
-        <TaskList tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} onUpdateDetails={updateTaskDetails} />
+        <TaskList tasks={tasks} onToggle={toggleTask} onDelete={deleteTask} onUpdateDetails={updateTaskDetails} onUpdateTask={updateTask} />
       </div>
     </div>
   );

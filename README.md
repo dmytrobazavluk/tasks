@@ -8,9 +8,13 @@ A simple task management app built with React and Tailwind CSS.
   - Title is required
   - Details/notes field available during task creation
 - ✅ Mark tasks as complete/incomplete (with completion timestamp)
-- 📋 Collapsible task details with free-form notes
+- 📋 Collapsible task details with read-only view
   - Expand/collapse to show metadata (added date, completion date)
-  - View and edit task descriptions and notes
+  - View task descriptions and notes in read-only mode
+- ✏️ Dedicated edit form
+  - Click "Edit" button to open edit form
+  - Edit both title and description together
+  - Save or cancel changes
 - 🗑️ Delete tasks
 - 💾 Persist tasks to browser storage (survives page reload)
 - 📱 Responsive design

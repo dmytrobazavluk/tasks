@@ -183,26 +183,24 @@ test.describe('Core Functionality', () => {
     await button.click();
 
     // Expand details
-    const expandButton = page.locator('button:has-text("▶")').first();
+    let expandButton = page.locator('button:has-text("▶")').first();
     await expandButton.click();
 
-    // Find and fill the details textarea
-    const detailsTextarea = page.locator('textarea[placeholder="Add notes or description..."]').first();
-    await detailsTextarea.fill('This is my task description');
+    // Click Edit button
+    const editButton = page.locator('button:has-text("Edit")').first();
+    await editButton.click();
 
-    // Verify details were saved by checking they're still visible
-    await expect(detailsTextarea).toHaveValue('This is my task description');
+    // Fill in the details in the edit form
+    const editDetailsTextarea = page.locator('textarea[placeholder="Add notes or description..."]').first();
+    await editDetailsTextarea.fill('This is my task description');
 
-    // Collapse and expand again to verify persistence
-    const collapseButton = page.locator('button:has-text("▼")').first();
-    await collapseButton.click();
+    // Save changes
+    const saveButton = page.locator('button:has-text("Save")').first();
+    await saveButton.click();
 
-    const newExpandButton = page.locator('button:has-text("▶")').first();
-    await newExpandButton.click();
-
-    // Details should still be there
-    const detailsTextarea2 = page.locator('textarea[placeholder="Add notes or description..."]').first();
-    await expect(detailsTextarea2).toHaveValue('This is my task description');
+    // Details should be visible in read-only form after save
+    const detailsDisplay = page.locator('text=This is my task description');
+    await expect(detailsDisplay).toBeVisible();
   });
 
   test('should update task details in real-time', async ({ page }) => {
@@ -217,16 +215,24 @@ test.describe('Core Functionality', () => {
     const expandButton = page.locator('button:has-text("▶")').first();
     await expandButton.click();
 
+    // Click Edit button
+    let editButton = page.locator('button:has-text("Edit")').first();
+    await editButton.click();
+
     // Add initial details
-    const detailsTextarea = page.locator('textarea[placeholder="Add notes or description..."]').first();
+    let detailsTextarea = page.locator('textarea[placeholder="Add notes or description..."]').first();
     await detailsTextarea.fill('Initial details');
 
     // Edit the details
     await detailsTextarea.clear();
     await detailsTextarea.fill('Updated details');
 
-    // Verify the update
+    // Verify the update in the form
     await expect(detailsTextarea).toHaveValue('Updated details');
+
+    // Save changes
+    const saveButton = page.locator('button:has-text("Save")').first();
+    await saveButton.click();
   });
 
   test('should add task details when creating a new task', async ({ page }) => {
@@ -246,8 +252,8 @@ test.describe('Core Functionality', () => {
     const expandButton = page.locator('button:has-text("▶")').first();
     await expandButton.click();
 
-    // Verify the details are there
-    const detailsTextarea = page.locator('textarea[placeholder="Add notes or description..."]').first();
-    await expect(detailsTextarea).toHaveValue('These are my task notes');
+    // Verify the details are displayed in read-only form
+    const detailsDisplay = page.locator('text=These are my task notes');
+    await expect(detailsDisplay).toBeVisible();
   });
 });
