@@ -6,6 +6,9 @@ export default function TaskItem({ task, showCompleted, onToggle, onDelete, onUp
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isSelectingCompletionDate, setIsSelectingCompletionDate] = useState(false);
+  const [selectedCompletionDateTime, setSelectedCompletionDateTime] = useState('');
+  const [validationError, setValidationError] = useState('');
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDetails, setEditDetails] = useState(task.details);
 
@@ -53,6 +56,44 @@ export default function TaskItem({ task, showCompleted, onToggle, onDelete, onUp
 
   const handleCancelDelete = () => {
     setIsConfirmingDelete(false);
+  };
+
+  const getLocalDateTimeString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const handleMarkDoneClick = () => {
+    const now = new Date();
+    const defaultDateTime = getLocalDateTimeString(now);
+    setSelectedCompletionDateTime(defaultDateTime);
+    setValidationError('');
+    setIsSelectingCompletionDate(true);
+  };
+
+  const handleConfirmCompletion = () => {
+    const selectedDate = new Date(selectedCompletionDateTime);
+    const now = new Date();
+
+    if (selectedDate > now) {
+      setValidationError('Task completion date cannot be in the future');
+      return;
+    }
+
+    // Proceed with completion
+    const isoDate = selectedDate.toISOString();
+    onUpdateTask(task.id, { completionDate: isoDate });
+    onToggle(task.id);
+    setIsSelectingCompletionDate(false);
+  };
+
+  const handleCancelCompletion = () => {
+    setIsSelectingCompletionDate(false);
+    setValidationError('');
   };
 
   return (
@@ -122,7 +163,7 @@ export default function TaskItem({ task, showCompleted, onToggle, onDelete, onUp
                       </button>
                     ) : (
                       <button
-                        onClick={() => onToggle(task.id)}
+                        onClick={handleMarkDoneClick}
                         className="flex-1 px-3 py-2 text-sm bg-green-50 text-green-600 hover:bg-green-100 rounded-md transition font-medium"
                       >
                         Mark Done
@@ -209,6 +250,41 @@ export default function TaskItem({ task, showCompleted, onToggle, onDelete, onUp
                 className="flex-1 px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition font-medium"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSelectingCompletionDate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-4">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">When was this completed?</h2>
+
+            <input
+              type="datetime-local"
+              value={selectedCompletionDateTime}
+              onChange={(e) => setSelectedCompletionDateTime(e.target.value)}
+              max={getLocalDateTimeString(new Date())}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            {validationError && (
+              <p className="text-red-600 text-sm mb-3">{validationError}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelCompletion}
+                className="flex-1 px-4 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmCompletion}
+                className="flex-1 px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition font-medium"
+              >
+                Confirm
               </button>
             </div>
           </div>

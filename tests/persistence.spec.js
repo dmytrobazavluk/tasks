@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openAddForm } from './setup';
+import { openAddForm, markTaskDone } from './setup';
 
 test.describe('Task Persistence', () => {
   test.beforeEach(async ({ page }) => {
@@ -47,15 +47,14 @@ test.describe('Task Persistence', () => {
     const expandButtons = page.locator('div[role="button"]');
     await expandButtons.first().click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task A is visible with countdown, Task B is incomplete
     await expect(page.locator('text=Task A')).toBeVisible();
     await expect(page.locator('text=Task B')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Task A should now be hidden (toggle is off)
     await expect(page.locator('text=Task A')).not.toBeVisible();

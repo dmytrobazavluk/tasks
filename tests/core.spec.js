@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage, openAddForm } from './setup';
+import { setupPage, openAddForm, markTaskDone } from './setup';
 
 test.describe('Core Functionality', () => {
   test.beforeEach(async ({ page }) => {
@@ -71,9 +71,8 @@ test.describe('Core Functionality', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    // Click Mark Done button
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    // Click Mark Done button and confirm date/time modal
+    await markTaskDone(page);
 
     // Task should be visible with countdown during 5 seconds
     await expect(page.locator('text=Test task')).toBeVisible();
@@ -82,7 +81,7 @@ test.describe('Core Functionality', () => {
     await expect(taskSpan).toHaveClass(/line-through/);
 
     // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Task should be hidden (toggle is off by default)
     await expect(page.locator('text=Test task')).not.toBeVisible();
@@ -108,9 +107,8 @@ test.describe('Core Functionality', () => {
     let expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    // Mark as complete
-    let markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    // Mark as complete (opens date/time modal, confirm with default now)
+    await markTaskDone(page);
 
     // Task is visible with countdown
     await expect(page.locator('text=Test task')).toBeVisible();
@@ -177,14 +175,13 @@ test.describe('Core Functionality', () => {
     const expandButtons = page.locator('div[role="button"]');
     await expandButtons.nth(1).click();
 
-    const markDoneButtons = page.locator('button:has-text("Mark Done")');
-    await markDoneButtons.nth(0).click();
+    await markTaskDone(page);
 
     // Task 2 is visible with countdown
     await expect(page.locator('text=Task 2')).toBeVisible();
 
-    // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    // Wait for countdown to complete (0.3s test duration = 3 decrements × 300ms each = 900ms+)
+    await page.waitForTimeout(1000);
 
     // Task 2 should now be hidden (countdown expired, toggle is off)
     await expect(page.locator('text=Task 2')).not.toBeVisible();

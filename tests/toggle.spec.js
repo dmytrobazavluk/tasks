@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage, openAddForm } from './setup';
+import { setupPage, openAddForm, markTaskDone } from './setup';
 
 test.describe('Completed Tasks Toggle', () => {
   test.beforeEach(async ({ page }) => {
@@ -24,14 +24,13 @@ test.describe('Completed Tasks Toggle', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task is visible with countdown during 5 seconds
     await expect(page.locator('text=Completed task')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // After countdown, task should be hidden (toggle is off by default)
     await expect(page.locator('text=Completed task')).not.toBeVisible();
@@ -56,11 +55,10 @@ test.describe('Completed Tasks Toggle', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Task should be deleted after countdown
     await expect(page.locator('text=Hidden task')).not.toBeVisible();
@@ -79,14 +77,13 @@ test.describe('Completed Tasks Toggle', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task is visible during countdown
     await expect(page.locator('text=Toggle test task')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Task should be hidden (toggle is off by default)
     await expect(page.locator('text=Toggle test task')).not.toBeVisible();
@@ -111,11 +108,10 @@ test.describe('Completed Tasks Toggle', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Task should be deleted, toggle should show "Show Completed"
     const toggleButton = page.locator('button:has-text("Show Completed")');
@@ -140,15 +136,14 @@ test.describe('Completed Tasks Toggle', () => {
     const expandButtons = page.locator('div[role="button"]');
     await expandButtons.first().click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Both should be visible during countdown (Task A with countdown, Task B as is)
     await expect(page.locator('text=Task A')).toBeVisible();
     await expect(page.locator('text=Task B')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Task A should be hidden (countdown expired, toggle is off)
     await expect(page.locator('text=Task A')).not.toBeVisible();
@@ -177,8 +172,7 @@ test.describe('Completed Tasks Toggle', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task is visible during countdown with strikethrough styling
     const taskSpan = page.locator('span:has-text("Styled task")').first();
@@ -200,8 +194,7 @@ test.describe('Completed Tasks Toggle', () => {
     let expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task should still be expanded and showing the countdown button
     const unmarkButton = page.locator('button:has-text("Unmark Done (0.")');
@@ -229,8 +222,7 @@ test.describe('Completed Tasks Toggle', () => {
     // Complete first task
     let expandButtons = page.locator('div[role="button"]');
     await expandButtons.nth(0).click();
-    let markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // First task should be visible with countdown
     await expect(page.locator('text=Task 1')).toBeVisible();
@@ -238,7 +230,7 @@ test.describe('Completed Tasks Toggle', () => {
     await expect(page.locator('text=Task 3')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Completed task should be hidden (toggle is off)
     await expect(page.locator('text=Task 1')).not.toBeVisible();

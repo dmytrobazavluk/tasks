@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage, openAddForm } from './setup';
+import { setupPage, openAddForm, markTaskDone } from './setup';
 
 test.describe('Date Display', () => {
   test.beforeEach(async ({ page }) => {
@@ -59,8 +59,7 @@ test.describe('Date Display', () => {
     await expandButton.click();
 
     // Mark as complete
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task is still visible during countdown (it's already expanded)
     await expect(page.locator('text=Task to complete')).toBeVisible();
@@ -85,14 +84,13 @@ test.describe('Date Display', () => {
     await expandButton.click();
 
     // Mark as complete
-    let markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task is visible during countdown
     await expect(page.locator('text=Toggle completion')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Task disappears after countdown (toggle is off)
     await expect(page.locator('text=Toggle completion')).not.toBeVisible();

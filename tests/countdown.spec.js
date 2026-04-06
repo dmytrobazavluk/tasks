@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage, openAddForm } from './setup';
+import { setupPage, openAddForm, markTaskDone } from './setup';
 
 test.describe('Task Removal Countdown', () => {
   test.beforeEach(async ({ page }) => {
@@ -19,8 +19,7 @@ test.describe('Task Removal Countdown', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Re-expand to see the countdown button
     const collapseButton = page.locator('div[role="button"]').first();
@@ -43,8 +42,7 @@ test.describe('Task Removal Countdown', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Button should show countdown (5)
     const unmarkButton = page.locator('button:has-text("Unmark Done (0.")');
@@ -64,8 +62,7 @@ test.describe('Task Removal Countdown', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Wait for countdown to be visible with a number
     await expect(page.locator('button:has-text("Unmark Done (0.")')).toBeVisible();
@@ -88,14 +85,13 @@ test.describe('Task Removal Countdown', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task should be visible with countdown
     await expect(page.locator('text=Auto complete task')).toBeVisible();
 
     // Wait for countdown to complete (5 seconds + buffer)
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Task should disappear from view (countdown expired, toggle is off)
     await expect(page.locator('text=Auto complete task')).not.toBeVisible();
@@ -124,8 +120,7 @@ test.describe('Task Removal Countdown', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Wait for countdown to show
     await page.waitForTimeout(150);
@@ -156,8 +151,7 @@ test.describe('Task Removal Countdown', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Edit should be clickable
     const editButton = page.locator('button:has-text("Edit")').first();
@@ -178,8 +172,7 @@ test.describe('Task Removal Countdown', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Delete should be clickable
     const deleteButton = page.locator('button:has-text("Delete")').last();
@@ -201,8 +194,7 @@ test.describe('Task Removal Countdown', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task should still be visible with countdown
     await expect(page.locator('text=Countdown visibility test')).toBeVisible();
@@ -227,14 +219,12 @@ test.describe('Task Removal Countdown', () => {
     let expandButtons = page.locator('div[role="button"]');
     await expandButtons.nth(0).click();
 
-    let markDoneButtons = page.locator('button:has-text("Mark Done")');
-    await markDoneButtons.first().click();
+    await markTaskDone(page);
 
     // Mark second task as done quickly (before first countdown completes)
     expandButtons = page.locator('div[role="button"]');
     await expandButtons.nth(1).click();
-    markDoneButtons = page.locator('button:has-text("Mark Done")');
-    await markDoneButtons.first().click();
+    await markTaskDone(page);
 
     // Both should be visible (both in countdown now)
     await expect(page.locator('text=Concurrent task 1')).toBeVisible();

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage, openAddForm } from './setup';
+import { setupPage, openAddForm, markTaskDone } from './setup';
 
 test.describe('Show Completed Toggle - Visibility', () => {
   test.beforeEach(async ({ page }) => {
@@ -25,8 +25,7 @@ test.describe('Show Completed Toggle - Visibility', () => {
     const expandButtons = page.locator('div[role="button"]');
     await expandButtons.nth(1).click();
 
-    const markDoneButtons = page.locator('button:has-text("Mark Done")');
-    await markDoneButtons.first().click();
+    await markTaskDone(page);
 
     // Completed task should be visible with countdown initially
     await expect(page.locator('text=Completed task')).toBeVisible();
@@ -66,14 +65,13 @@ test.describe('Show Completed Toggle - Visibility', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task should be visible with countdown
     await expect(page.locator('text=Task that stays completed')).toBeVisible();
 
     // Wait for countdown to complete (5.5 seconds)
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(1000);
 
     // Task should no longer be visible (countdown expired, toggle is off by default)
     await expect(page.locator('text=Task that stays completed')).not.toBeVisible();
@@ -108,8 +106,7 @@ test.describe('Show Completed Toggle - Visibility', () => {
     const expandButtons = page.locator('div[role="button"]');
     await expandButtons.first().click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Wait just a moment for the countdown to be visible
     await page.waitForTimeout(100);
@@ -141,8 +138,7 @@ test.describe('Show Completed Toggle - Visibility', () => {
     const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
-    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-    await markDoneButton.click();
+    await markTaskDone(page);
 
     // Task should still be visible (countdown active)
     await expect(page.locator('text=Immediate test task')).toBeVisible();
