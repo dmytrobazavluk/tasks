@@ -41,21 +41,13 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
                 {task.title}
               </span>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-blue-500 hover:text-blue-700 font-medium text-sm"
-                title={isExpanded ? 'Hide details' : 'Show details'}
-              >
-                {isExpanded ? '▼' : '▶'}
-              </button>
-              <button
-                onClick={() => onDelete(task.id)}
-                className="text-red-500 hover:text-red-700 font-medium text-sm"
-              >
-                Delete
-              </button>
-            </div>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-blue-500 hover:text-blue-700 font-medium text-sm"
+              title={isExpanded ? 'Hide details' : 'Show details'}
+            >
+              {isExpanded ? '▼' : '▶'}
+            </button>
           </div>
 
           {isExpanded && (
@@ -84,12 +76,20 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
                   </div>
                 )}
 
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="w-full px-3 py-2 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition font-medium"
-                >
-                  Edit
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition font-medium"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => onDelete(task.id)}
+                    className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 hover:bg-red-100 rounded-md transition font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           )}

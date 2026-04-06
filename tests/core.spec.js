@@ -94,7 +94,12 @@ test.describe('Core Functionality', () => {
 
     await expect(page.locator('text=Task to delete')).toBeVisible();
 
-    const deleteButton = page.locator('button:has-text("Delete")');
+    // Expand to show delete button
+    const expandButton = page.locator('button:has-text("▶")').first();
+    await expandButton.click();
+
+    // Click delete button
+    const deleteButton = page.locator('button:has-text("Delete")').first();
     await deleteButton.click();
 
     await expect(page.locator('text=Task to delete')).not.toBeVisible();
@@ -120,9 +125,12 @@ test.describe('Core Functionality', () => {
     const checkboxes = page.locator('input[type="checkbox"]');
     await checkboxes.nth(1).click();
 
-    // Delete first task
-    const deleteButtons = page.locator('button:has-text("Delete")');
-    await deleteButtons.first().click();
+    // Delete first task - need to expand it first
+    const expandButtons = page.locator('button:has-text("▶")');
+    await expandButtons.first().click();
+
+    const deleteButton = page.locator('button:has-text("Delete")').first();
+    await deleteButton.click();
 
     // Verify state
     await expect(page.locator('text=Task 1')).not.toBeVisible();

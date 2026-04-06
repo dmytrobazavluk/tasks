@@ -11,6 +11,7 @@ A simple task management app built with React and Tailwind CSS.
 - 📋 Collapsible task details with read-only view
   - Expand/collapse to show metadata (added date, completion date)
   - View task descriptions and notes in read-only mode
+  - Action buttons in expanded view: "Edit" and "Delete"
 - ✏️ Dedicated edit form
   - Click "Edit" button to open edit form
   - Edit both title and description together
