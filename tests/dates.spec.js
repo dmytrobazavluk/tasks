@@ -84,7 +84,7 @@ test.describe('Date Display', () => {
     await expect(page.locator('text=Toggle completion')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Task disappears after countdown (toggle is off)
     await expect(page.locator('text=Toggle completion')).not.toBeVisible();

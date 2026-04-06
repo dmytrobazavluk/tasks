@@ -29,7 +29,7 @@ test.describe('Completed Tasks Toggle', () => {
     await expect(page.locator('text=Completed task')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // After countdown, task should be hidden (toggle is off by default)
     await expect(page.locator('text=Completed task')).not.toBeVisible();
@@ -56,7 +56,7 @@ test.describe('Completed Tasks Toggle', () => {
     await markDoneButton.click();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Task should be deleted after countdown
     await expect(page.locator('text=Hidden task')).not.toBeVisible();
@@ -80,7 +80,7 @@ test.describe('Completed Tasks Toggle', () => {
     await expect(page.locator('text=Toggle test task')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Task should be hidden (toggle is off by default)
     await expect(page.locator('text=Toggle test task')).not.toBeVisible();
@@ -107,7 +107,7 @@ test.describe('Completed Tasks Toggle', () => {
     await markDoneButton.click();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Task should be deleted, toggle should show "Show Completed"
     const toggleButton = page.locator('button:has-text("Show Completed")');
@@ -136,7 +136,7 @@ test.describe('Completed Tasks Toggle', () => {
     await expect(page.locator('text=Task B')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Task A should be hidden (countdown expired, toggle is off)
     await expect(page.locator('text=Task A')).not.toBeVisible();
@@ -188,7 +188,7 @@ test.describe('Completed Tasks Toggle', () => {
     await markDoneButton.click();
 
     // Task should still be expanded and showing the countdown button
-    const unmarkButton = page.locator('button:has-text("Unmark Done (5)")');
+    const unmarkButton = page.locator('button:has-text("Unmark Done (0.")');
     await expect(unmarkButton).toBeVisible();
 
     // Should also have edit and delete buttons available
@@ -221,7 +221,7 @@ test.describe('Completed Tasks Toggle', () => {
     await expect(page.locator('text=Task 3')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Completed task should be hidden (toggle is off)
     await expect(page.locator('text=Task 1')).not.toBeVisible();

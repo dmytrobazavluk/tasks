@@ -48,7 +48,7 @@ test.describe('Task Persistence', () => {
     await expect(page.locator('text=Task B')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Task A should now be hidden (toggle is off)
     await expect(page.locator('text=Task A')).not.toBeVisible();

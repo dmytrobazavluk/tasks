@@ -71,7 +71,7 @@ test.describe('Core Functionality', () => {
     await expect(taskSpan).toHaveClass(/line-through/);
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Task should be hidden (toggle is off by default)
     await expect(page.locator('text=Test task')).not.toBeVisible();
@@ -106,7 +106,7 @@ test.describe('Core Functionality', () => {
     await expect(taskSpan).toHaveClass(/line-through/);
 
     // Expand to show Unmark Done button (task stays expanded since we just marked it done while expanded)
-    const unmarkButton = page.locator('button:has-text("Unmark Done (5)")');
+    const unmarkButton = page.locator('button:has-text("Unmark Done (0.")');
     await expect(unmarkButton).toBeVisible();
 
     // Click Unmark Done button to cancel countdown
@@ -168,7 +168,7 @@ test.describe('Core Functionality', () => {
     await expect(page.locator('text=Task 2')).toBeVisible();
 
     // Wait for countdown to complete
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Task 2 should now be hidden (countdown expired, toggle is off)
     await expect(page.locator('text=Task 2')).not.toBeVisible();

@@ -3,6 +3,7 @@ import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
 import { persistence } from './persistence';
 import { createTask, toggleTaskCompletion } from './models/Task';
+import { COUNTDOWN_CONFIG } from './config';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
@@ -37,7 +38,8 @@ export default function App() {
         const updatedTask = toggleTaskCompletion(task, !task.completed);
         // When marking as done, start removal countdown
         if (updatedTask.completed && !updatedTask.removalCountdown) {
-          updatedTask.removalCountdown = 5;
+          // Initialize countdown with configured duration (converted to count of decrements)
+          updatedTask.removalCountdown = Math.ceil(COUNTDOWN_CONFIG.duration / COUNTDOWN_CONFIG.decrement);
         } else if (!updatedTask.completed && updatedTask.removalCountdown) {
           // When unmarking, clear countdown
           updatedTask.removalCountdown = null;

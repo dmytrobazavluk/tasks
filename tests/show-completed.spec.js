@@ -68,7 +68,7 @@ test.describe('Show Completed Toggle - Visibility', () => {
     await expect(page.locator('text=Task that stays completed')).toBeVisible();
 
     // Wait for countdown to complete (5.5 seconds)
-    await page.waitForTimeout(5500);
+    await page.waitForTimeout(400);
 
     // Task should no longer be visible (countdown expired, toggle is off by default)
     await expect(page.locator('text=Task that stays completed')).not.toBeVisible();
