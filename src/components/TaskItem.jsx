@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { formatDate } from '../utils/dateFormat';
 
 export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, onUpdateTask }) {
@@ -7,6 +7,29 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDetails, setEditDetails] = useState(task.details);
+
+  // Handle countdown timer
+  useEffect(() => {
+    if (!task.removalCountdown || task.removalCountdown <= 0) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      if (task.removalCountdown === 1) {
+        // Delete the task when countdown reaches 0
+        onDelete(task.id);
+      } else {
+        onUpdateTask(task.id, { removalCountdown: task.removalCountdown - 1 });
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [task.removalCountdown, task.id, onDelete, onUpdateTask]);
+
+  const handleUnmarkDone = () => {
+    onUpdateTask(task.id, { removalCountdown: null });
+    onToggle(task.id);
+  };
 
   const handleSaveEdit = () => {
     if (editTitle.trim()) {
@@ -84,10 +107,10 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
                   <div className="flex gap-2">
                     {task.completed ? (
                       <button
-                        onClick={() => onToggle(task.id)}
+                        onClick={handleUnmarkDone}
                         className="flex-1 px-3 py-2 text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-md transition font-medium"
                       >
-                        Unmark Done
+                        Unmark Done{task.removalCountdown && ` (${task.removalCountdown})`}
                       </button>
                     ) : (
                       <button

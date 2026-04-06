@@ -11,6 +11,7 @@
  *   details: string - free-form notes or description (empty by default)
  *   addedDate: string - ISO timestamp when task was created
  *   completionDate: string|null - ISO timestamp when task was completed (null if not completed)
+ *   removalCountdown: number|null - seconds until task auto-deletes (null if not in countdown)
  * }
  */
 

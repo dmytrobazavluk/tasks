@@ -10,6 +10,10 @@ A simple task management app built with React and Tailwind CSS.
 - ✅ Mark tasks as complete/incomplete with explicit buttons
   - No checkbox—use "Mark Done" / "Unmark Done" buttons (visible when expanded)
   - Completion timestamp tracked automatically
+- 👁️ Toggle visibility of completed tasks
+  - Completed tasks hidden by default to reduce clutter
+  - "Show Completed" / "Hide Completed" button to toggle visibility
+  - Independent of task state (completion not affected by toggle)
 - 📋 Collapsible task details with read-only view
   - Expand/collapse to show metadata (added date, completion date)
   - View task descriptions and notes in read-only mode
@@ -68,7 +72,7 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes **21 tests** organized by functionality:
+The test suite includes **30 tests** organized by functionality:
 
 **Core Functionality (12 tests)** — `core.spec.js`
 - Load app with title, empty state display
@@ -95,6 +99,17 @@ The test suite includes **21 tests** organized by functionality:
 - Hide completion date for incomplete tasks
 - Display completion date when completed
 - Toggle completion date on state change
+
+**Completed Tasks Toggle (9 tests)** — `toggle.spec.js`
+- Show/Hide Completed button visible by default
+- Completed tasks hidden initially
+- Toggle shows completed tasks
+- Toggle hides completed tasks again
+- Button text updates based on state
+- Display both completed and incomplete tasks correctly
+- Completed tasks have correct styling (strikethrough)
+- Operations available on completed tasks when visible
+- Handle toggling with multiple completed tasks
 
 Tests use **Playwright** for headless browser automation and automatically manage the dev server.
 
@@ -126,10 +141,11 @@ frontend/
 │       └── memory.js      # In-memory implementation
 └── tests/
     ├── setup.js           # Common test utilities
-    ├── core.spec.js       # Core functionality tests (8 tests)
+    ├── core.spec.js       # Core functionality tests (12 tests)
     ├── validation.spec.js # Form validation tests (3 tests)
     ├── persistence.spec.js # Persistence tests (2 tests)
-    └── dates.spec.js      # Date display tests (4 tests)
+    ├── dates.spec.js      # Date display tests (4 tests)
+    └── toggle.spec.js     # Completed tasks toggle tests (9 tests)
 ```
 
 ## Technology Stack

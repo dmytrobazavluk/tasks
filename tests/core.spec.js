@@ -64,8 +64,17 @@ test.describe('Core Functionality', () => {
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
-    // Check that the task has strikethrough styling
+    // Task should be visible with countdown during 5 seconds
+    await expect(page.locator('text=Test task')).toBeVisible();
+
+    // Check that the task has strikethrough styling (visible during countdown)
     await expect(taskSpan).toHaveClass(/line-through/);
+
+    // Wait for countdown to complete
+    await page.waitForTimeout(5500);
+
+    // Task should disappear after countdown
+    await expect(page.locator('text=Test task')).not.toBeVisible();
   });
 
   test('should unmark a completed task', async ({ page }) => {
@@ -83,14 +92,20 @@ test.describe('Core Functionality', () => {
     let markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
+    // Task is visible with countdown
+    await expect(page.locator('text=Test task')).toBeVisible();
+
     let taskSpan = page.locator('span:has-text("Test task")').first();
     await expect(taskSpan).toHaveClass(/line-through/);
 
-    // Unmark - click Unmark Done button
-    let unmarkButton = page.locator('button:has-text("Unmark Done")').first();
+    // Expand to show Unmark Done button (task stays expanded since we just marked it done while expanded)
+    const unmarkButton = page.locator('button:has-text("Unmark Done (5)")');
+    await expect(unmarkButton).toBeVisible();
+
+    // Click Unmark Done button to cancel countdown
     await unmarkButton.click();
 
-    taskSpan = page.locator('span:has-text("Test task")').first();
+    // Task should now be unmarked
     await expect(taskSpan).not.toHaveClass(/line-through/);
   });
 
@@ -129,7 +144,7 @@ test.describe('Core Functionality', () => {
       await button.click();
     }
 
-    // Verify all tasks exist
+    // Verify all tasks exist initially
     for (let i = 1; i <= 3; i++) {
       await expect(page.locator(`text=Task ${i}`)).toBeVisible();
     }
@@ -142,9 +157,8 @@ test.describe('Core Functionality', () => {
     const markDoneButtons = page.locator('button:has-text("Mark Done")');
     await markDoneButtons.nth(0).click();
 
-    // Collapse Task 2 first to avoid multiple delete buttons
-    let collapseButtons = page.locator('button:has-text("▼")');
-    await collapseButtons.first().click();
+    // Task 2 should now be hidden (completed tasks hidden by default)
+    await expect(page.locator('text=Task 2')).not.toBeVisible();
 
     // Delete first task - need to expand it first
     const expandButton = page.locator('button:has-text("▶")').first();
@@ -157,14 +171,16 @@ test.describe('Core Functionality', () => {
     const confirmDeleteButton = page.locator('button.bg-red-600:has-text("Delete")');
     await confirmDeleteButton.click();
 
-    // Verify state
+    // Verify Task 1 is deleted and Task 3 remains
     await expect(page.locator('text=Task 1')).not.toBeVisible();
-    await expect(page.locator('text=Task 2')).toBeVisible();
     await expect(page.locator('text=Task 3')).toBeVisible();
 
-    // Task 2 should be marked as complete
-    const taskSpans = page.locator('span');
-    const task2 = taskSpans.filter({ hasText: 'Task 2' }).first();
+    // Show completed tasks to verify Task 2 is still there and marked complete
+    const showCompletedButton = page.locator('button:has-text("Show Completed")');
+    await showCompletedButton.click();
+
+    await expect(page.locator('text=Task 2')).toBeVisible();
+    const task2 = page.locator('span').filter({ hasText: 'Task 2' }).first();
     await expect(task2).toHaveClass(/line-through/);
   });
 

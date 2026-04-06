@@ -43,14 +43,24 @@ test.describe('Task Persistence', () => {
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
-    // Verify state before reload
-    const taskA = page.locator('span').filter({ hasText: 'Task A' }).first();
-    await expect(taskA).toHaveClass(/line-through/);
+    // Task A should disappear (completed tasks hidden by default)
+    await expect(page.locator('text=Task A')).not.toBeVisible();
+    await expect(page.locator('text=Task B')).toBeVisible();
 
     // Reload the page
     await page.reload();
 
-    // Both tasks should be there
+    // Task B should be visible (incomplete)
+    await expect(page.locator('text=Task B')).toBeVisible();
+
+    // Task A should be hidden (completed, hidden by default)
+    await expect(page.locator('text=Task A')).not.toBeVisible();
+
+    // Show completed tasks
+    const showCompletedButton = page.locator('button:has-text("Show Completed")');
+    await showCompletedButton.click();
+
+    // Both tasks should now be visible
     await expect(page.locator('text=Task A')).toBeVisible();
     await expect(page.locator('text=Task B')).toBeVisible();
 

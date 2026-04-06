@@ -56,6 +56,17 @@ test.describe('Date Display', () => {
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
+    // Task disappears (completed tasks hidden by default)
+    await expect(page.locator('text=Task to complete')).not.toBeVisible();
+
+    // Show completed tasks to verify completion date
+    const showCompletedButton = page.locator('button:has-text("Show Completed")');
+    await showCompletedButton.click();
+
+    // Expand the completed task to see the details (it will be collapsed after re-render)
+    let expandCompletedButton = page.locator('button:has-text("▶")').first();
+    await expandCompletedButton.click();
+
     // Verify completion date is displayed
     const completedText = page.locator('text=Completed:');
     await expect(completedText).toBeVisible();
@@ -77,7 +88,17 @@ test.describe('Date Display', () => {
     let markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
-    // Verify completion date is shown
+    // Task disappears (completed tasks hidden by default)
+    await expect(page.locator('text=Toggle completion')).not.toBeVisible();
+
+    // Show completed tasks to verify completion date is shown
+    let showCompletedButton = page.locator('button:has-text("Show Completed")');
+    await showCompletedButton.click();
+
+    // Expand the completed task to see the details (it will be collapsed after re-render)
+    let expandCompletedButton = page.locator('button:has-text("▶")').first();
+    await expandCompletedButton.click();
+
     let completedText = page.locator('text=Completed:');
     await expect(completedText).toBeVisible();
 
@@ -85,7 +106,7 @@ test.describe('Date Display', () => {
     let unmarkButton = page.locator('button:has-text("Unmark Done")').first();
     await unmarkButton.click();
 
-    // Verify completion date is hidden
+    // Task remains visible in completed view but should not have completion date
     completedText = page.locator('text=Completed:');
     await expect(completedText).not.toBeVisible();
   });
