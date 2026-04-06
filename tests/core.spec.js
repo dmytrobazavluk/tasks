@@ -73,8 +73,15 @@ test.describe('Core Functionality', () => {
     // Wait for countdown to complete
     await page.waitForTimeout(5500);
 
-    // Task should disappear after countdown
+    // Task should be hidden (toggle is off by default)
     await expect(page.locator('text=Test task')).not.toBeVisible();
+
+    // But should appear when toggle is on
+    const showCompletedButton = page.locator('button:has-text("Show Completed")');
+    await showCompletedButton.click();
+
+    await expect(page.locator('text=Test task')).toBeVisible();
+    await expect(taskSpan).toHaveClass(/line-through/);
   });
 
   test('should unmark a completed task', async ({ page }) => {
@@ -157,7 +164,13 @@ test.describe('Core Functionality', () => {
     const markDoneButtons = page.locator('button:has-text("Mark Done")');
     await markDoneButtons.nth(0).click();
 
-    // Task 2 should now be hidden (completed tasks hidden by default)
+    // Task 2 is visible with countdown
+    await expect(page.locator('text=Task 2')).toBeVisible();
+
+    // Wait for countdown to complete
+    await page.waitForTimeout(5500);
+
+    // Task 2 should now be hidden (countdown expired, toggle is off)
     await expect(page.locator('text=Task 2')).not.toBeVisible();
 
     // Delete first task - need to expand it first

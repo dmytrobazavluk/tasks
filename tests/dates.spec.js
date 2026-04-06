@@ -56,18 +56,10 @@ test.describe('Date Display', () => {
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
-    // Task disappears (completed tasks hidden by default)
-    await expect(page.locator('text=Task to complete')).not.toBeVisible();
+    // Task is still visible during countdown (it's already expanded)
+    await expect(page.locator('text=Task to complete')).toBeVisible();
 
-    // Show completed tasks to verify completion date
-    const showCompletedButton = page.locator('button:has-text("Show Completed")');
-    await showCompletedButton.click();
-
-    // Expand the completed task to see the details (it will be collapsed after re-render)
-    let expandCompletedButton = page.locator('button:has-text("▶")').first();
-    await expandCompletedButton.click();
-
-    // Verify completion date is displayed
+    // Verify completion date is immediately visible (task is still expanded during countdown)
     const completedText = page.locator('text=Completed:');
     await expect(completedText).toBeVisible();
   });
@@ -88,7 +80,13 @@ test.describe('Date Display', () => {
     let markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
-    // Task disappears (completed tasks hidden by default)
+    // Task is visible during countdown
+    await expect(page.locator('text=Toggle completion')).toBeVisible();
+
+    // Wait for countdown to complete
+    await page.waitForTimeout(5500);
+
+    // Task disappears after countdown (toggle is off)
     await expect(page.locator('text=Toggle completion')).not.toBeVisible();
 
     // Show completed tasks to verify completion date is shown

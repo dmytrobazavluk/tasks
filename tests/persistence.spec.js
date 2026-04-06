@@ -43,8 +43,16 @@ test.describe('Task Persistence', () => {
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
-    // Task A should disappear (completed tasks hidden by default)
+    // Task A is visible with countdown, Task B is incomplete
+    await expect(page.locator('text=Task A')).toBeVisible();
+    await expect(page.locator('text=Task B')).toBeVisible();
+
+    // Wait for countdown to complete
+    await page.waitForTimeout(5500);
+
+    // Task A should now be hidden (toggle is off)
     await expect(page.locator('text=Task A')).not.toBeVisible();
+    // Task B should still be visible
     await expect(page.locator('text=Task B')).toBeVisible();
 
     // Reload the page

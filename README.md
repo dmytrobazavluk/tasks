@@ -10,10 +10,14 @@ A simple task management app built with React and Tailwind CSS.
 - ✅ Mark tasks as complete/incomplete with explicit buttons
   - No checkbox—use "Mark Done" / "Unmark Done" buttons (visible when expanded)
   - Completion timestamp tracked automatically
+  - 5-second countdown after marking done (visible on button: "Unmark Done (5)" → "(4)" → "(3)" etc.)
+  - Click "Unmark Done" anytime during countdown to cancel and revert to incomplete
+  - After countdown expires, task becomes a completed task (persisted but hidden by default)
 - 👁️ Toggle visibility of completed tasks
-  - Completed tasks hidden by default to reduce clutter
+  - Completed tasks hidden by default to reduce clutter  
   - "Show Completed" / "Hide Completed" button to toggle visibility
-  - Independent of task state (completion not affected by toggle)
+  - Completed tasks remain visible during 5-second countdown period
+  - After countdown, completed tasks are hidden until you click "Show Completed"
 - 📋 Collapsible task details with read-only view
   - Expand/collapse to show metadata (added date, completion date)
   - View task descriptions and notes in read-only mode
@@ -72,7 +76,7 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes **30 tests** organized by functionality:
+The test suite includes **40 tests** organized by functionality:
 
 **Core Functionality (12 tests)** — `core.spec.js`
 - Load app with title, empty state display
@@ -111,6 +115,22 @@ The test suite includes **30 tests** organized by functionality:
 - Operations available on completed tasks when visible
 - Handle toggling with multiple completed tasks
 
+**Task Removal Countdown (9 tests)** — `countdown.spec.js`
+- Tasks don't disappear immediately when marked done
+- Countdown displays on unmark button (5, 4, 3, 2, 1)
+- Countdown properly decrements
+- Task auto-deletes after countdown completes
+- Clicking "Unmark Done" cancels countdown
+- Edit and delete operations available during countdown
+- Countdown visible even with toggle off
+- Multiple tasks with concurrent countdowns
+
+**Show Completed Toggle - Visibility (4 tests)** — `show-completed.spec.js`
+- Toggle shows completed tasks on button click
+- Toggle properly switches "Show Completed" ↔ "Hide Completed" states
+- Tasks auto-delete after countdown (not shown with toggle)
+- Tasks visible during countdown period
+
 Tests use **Playwright** for headless browser automation and automatically manage the dev server.
 
 ## Project Structure
@@ -140,12 +160,14 @@ frontend/
 │       ├── localStorage.js # Browser storage implementation
 │       └── memory.js      # In-memory implementation
 └── tests/
-    ├── setup.js           # Common test utilities
-    ├── core.spec.js       # Core functionality tests (12 tests)
-    ├── validation.spec.js # Form validation tests (3 tests)
-    ├── persistence.spec.js # Persistence tests (2 tests)
-    ├── dates.spec.js      # Date display tests (4 tests)
-    └── toggle.spec.js     # Completed tasks toggle tests (9 tests)
+    ├── setup.js              # Common test utilities
+    ├── core.spec.js          # Core functionality tests (12 tests)
+    ├── validation.spec.js    # Form validation tests (3 tests)
+    ├── persistence.spec.js   # Persistence tests (2 tests)
+    ├── dates.spec.js         # Date display tests (4 tests)
+    ├── toggle.spec.js        # Completed tasks toggle tests (9 tests)
+    ├── countdown.spec.js     # Task removal countdown tests (9 tests)
+    └── show-completed.spec.js # Show Completed toggle tests (4 tests)
 ```
 
 ## Technology Stack

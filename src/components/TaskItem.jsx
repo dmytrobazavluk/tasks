@@ -16,15 +16,15 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
 
     const timer = setTimeout(() => {
       if (task.removalCountdown === 1) {
-        // Delete the task when countdown reaches 0
-        onDelete(task.id);
+        // Clear countdown when it reaches 0 (task stays as completed)
+        onUpdateTask(task.id, { removalCountdown: null });
       } else {
         onUpdateTask(task.id, { removalCountdown: task.removalCountdown - 1 });
       }
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [task.removalCountdown, task.id, onDelete, onUpdateTask]);
+  }, [task.removalCountdown, task.id, onUpdateTask]);
 
   const handleUnmarkDone = () => {
     onUpdateTask(task.id, { removalCountdown: null });
