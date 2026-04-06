@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage } from './setup';
+import { setupPage, openAddForm } from './setup';
 
 test.describe('Task Removal Countdown', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,6 +7,8 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should not disappear immediately when marked done', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -14,14 +16,14 @@ test.describe('Task Removal Countdown', () => {
     await titleInput.fill('Countdown task');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
     // Re-expand to see the countdown button
-    const collapseButton = page.locator('button:has-text("▼")').first();
+    const collapseButton = page.locator('div[role="button"]').first();
     await collapseButton.click();
 
     // Task should still be visible immediately after marking done
@@ -29,6 +31,8 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should show countdown on unmark done button', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -36,7 +40,7 @@ test.describe('Task Removal Countdown', () => {
     await titleInput.fill('Task with countdown');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -48,6 +52,8 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should countdown decrements', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -55,7 +61,7 @@ test.describe('Task Removal Countdown', () => {
     await titleInput.fill('Countdown test');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -70,6 +76,8 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should hide completed task after countdown completes (when toggle is off)', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -77,7 +85,7 @@ test.describe('Task Removal Countdown', () => {
     await titleInput.fill('Auto complete task');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -104,6 +112,8 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should cancel countdown when unmark done is clicked', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -111,7 +121,7 @@ test.describe('Task Removal Countdown', () => {
     await titleInput.fill('Cancel countdown task');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -134,6 +144,8 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should allow editing during countdown', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -141,7 +153,7 @@ test.describe('Task Removal Countdown', () => {
     await titleInput.fill('Edit during countdown');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -154,6 +166,8 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should allow delete during countdown', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -161,7 +175,7 @@ test.describe('Task Removal Countdown', () => {
     await titleInput.fill('Delete during countdown');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -174,6 +188,8 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should show countdown when marking done even with show completed off', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -182,7 +198,7 @@ test.describe('Task Removal Countdown', () => {
     await button.click();
 
     // Expand and mark done
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -194,25 +210,29 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should handle multiple tasks with concurrent countdowns', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
     // Add two tasks
     await titleInput.fill('Concurrent task 1');
     await button.click();
+
+    await openAddForm(page);
     await titleInput.fill('Concurrent task 2');
     await button.click();
 
     // Mark first task as done
-    let expandButtons = page.locator('button:has-text("▶")');
+    let expandButtons = page.locator('div[role="button"]');
     await expandButtons.nth(0).click();
 
     let markDoneButtons = page.locator('button:has-text("Mark Done")');
     await markDoneButtons.first().click();
 
     // Mark second task as done quickly (before first countdown completes)
-    expandButtons = page.locator('button:has-text("▶")');
-    await expandButtons.first().click();
+    expandButtons = page.locator('div[role="button"]');
+    await expandButtons.nth(1).click();
     markDoneButtons = page.locator('button:has-text("Mark Done")');
     await markDoneButtons.first().click();
 

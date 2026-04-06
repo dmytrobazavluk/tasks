@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage } from './setup';
+import { setupPage, openAddForm } from './setup';
 
 test.describe('Completed Tasks Toggle', () => {
   test.beforeEach(async ({ page }) => {
@@ -12,6 +12,8 @@ test.describe('Completed Tasks Toggle', () => {
   });
 
   test('should not display completed tasks by default', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -19,7 +21,7 @@ test.describe('Completed Tasks Toggle', () => {
     await titleInput.fill('Completed task');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -42,6 +44,8 @@ test.describe('Completed Tasks Toggle', () => {
   });
 
   test('should show completed tasks when toggle is clicked', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -49,7 +53,7 @@ test.describe('Completed Tasks Toggle', () => {
     await titleInput.fill('Hidden task');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -63,6 +67,8 @@ test.describe('Completed Tasks Toggle', () => {
   });
 
   test('should hide completed tasks when toggle is clicked again', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -70,7 +76,7 @@ test.describe('Completed Tasks Toggle', () => {
     await titleInput.fill('Toggle test task');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -93,6 +99,8 @@ test.describe('Completed Tasks Toggle', () => {
   });
 
   test('should display button text as "Hide Completed" when toggled on', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -100,7 +108,7 @@ test.describe('Completed Tasks Toggle', () => {
     await titleInput.fill('Task for button state');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -115,17 +123,21 @@ test.describe('Completed Tasks Toggle', () => {
   });
 
   test('should maintain both completed and incomplete tasks with toggle', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
     // Add two tasks
     await titleInput.fill('Task A');
     await button.click();
+
+    await openAddForm(page);
     await titleInput.fill('Task B');
     await button.click();
 
     // Complete Task A
-    const expandButtons = page.locator('button:has-text("▶")');
+    const expandButtons = page.locator('div[role="button"]');
     await expandButtons.first().click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -153,6 +165,8 @@ test.describe('Completed Tasks Toggle', () => {
   });
 
   test('should show correct styling for completed tasks when visible', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -160,7 +174,7 @@ test.describe('Completed Tasks Toggle', () => {
     await titleInput.fill('Styled task');
     await button.click();
 
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -173,6 +187,8 @@ test.describe('Completed Tasks Toggle', () => {
   });
 
   test('should allow operations on completed tasks when visible', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -181,7 +197,7 @@ test.describe('Completed Tasks Toggle', () => {
     await button.click();
 
     // Expand and mark as done
-    let expandButton = page.locator('button:has-text("▶")').first();
+    let expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -205,12 +221,13 @@ test.describe('Completed Tasks Toggle', () => {
 
     // Add three tasks
     for (let i = 1; i <= 3; i++) {
+      await openAddForm(page);
       await titleInput.fill(`Task ${i}`);
       await button.click();
     }
 
     // Complete first task
-    let expandButtons = page.locator('button:has-text("▶")');
+    let expandButtons = page.locator('div[role="button"]');
     await expandButtons.nth(0).click();
     let markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();

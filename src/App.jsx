@@ -9,6 +9,7 @@ export default function App() {
   const [tasks, setTasks] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Load tasks from persistence on mount
   useEffect(() => {
@@ -65,11 +66,26 @@ export default function App() {
     ? tasks
     : tasks.filter(task => !task.completed || (task.removalCountdown && task.removalCountdown > 0));
 
+  const handleAddTask = (title, details) => {
+    addTask(title, details);
+    setIsFormOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-2xl mx-auto p-6">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">Task Planner</h1>
-        <TaskForm onAdd={addTask} />
+        {!isFormOpen && (
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="w-full mb-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+          >
+            Add Task
+          </button>
+        )}
+        {isFormOpen && (
+          <TaskForm onAdd={handleAddTask} onClose={() => setIsFormOpen(false)} />
+        )}
 
         <div className="mb-4 flex items-center justify-between">
           <div className="flex-1"></div>

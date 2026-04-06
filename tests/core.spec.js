@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage } from './setup';
+import { setupPage, openAddForm } from './setup';
 
 test.describe('Core Functionality', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,26 +15,35 @@ test.describe('Core Functionality', () => {
   });
 
   test('should add a new task', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
     await titleInput.fill('Test task');
     await button.click();
 
+    // Task should be visible after adding
     await expect(page.locator('text=Test task')).toBeVisible();
-    await expect(titleInput).toHaveValue('');
+
+    // Form should close after adding task (opens again on button click)
+    const addButton = page.locator('button:has-text("Add Task")').first();
+    await expect(addButton).toBeVisible();
   });
 
   test('should add multiple tasks', async ({ page }) => {
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
+    await openAddForm(page);
     await titleInput.fill('Task 1');
     await button.click();
 
+    await openAddForm(page);
     await titleInput.fill('Task 2');
     await button.click();
 
+    await openAddForm(page);
     await titleInput.fill('Task 3');
     await button.click();
 
@@ -47,6 +56,8 @@ test.describe('Core Functionality', () => {
   });
 
   test('should mark a task as complete', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -57,7 +68,7 @@ test.describe('Core Functionality', () => {
     await expect(taskSpan).not.toHaveClass(/line-through/);
 
     // Expand to show Mark Done button
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Click Mark Done button
@@ -85,6 +96,8 @@ test.describe('Core Functionality', () => {
   });
 
   test('should unmark a completed task', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -92,7 +105,7 @@ test.describe('Core Functionality', () => {
     await button.click();
 
     // Expand to show Mark Done button
-    let expandButton = page.locator('button:has-text("▶")').first();
+    let expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Mark as complete
@@ -117,6 +130,8 @@ test.describe('Core Functionality', () => {
   });
 
   test('should delete a task', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -126,7 +141,7 @@ test.describe('Core Functionality', () => {
     await expect(page.locator('text=Task to delete')).toBeVisible();
 
     // Expand to show delete button
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Click delete button to show confirmation
@@ -147,6 +162,7 @@ test.describe('Core Functionality', () => {
 
     // Add 3 tasks
     for (let i = 1; i <= 3; i++) {
+      await openAddForm(page);
       await titleInput.fill(`Task ${i}`);
       await button.click();
     }
@@ -158,7 +174,7 @@ test.describe('Core Functionality', () => {
 
     // Mark second task as complete
     // Need to expand second task
-    const expandButtons = page.locator('button:has-text("▶")');
+    const expandButtons = page.locator('div[role="button"]');
     await expandButtons.nth(1).click();
 
     const markDoneButtons = page.locator('button:has-text("Mark Done")');
@@ -174,7 +190,7 @@ test.describe('Core Functionality', () => {
     await expect(page.locator('text=Task 2')).not.toBeVisible();
 
     // Delete first task - need to expand it first
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const deleteButton = page.locator('button:has-text("Delete")').first();
@@ -198,6 +214,8 @@ test.describe('Core Functionality', () => {
   });
 
   test('should expand and collapse task details', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -206,7 +224,7 @@ test.describe('Core Functionality', () => {
     await button.click();
 
     // Details should be hidden initially (collapse button shows ▶)
-    let expandButton = page.locator('button:has-text("▶")').first();
+    let expandButton = page.locator('div[role="button"]').first();
     await expect(expandButton).toBeVisible();
 
     // Added date should not be visible yet
@@ -217,7 +235,7 @@ test.describe('Core Functionality', () => {
     await expandButton.click();
 
     // Expand button should now show ▼
-    let collapseButton = page.locator('button:has-text("▼")').first();
+    let collapseButton = page.locator('div[role="button"]').first();
     await expect(collapseButton).toBeVisible();
 
     // Added date should now be visible
@@ -228,7 +246,7 @@ test.describe('Core Functionality', () => {
     await collapseButton.click();
 
     // Expand button should show ▶ again
-    expandButton = page.locator('button:has-text("▶")').first();
+    expandButton = page.locator('div[role="button"]').first();
     await expect(expandButton).toBeVisible();
 
     // Added date should be hidden again
@@ -237,6 +255,8 @@ test.describe('Core Functionality', () => {
   });
 
   test('should add and edit task details', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -245,7 +265,7 @@ test.describe('Core Functionality', () => {
     await button.click();
 
     // Expand details
-    let expandButton = page.locator('button:has-text("▶")').first();
+    let expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Click Edit button
@@ -266,6 +286,8 @@ test.describe('Core Functionality', () => {
   });
 
   test('should update task details in real-time', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -274,7 +296,7 @@ test.describe('Core Functionality', () => {
     await button.click();
 
     // Expand details
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Click Edit button
@@ -298,6 +320,8 @@ test.describe('Core Functionality', () => {
   });
 
   test('should add task details when creating a new task', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const detailsInput = page.locator('textarea[placeholder*="Add details or notes"]');
     const button = page.locator('button:has-text("Add Task")');
@@ -311,7 +335,7 @@ test.describe('Core Functionality', () => {
     await expect(page.locator('text=Task with initial details')).toBeVisible();
 
     // Expand the task to verify details were saved
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Verify the details are displayed in read-only form

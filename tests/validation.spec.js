@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage } from './setup';
+import { setupPage, openAddForm } from './setup';
 
 test.describe('Form Validation', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,6 +7,8 @@ test.describe('Form Validation', () => {
   });
 
   test('should not add empty task', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -16,6 +18,8 @@ test.describe('Form Validation', () => {
   });
 
   test('should not add task with only whitespace', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -26,6 +30,8 @@ test.describe('Form Validation', () => {
   });
 
   test('should clear inputs after adding task', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const detailsInput = page.locator('textarea[placeholder*="Add details or notes"]');
     const button = page.locator('button:has-text("Add Task")');
@@ -34,7 +40,14 @@ test.describe('Form Validation', () => {
     await detailsInput.fill('Task details');
     await button.click();
 
-    await expect(titleInput).toHaveValue('');
-    await expect(detailsInput).toHaveValue('');
+    // Task should be visible after adding
+    await expect(page.locator('text=New task')).toBeVisible();
+
+    // Form should close after adding task and reset for next add
+    await openAddForm(page);
+    const titleInputAfterClose = page.locator('input[placeholder="Task title..."]');
+    const detailsInputAfterClose = page.locator('textarea[placeholder*="Add details or notes"]');
+    await expect(titleInputAfterClose).toHaveValue('');
+    await expect(detailsInputAfterClose).toHaveValue('');
   });
 });

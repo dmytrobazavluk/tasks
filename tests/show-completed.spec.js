@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage } from './setup';
+import { setupPage, openAddForm } from './setup';
 
 test.describe('Show Completed Toggle - Visibility', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,6 +7,8 @@ test.describe('Show Completed Toggle - Visibility', () => {
   });
 
   test('should show completed tasks when Show Completed toggle is on', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -15,11 +17,12 @@ test.describe('Show Completed Toggle - Visibility', () => {
     await button.click();
 
     // Add a task and mark it as done
+    await openAddForm(page);
     await titleInput.fill('Completed task');
     await button.click();
 
     // Expand and mark as done
-    const expandButtons = page.locator('button:has-text("▶")');
+    const expandButtons = page.locator('div[role="button"]');
     await expandButtons.nth(1).click();
 
     const markDoneButtons = page.locator('button:has-text("Mark Done")');
@@ -50,6 +53,8 @@ test.describe('Show Completed Toggle - Visibility', () => {
   });
 
   test('should show completed tasks after countdown expires when toggle is on', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -58,7 +63,7 @@ test.describe('Show Completed Toggle - Visibility', () => {
     await button.click();
 
     // Mark it as done
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -86,17 +91,21 @@ test.describe('Show Completed Toggle - Visibility', () => {
   });
 
   test('should keep showing completed tasks when toggle is used during countdown', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
     // Add tasks
     await titleInput.fill('Task 1');
     await button.click();
+
+    await openAddForm(page);
     await titleInput.fill('Task 2');
     await button.click();
 
     // Mark Task 1 as done
-    const expandButtons = page.locator('button:has-text("▶")');
+    const expandButtons = page.locator('div[role="button"]');
     await expandButtons.first().click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
@@ -119,6 +128,8 @@ test.describe('Show Completed Toggle - Visibility', () => {
   });
 
   test('should immediately show completed tasks when toggle is clicked right after marking done', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -127,7 +138,7 @@ test.describe('Show Completed Toggle - Visibility', () => {
     await button.click();
 
     // Expand and mark as done
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();

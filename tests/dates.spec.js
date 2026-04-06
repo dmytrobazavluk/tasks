@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage } from './setup';
+import { setupPage, openAddForm } from './setup';
 
 test.describe('Date Display', () => {
   test.beforeEach(async ({ page }) => {
@@ -7,6 +7,8 @@ test.describe('Date Display', () => {
   });
 
   test('should display added date in expanded details', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -15,7 +17,7 @@ test.describe('Date Display', () => {
     await button.click();
 
     // Dates are hidden by default - expand details
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Verify added date is displayed
@@ -24,6 +26,8 @@ test.describe('Date Display', () => {
   });
 
   test('should not display completion date for incomplete tasks', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -32,7 +36,7 @@ test.describe('Date Display', () => {
     await button.click();
 
     // Expand details
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Verify completion date is NOT displayed
@@ -41,6 +45,8 @@ test.describe('Date Display', () => {
   });
 
   test('should display completion date when task is marked complete', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -49,7 +55,7 @@ test.describe('Date Display', () => {
     await button.click();
 
     // Expand details
-    const expandButton = page.locator('button:has-text("▶")').first();
+    const expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Mark as complete
@@ -65,6 +71,8 @@ test.describe('Date Display', () => {
   });
 
   test('should hide completion date when task is marked incomplete again', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -73,7 +81,7 @@ test.describe('Date Display', () => {
     await button.click();
 
     // Expand details
-    let expandButton = page.locator('button:has-text("▶")').first();
+    let expandButton = page.locator('div[role="button"]').first();
     await expandButton.click();
 
     // Mark as complete
@@ -94,7 +102,7 @@ test.describe('Date Display', () => {
     await showCompletedButton.click();
 
     // Expand the completed task to see the details (it will be collapsed after re-render)
-    let expandCompletedButton = page.locator('button:has-text("▶")').first();
+    let expandCompletedButton = page.locator('div[role="button"]').first();
     await expandCompletedButton.click();
 
     let completedText = page.locator('text=Completed:');

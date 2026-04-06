@@ -14,3 +14,11 @@ export const setupPage = async (page) => {
   });
   await page.goto('/');
 };
+
+/**
+ * Open the add task form
+ */
+export const openAddForm = async (page) => {
+  const addButton = page.locator('button:has-text("Add Task")').first();
+  await addButton.click();
+};

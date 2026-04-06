@@ -59,7 +59,18 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
     <div className="bg-white rounded-lg shadow hover:shadow-md transition">
       {!isEditing ? (
         <>
-          <div className="flex items-start gap-3 p-4">
+          <div
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-start gap-3 p-4 cursor-pointer hover:bg-gray-50 transition"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsExpanded(!isExpanded);
+              }
+            }}
+          >
             <div className="flex-1">
               <span
                 className={`block ${
@@ -69,13 +80,9 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
                 {task.title}
               </span>
             </div>
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-blue-500 hover:text-blue-700 font-medium text-sm"
-              title={isExpanded ? 'Hide details' : 'Show details'}
-            >
+            <span className="text-blue-500 font-medium text-sm flex-shrink-0">
               {isExpanded ? '▼' : '▶'}
-            </button>
+            </span>
           </div>
 
           {isExpanded && (

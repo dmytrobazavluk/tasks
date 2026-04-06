@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { openAddForm } from './setup';
 
 test.describe('Task Persistence', () => {
   test.beforeEach(async ({ page }) => {
@@ -11,6 +12,8 @@ test.describe('Task Persistence', () => {
   });
 
   test('should persist tasks across page reload', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
@@ -27,17 +30,21 @@ test.describe('Task Persistence', () => {
   });
 
   test('should persist multiple tasks and their state across reload', async ({ page }) => {
+    await openAddForm(page);
+
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const button = page.locator('button:has-text("Add Task")');
 
     // Add tasks
     await titleInput.fill('Task A');
     await button.click();
+
+    await openAddForm(page);
     await titleInput.fill('Task B');
     await button.click();
 
     // Mark first task as complete
-    const expandButtons = page.locator('button:has-text("▶")');
+    const expandButtons = page.locator('div[role="button"]');
     await expandButtons.first().click();
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
