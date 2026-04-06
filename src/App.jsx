@@ -5,17 +5,21 @@ import { persistence } from './persistence';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
+  const [loaded, setLoaded] = useState(false);
 
   // Load tasks from persistence on mount
   useEffect(() => {
     const savedTasks = persistence.load();
     setTasks(savedTasks);
+    setLoaded(true);
   }, []);
 
-  // Save tasks to persistence whenever they change
+  // Save tasks to persistence whenever they change (but skip initial load)
   useEffect(() => {
-    persistence.save(tasks);
-  }, [tasks]);
+    if (loaded) {
+      persistence.save(tasks);
+    }
+  }, [tasks, loaded]);
 
   const addTask = (title) => {
     setTasks([...tasks, { id: Date.now(), title, completed: false }]);
