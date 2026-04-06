@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
 import { persistence } from './persistence';
+import { createTask, toggleTaskCompletion } from './models/Task';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
@@ -22,7 +23,7 @@ export default function App() {
   }, [tasks, loaded]);
 
   const addTask = (title) => {
-    setTasks([...tasks, { id: Date.now(), title, completed: false }]);
+    setTasks([...tasks, createTask(title)]);
   };
 
   const deleteTask = (id) => {
@@ -31,7 +32,7 @@ export default function App() {
 
   const toggleTask = (id) => {
     setTasks(tasks.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
+      task.id === id ? toggleTaskCompletion(task, !task.completed) : task
     ));
   };
 

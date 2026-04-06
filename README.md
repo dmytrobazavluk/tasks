@@ -4,9 +4,10 @@ A simple task management app built with React and Tailwind CSS.
 
 ## Features
 
-- ✨ Add new tasks
-- ✅ Mark tasks as complete/incomplete
+- ✨ Add new tasks (with creation timestamp)
+- ✅ Mark tasks as complete/incomplete (with completion timestamp)
 - 🗑️ Delete tasks
+- 💾 Persist tasks to browser storage (survives page reload)
 - 📱 Responsive design
 
 ## How to Run
@@ -56,15 +57,29 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes 11 tests covering:
-- ✅ Loading the app with correct title
-- ✅ Empty state message display
-- ✅ Adding single and multiple tasks
-- ✅ Marking tasks as complete/incomplete
-- ✅ Deleting tasks
-- ✅ Form validation (empty/whitespace inputs)
-- ✅ Input clearing after task submission
-- ✅ Multi-task operations in sequence
+The test suite includes **17 tests** organized by functionality:
+
+**Core Functionality (8 tests)** — `core.spec.js`
+- Load app with title, empty state display
+- Add single/multiple tasks
+- Mark tasks complete/incomplete
+- Delete tasks
+- Multi-operation sequences
+
+**Form Validation (3 tests)** — `validation.spec.js`
+- Reject empty task submission
+- Reject whitespace-only input
+- Clear input after submission
+
+**Persistence (2 tests)** — `persistence.spec.js`
+- Tasks survive page reload
+- Task state (completion) persists
+
+**Date Display (4 tests)** — `dates.spec.js`
+- Display added date on all tasks
+- Hide completion date for incomplete tasks
+- Display completion date when completed
+- Toggle completion date on state change
 
 Tests use **Playwright** for headless browser automation and automatically manage the dev server.
 
@@ -82,12 +97,24 @@ frontend/
 ├── src/
 │   ├── main.jsx           # React app initialization
 │   ├── App.jsx            # Main component with state management
-│   └── components/
-│       ├── TaskForm.jsx   # Form to add new tasks
-│       ├── TaskList.jsx   # Renders all tasks
-│       └── TaskItem.jsx   # Individual task card
+│   ├── components/
+│   │   ├── TaskForm.jsx   # Form to add new tasks
+│   │   ├── TaskList.jsx   # Renders all tasks
+│   │   └── TaskItem.jsx   # Individual task card with date display
+│   ├── models/
+│   │   └── Task.js        # Task model and utilities
+│   ├── utils/
+│   │   └── dateFormat.js  # Date formatting utilities
+│   └── persistence/
+│       ├── index.js       # Persistence factory
+│       ├── localStorage.js # Browser storage implementation
+│       └── memory.js      # In-memory implementation
 └── tests/
-    └── app.spec.js        # Playwright test suite
+    ├── setup.js           # Common test utilities
+    ├── core.spec.js       # Core functionality tests (8 tests)
+    ├── validation.spec.js # Form validation tests (3 tests)
+    ├── persistence.spec.js # Persistence tests (2 tests)
+    └── dates.spec.js      # Date display tests (4 tests)
 ```
 
 ## Technology Stack

@@ -1,13 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { setupPage } from './setup';
 
-test.describe('Task Planner App', () => {
+test.describe('Core Functionality', () => {
   test.beforeEach(async ({ page }) => {
-    // Use memory persistence for tests to avoid localStorage interference
-    // This runs before the page loads so the app uses in-memory storage
-    await page.addInitScript(() => {
-      window.__APP_CONFIG__ = { persistence: 'memory' };
-    });
-    await page.goto('/');
+    await setupPage(page);
   });
 
   test('should load the app with the title', async ({ page }) => {
@@ -105,35 +101,6 @@ test.describe('Task Planner App', () => {
     await expect(page.locator('text=No tasks yet')).toBeVisible();
   });
 
-  test('should not add empty task', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
-
-    await button.click();
-
-    await expect(page.locator('text=No tasks yet')).toBeVisible();
-  });
-
-  test('should not add task with only whitespace', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
-
-    await input.fill('   ');
-    await button.click();
-
-    await expect(page.locator('text=No tasks yet')).toBeVisible();
-  });
-
-  test('should clear input after adding task', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
-
-    await input.fill('New task');
-    await button.click();
-
-    await expect(input).toHaveValue('');
-  });
-
   test('should handle multiple operations in sequence', async ({ page }) => {
     const input = page.locator('input[placeholder="Add a new task..."]');
     const button = page.locator('button:has-text("Add")');
@@ -167,64 +134,4 @@ test.describe('Task Planner App', () => {
     const task2 = taskSpans.filter({ hasText: 'Task 2' }).first();
     await expect(task2).toHaveClass(/line-through/);
   });
-
 });
-
-// Persistence tests with localStorage (not memory)
-test.describe('Task Planner Persistence', () => {
-  test.beforeEach(async ({ page }) => {
-    // Clear localStorage and use localStorage persistence (not memory)
-    await page.goto('/');
-    await page.evaluate(() => {
-      localStorage.clear();
-    });
-    await page.reload();
-  });
-
-  test('should persist tasks across page reload', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
-
-    // Add a task
-    await input.fill('Persistent task');
-    await button.click();
-    await expect(page.locator('text=Persistent task')).toBeVisible();
-
-    // Reload the page
-    await page.reload();
-
-    // Task should still be there after reload
-    await expect(page.locator('text=Persistent task')).toBeVisible();
-  });
-
-  test('should persist multiple tasks and their state across reload', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
-
-    // Add tasks
-    await input.fill('Task A');
-    await button.click();
-    await input.fill('Task B');
-    await button.click();
-
-    // Mark first task as complete
-    const checkboxes = page.locator('input[type="checkbox"]');
-    await checkboxes.first().click();
-
-    // Verify state before reload
-    const taskA = page.locator('span').filter({ hasText: 'Task A' }).first();
-    await expect(taskA).toHaveClass(/line-through/);
-
-    // Reload the page
-    await page.reload();
-
-    // Both tasks should be there
-    await expect(page.locator('text=Task A')).toBeVisible();
-    await expect(page.locator('text=Task B')).toBeVisible();
-
-    // Task A should still be marked as complete
-    const reloadedTaskA = page.locator('span').filter({ hasText: 'Task A' }).first();
-    await expect(reloadedTaskA).toHaveClass(/line-through/);
-  });
-});
-
