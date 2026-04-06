@@ -11,11 +11,11 @@ test.describe('Task Persistence', () => {
   });
 
   test('should persist tasks across page reload', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
+    const titleInput = page.locator('input[placeholder="Task title..."]');
+    const button = page.locator('button:has-text("Add Task")');
 
     // Add a task
-    await input.fill('Persistent task');
+    await titleInput.fill('Persistent task');
     await button.click();
     await expect(page.locator('text=Persistent task')).toBeVisible();
 
@@ -27,13 +27,13 @@ test.describe('Task Persistence', () => {
   });
 
   test('should persist multiple tasks and their state across reload', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
+    const titleInput = page.locator('input[placeholder="Task title..."]');
+    const button = page.locator('button:has-text("Add Task")');
 
     // Add tasks
-    await input.fill('Task A');
+    await titleInput.fill('Task A');
     await button.click();
-    await input.fill('Task B');
+    await titleInput.fill('Task B');
     await button.click();
 
     // Mark first task as complete

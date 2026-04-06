@@ -8,6 +8,7 @@
  *   id: number - unique identifier (timestamp-based)
  *   title: string - task description
  *   completed: boolean - whether task is done
+ *   details: string - free-form notes or description (empty by default)
  *   addedDate: string - ISO timestamp when task was created
  *   completionDate: string|null - ISO timestamp when task was completed (null if not completed)
  * }
@@ -16,12 +17,14 @@
 /**
  * Create a new Task
  * @param {string} title - Task description
+ * @param {string} details - Free-form notes/description (optional)
  * @returns {Object} New task object
  */
-export const createTask = (title) => ({
+export const createTask = (title, details = '') => ({
   id: Date.now(),
   title,
   completed: false,
+  details: details || '',
   addedDate: new Date().toISOString(),
   completionDate: null,
 });
@@ -49,6 +52,7 @@ export const isValidTask = (task) => {
     typeof task.id === 'number' &&
     typeof task.title === 'string' &&
     typeof task.completed === 'boolean' &&
+    typeof task.details === 'string' &&
     typeof task.addedDate === 'string' &&
     (task.completionDate === null || typeof task.completionDate === 'string')
   );
@@ -60,6 +64,7 @@ export const isValidTask = (task) => {
  * @property {number} id
  * @property {string} title
  * @property {boolean} completed
+ * @property {string} details - Free-form notes/description
  * @property {string} addedDate - ISO timestamp
  * @property {string|null} completionDate - ISO timestamp or null
  */

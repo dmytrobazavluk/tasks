@@ -1,6 +1,6 @@
 import TaskItem from './TaskItem';
 
-export default function TaskList({ tasks, onToggle, onDelete }) {
+export default function TaskList({ tasks, onToggle, onDelete, onUpdateDetails }) {
   return (
     <div className="space-y-2">
       {tasks.length === 0 ? (
@@ -12,6 +12,7 @@ export default function TaskList({ tasks, onToggle, onDelete }) {
             task={task}
             onToggle={onToggle}
             onDelete={onDelete}
+            onUpdateDetails={onUpdateDetails}
           />
         ))
       )}

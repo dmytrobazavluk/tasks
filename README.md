@@ -4,8 +4,13 @@ A simple task management app built with React and Tailwind CSS.
 
 ## Features
 
-- ✨ Add new tasks (with creation timestamp)
+- ✨ Add new tasks with optional details
+  - Title is required
+  - Details/notes field available during task creation
 - ✅ Mark tasks as complete/incomplete (with completion timestamp)
+- 📋 Collapsible task details with free-form notes
+  - Expand/collapse to show metadata (added date, completion date)
+  - View and edit task descriptions and notes
 - 🗑️ Delete tasks
 - 💾 Persist tasks to browser storage (survives page reload)
 - 📱 Responsive design
@@ -57,14 +62,18 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes **17 tests** organized by functionality:
+The test suite includes **21 tests** organized by functionality:
 
-**Core Functionality (8 tests)** — `core.spec.js`
+**Core Functionality (12 tests)** — `core.spec.js`
 - Load app with title, empty state display
 - Add single/multiple tasks
+- Add task details during creation
 - Mark tasks complete/incomplete
 - Delete tasks
 - Multi-operation sequences
+- Expand and collapse task details
+- Add and edit task details
+- Real-time detail updates
 
 **Form Validation (3 tests)** — `validation.spec.js`
 - Reject empty task submission
@@ -76,7 +85,7 @@ The test suite includes **17 tests** organized by functionality:
 - Task state (completion) persists
 
 **Date Display (4 tests)** — `dates.spec.js`
-- Display added date on all tasks
+- Display added date in expanded details
 - Hide completion date for incomplete tasks
 - Display completion date when completed
 - Toggle completion date on state change

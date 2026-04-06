@@ -7,8 +7,8 @@ test.describe('Form Validation', () => {
   });
 
   test('should not add empty task', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
+    const titleInput = page.locator('input[placeholder="Task title..."]');
+    const button = page.locator('button:has-text("Add Task")');
 
     await button.click();
 
@@ -16,22 +16,25 @@ test.describe('Form Validation', () => {
   });
 
   test('should not add task with only whitespace', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
+    const titleInput = page.locator('input[placeholder="Task title..."]');
+    const button = page.locator('button:has-text("Add Task")');
 
-    await input.fill('   ');
+    await titleInput.fill('   ');
     await button.click();
 
     await expect(page.locator('text=No tasks yet')).toBeVisible();
   });
 
-  test('should clear input after adding task', async ({ page }) => {
-    const input = page.locator('input[placeholder="Add a new task..."]');
-    const button = page.locator('button:has-text("Add")');
+  test('should clear inputs after adding task', async ({ page }) => {
+    const titleInput = page.locator('input[placeholder="Task title..."]');
+    const detailsInput = page.locator('textarea[placeholder*="Add details or notes"]');
+    const button = page.locator('button:has-text("Add Task")');
 
-    await input.fill('New task');
+    await titleInput.fill('New task');
+    await detailsInput.fill('Task details');
     await button.click();
 
-    await expect(input).toHaveValue('');
+    await expect(titleInput).toHaveValue('');
+    await expect(detailsInput).toHaveValue('');
   });
 });

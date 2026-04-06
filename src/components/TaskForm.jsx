@@ -1,31 +1,40 @@
 import { useState } from 'react';
 
 export default function TaskForm({ onAdd }) {
-  const [input, setInput] = useState('');
+  const [title, setTitle] = useState('');
+  const [details, setDetails] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (input.trim()) {
-      onAdd(input);
-      setInput('');
+    if (title.trim()) {
+      onAdd(title, details);
+      setTitle('');
+      setDetails('');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-8">
-      <div className="flex gap-2">
+    <form onSubmit={handleSubmit} className="mb-8 bg-white p-4 rounded-lg shadow">
+      <div className="space-y-3">
         <input
           type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Add a new task..."
-          className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Task title..."
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <textarea
+          value={details}
+          onChange={(e) => setDetails(e.target.value)}
+          placeholder="Add details or notes (optional)..."
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          rows="2"
         />
         <button
           type="submit"
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+          className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
         >
-          Add
+          Add Task
         </button>
       </div>
     </form>
