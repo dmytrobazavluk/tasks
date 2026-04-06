@@ -53,15 +53,18 @@ test.describe('Core Functionality', () => {
     await titleInput.fill('Test task');
     await button.click();
 
-    const taskText = page.locator('text=Test task');
-    const checkbox = page.locator('input[type="checkbox"]').first();
+    const taskSpan = page.locator('span:has-text("Test task")').first();
+    await expect(taskSpan).not.toHaveClass(/line-through/);
 
-    await expect(taskText).not.toHaveClass(/line-through/);
+    // Expand to show Mark Done button
+    const expandButton = page.locator('button:has-text("▶")').first();
+    await expandButton.click();
 
-    await checkbox.click();
+    // Click Mark Done button
+    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
+    await markDoneButton.click();
 
     // Check that the task has strikethrough styling
-    const taskSpan = page.locator('span:has-text("Test task")');
     await expect(taskSpan).toHaveClass(/line-through/);
   });
 
@@ -72,16 +75,22 @@ test.describe('Core Functionality', () => {
     await titleInput.fill('Test task');
     await button.click();
 
-    const checkbox = page.locator('input[type="checkbox"]').first();
+    // Expand to show Mark Done button
+    let expandButton = page.locator('button:has-text("▶")').first();
+    await expandButton.click();
 
     // Mark as complete
-    await checkbox.click();
-    let taskSpan = page.locator('span:has-text("Test task")');
+    let markDoneButton = page.locator('button:has-text("Mark Done")').first();
+    await markDoneButton.click();
+
+    let taskSpan = page.locator('span:has-text("Test task")').first();
     await expect(taskSpan).toHaveClass(/line-through/);
 
-    // Unmark
-    await checkbox.click();
-    taskSpan = page.locator('span:has-text("Test task")');
+    // Unmark - click Unmark Done button
+    let unmarkButton = page.locator('button:has-text("Unmark Done")').first();
+    await unmarkButton.click();
+
+    taskSpan = page.locator('span:has-text("Test task")').first();
     await expect(taskSpan).not.toHaveClass(/line-through/);
   });
 
@@ -122,12 +131,16 @@ test.describe('Core Functionality', () => {
     }
 
     // Mark second task as complete
-    const checkboxes = page.locator('input[type="checkbox"]');
-    await checkboxes.nth(1).click();
+    // Need to expand second task
+    const expandButtons = page.locator('button:has-text("▶")');
+    await expandButtons.nth(1).click();
+
+    const markDoneButtons = page.locator('button:has-text("Mark Done")');
+    await markDoneButtons.nth(0).click();
 
     // Delete first task - need to expand it first
-    const expandButtons = page.locator('button:has-text("▶")');
-    await expandButtons.first().click();
+    const expandButton = page.locator('button:has-text("▶")').first();
+    await expandButton.click();
 
     const deleteButton = page.locator('button:has-text("Delete")').first();
     await deleteButton.click();

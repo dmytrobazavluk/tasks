@@ -48,13 +48,13 @@ test.describe('Date Display', () => {
     await titleInput.fill('Task to complete');
     await button.click();
 
-    // Mark as complete
-    const checkbox = page.locator('input[type="checkbox"]').first();
-    await checkbox.click();
-
-    // Expand details (button shows ▶ by default)
+    // Expand details
     const expandButton = page.locator('button:has-text("▶")').first();
     await expandButton.click();
+
+    // Mark as complete
+    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
+    await markDoneButton.click();
 
     // Verify completion date is displayed
     const completedText = page.locator('text=Completed:');
@@ -69,20 +69,21 @@ test.describe('Date Display', () => {
     await titleInput.fill('Toggle completion');
     await button.click();
 
-    // Expand details to prepare for next steps
+    // Expand details
     let expandButton = page.locator('button:has-text("▶")').first();
     await expandButton.click();
 
     // Mark as complete
-    const checkbox = page.locator('input[type="checkbox"]').first();
-    await checkbox.click();
+    let markDoneButton = page.locator('button:has-text("Mark Done")').first();
+    await markDoneButton.click();
 
     // Verify completion date is shown
     let completedText = page.locator('text=Completed:');
     await expect(completedText).toBeVisible();
 
     // Mark as incomplete
-    await checkbox.click();
+    let unmarkButton = page.locator('button:has-text("Unmark Done")').first();
+    await unmarkButton.click();
 
     // Verify completion date is hidden
     completedText = page.locator('text=Completed:');

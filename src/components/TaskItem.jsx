@@ -26,12 +26,6 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
       {!isEditing ? (
         <>
           <div className="flex items-start gap-3 p-4">
-            <input
-              type="checkbox"
-              checked={task.completed}
-              onChange={() => onToggle(task.id)}
-              className="w-5 h-5 text-blue-600 cursor-pointer mt-1"
-            />
             <div className="flex-1">
               <span
                 className={`block ${
@@ -76,19 +70,36 @@ export default function TaskItem({ task, onToggle, onDelete, onUpdateDetails, on
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition font-medium"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => onDelete(task.id)}
-                    className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 hover:bg-red-100 rounded-md transition font-medium"
-                  >
-                    Delete
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    {task.completed ? (
+                      <button
+                        onClick={() => onToggle(task.id)}
+                        className="flex-1 px-3 py-2 text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-md transition font-medium"
+                      >
+                        Unmark Done
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => onToggle(task.id)}
+                        className="flex-1 px-3 py-2 text-sm bg-green-50 text-green-600 hover:bg-green-100 rounded-md transition font-medium"
+                      >
+                        Mark Done
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition font-medium"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onDelete(task.id)}
+                      className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 hover:bg-red-100 rounded-md transition font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

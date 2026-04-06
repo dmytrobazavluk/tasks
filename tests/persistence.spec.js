@@ -37,8 +37,11 @@ test.describe('Task Persistence', () => {
     await button.click();
 
     // Mark first task as complete
-    const checkboxes = page.locator('input[type="checkbox"]');
-    await checkboxes.first().click();
+    const expandButtons = page.locator('button:has-text("▶")');
+    await expandButtons.first().click();
+
+    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
+    await markDoneButton.click();
 
     // Verify state before reload
     const taskA = page.locator('span').filter({ hasText: 'Task A' }).first();
