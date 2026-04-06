@@ -5,21 +5,27 @@ A simple task management app built with React and Tailwind CSS.
 ## Features
 
 - ✨ Add new tasks with optional details
+  - Click "+ Add Task" button at the bottom to open the form
   - Title is required
   - Details/notes field available during task creation
+  - Form closes automatically after adding task
 - ✅ Mark tasks as complete/incomplete with explicit buttons
   - No checkbox—use "Mark Done" / "Unmark Done" buttons (visible when expanded)
   - Completion timestamp tracked automatically
-  - 5-second countdown after marking done (visible on button: "Unmark Done (5)" → "(4)" → "(3)" etc.)
+  - 3-second countdown after marking done (displayed as decimal seconds: "Unmark Done (2.9)" → "(1.8)" → "(0.7)" etc.)
+  - Countdown only starts when "Show Completed" toggle is OFF
   - Click "Unmark Done" anytime during countdown to cancel and revert to incomplete
   - After countdown expires, task becomes a completed task (persisted but hidden by default)
 - 👁️ Toggle visibility of completed tasks
   - Completed tasks hidden by default to reduce clutter  
-  - "Show Completed" / "Hide Completed" button to toggle visibility
-  - Completed tasks remain visible during 5-second countdown period
-  - After countdown, completed tasks are hidden until you click "Show Completed"
+  - "Show Completed" / "Hide Completed" button (top right) to toggle visibility
+  - Completed tasks remain visible during countdown period (when toggle is OFF)
+  - When you toggle "Show Completed" ON, all active countdowns are cancelled
+  - After countdown expires, completed tasks are hidden until you click "Show Completed"
 - 📋 Collapsible task details with read-only view
-  - Expand/collapse to show metadata (added date, completion date)
+  - Click anywhere on the task header (title area) to expand/collapse
+  - Arrow icon indicates state: ▶ (collapsed) or ▼ (expanded)
+  - View metadata when expanded: added date, completion date
   - View task descriptions and notes in read-only mode
   - Action buttons in expanded view: "Mark Done"/"Unmark Done", "Edit", and "Delete"
 - ✏️ Dedicated edit form
@@ -35,29 +41,18 @@ A simple task management app built with React and Tailwind CSS.
 - Node.js (v18+)
 - npm
 
-### Development Server
+### Quick Start
+```bash
+npm install
+npm run dev
+```
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
+Then open [http://localhost:8000](http://localhost:8000) in your browser.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+The dev server watches for file changes and automatically rebuilds.
 
-3. Start the dev server:
-   ```bash
-   npm run dev
-   ```
-
-4. Open your browser and visit:
-   ```
-   http://localhost:8000
-   ```
-
-The app will load and you can start adding and managing tasks! The dev server watches for file changes and automatically rebuilds.
+### First Time Setup Issues?
+See **[CONTRIBUTING.md](CONTRIBUTING.md)** — Troubleshooting section for common problems.
 
 ## Testing
 
@@ -76,7 +71,7 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes **40 tests** organized by functionality:
+The test suite includes **43 tests** organized by functionality:
 
 **Core Functionality (12 tests)** — `core.spec.js`
 - Load app with title, empty state display
@@ -115,21 +110,21 @@ The test suite includes **40 tests** organized by functionality:
 - Operations available on completed tasks when visible
 - Handle toggling with multiple completed tasks
 
-**Task Removal Countdown (9 tests)** — `countdown.spec.js`
+**Task Removal Countdown (10 tests)** — `countdown.spec.js`
 - Tasks don't disappear immediately when marked done
-- Countdown displays on unmark button (5, 4, 3, 2, 1)
-- Countdown properly decrements
-- Task auto-deletes after countdown completes
-- Clicking "Unmark Done" cancels countdown
+- Countdown displays on unmark button as decimal seconds (e.g., 2.9, 1.8, 0.7)
+- Countdown properly decrements at 0.1 second intervals
+- Task hidden after countdown completes (when toggle is off)
+- Clicking "Unmark Done" cancels countdown and reverts to incomplete
 - Edit and delete operations available during countdown
-- Countdown visible even with toggle off
+- Countdown only shows when "Show Completed" toggle is off
 - Multiple tasks with concurrent countdowns
 
 **Show Completed Toggle - Visibility (4 tests)** — `show-completed.spec.js`
 - Toggle shows completed tasks on button click
 - Toggle properly switches "Show Completed" ↔ "Hide Completed" states
-- Tasks auto-delete after countdown (not shown with toggle)
-- Tasks visible during countdown period
+- Countdown is disabled when "Show Completed" is on
+- Active countdowns are cancelled when toggling to "Show Completed"
 
 Tests use **Playwright** for headless browser automation and automatically manage the dev server.
 
@@ -137,7 +132,11 @@ Tests use **Playwright** for headless browser automation and automatically manag
 
 ```
 frontend/
-├── index.html              # Main entry point
+├── README.md               # Feature documentation (this file)
+├── CONTRIBUTING.md         # How to add features and contribute
+├── TESTING.md              # Testing guide and patterns
+├── PROGRESS.md             # Project progress and status
+├── IMPLEMENTATION_NOTES.md # Developer notes on code patterns and decisions
 ├── package.json            # Project metadata and dependencies
 ├── build.js               # esbuild configuration for production builds
 ├── dev-server.js          # Development server with auto-rebuild
@@ -166,7 +165,7 @@ frontend/
     ├── persistence.spec.js   # Persistence tests (2 tests)
     ├── dates.spec.js         # Date display tests (4 tests)
     ├── toggle.spec.js        # Completed tasks toggle tests (9 tests)
-    ├── countdown.spec.js     # Task removal countdown tests (9 tests)
+    ├── countdown.spec.js     # Task removal countdown tests (10 tests)
     └── show-completed.spec.js # Show Completed toggle tests (4 tests)
 ```
 
@@ -178,6 +177,23 @@ frontend/
 - **Build Tool:** esbuild (JSX transpilation and bundling)
 - **Testing:** Playwright (end-to-end browser testing)
 - **Dev Server:** Node.js HTTP server with auto-rebuild
+
+## Contributing
+
+Want to add a feature or fix a bug? Start here:
+
+1. **Setup:** Follow "How to Run" section above
+2. **Learn:** Read [CONTRIBUTING.md](CONTRIBUTING.md)
+3. **Code:** Follow the step-by-step guide in CONTRIBUTING.md
+4. **Test:** Run `npm test` to verify changes
+5. **Submit:** Create a pull request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- How to add new features (with example)
+- Git workflow and conventions
+- Code style and patterns
+- Testing requirements
+- Troubleshooting common issues
 
 ## Future Enhancements
 
