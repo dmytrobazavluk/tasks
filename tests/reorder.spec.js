@@ -6,7 +6,7 @@ test.describe('Task Reordering - Structure Verification', () => {
     await setupPage(page);
   });
 
-  test('incomplete tasks are draggable', async ({ page }) => {
+  test('incomplete tasks have draggable handle', async ({ page }) => {
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const addButton = page.locator('button:has-text("Add Task")');
 
@@ -16,18 +16,16 @@ test.describe('Task Reordering - Structure Verification', () => {
     await addButton.click();
 
     // Verify the task exists
-    await expect(page.locator('text=Draggable Task')).toBeVisible();
+    const task = page.locator('text=Draggable Task').first();
+    await expect(task).toBeVisible();
 
-    // Verify parent has draggable attribute set to true
-    const isDraggable = await page.locator('text=Draggable Task').first().evaluate(el => {
-      const parent = el.closest('[draggable]');
-      return parent ? parent.draggable : false;
-    });
+    // Verify task has a draggable handle (element with draggable="true")
+    const handle = task.locator('xpath=ancestor::div').filter({ has: page.locator('[draggable="true"]') }).locator('[draggable="true"]').first();
 
-    expect(isDraggable).toBe(true);
+    await expect(handle).toBeVisible();
   });
 
-  test('completed tasks are not draggable', async ({ page }) => {
+  test('completed tasks do not have draggable handle', async ({ page }) => {
     const titleInput = page.locator('input[placeholder="Task title..."]');
     const addButton = page.locator('button:has-text("Add Task")');
 
@@ -51,13 +49,15 @@ test.describe('Task Reordering - Structure Verification', () => {
     const showCompletedButton = page.locator('button:has-text("Show Completed")');
     await showCompletedButton.click();
 
-    // Verify the completed task's parent is not draggable
-    const isDraggable = await page.locator('text=Task to Complete').first().evaluate(el => {
-      const parent = el.closest('[draggable]');
-      return parent ? parent.draggable : false;
-    });
+    // Verify completed task doesn't have a draggable handle
+    const task = page.locator('text=Task to Complete').first();
+    await expect(task).toBeVisible();
 
-    expect(isDraggable).toBe(false);
+    // Should not have a draggable handle element
+    const handle = task.locator('xpath=ancestor::div').locator('[draggable="true"]');
+    const handleCount = await handle.count();
+
+    expect(handleCount).toBe(0);
   });
 
   test('today group renders with tasks', async ({ page }) => {

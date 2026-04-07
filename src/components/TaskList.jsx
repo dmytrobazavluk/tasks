@@ -168,22 +168,22 @@ export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onD
           )}
 
           <div
-            draggable={isToday && !task.completed}
-            onDragStart={(e) => handleDragStart(e, task.id)}
-            onDragEnd={handleDragEnd}
             onDragOver={isToday ? (e) => handleDragOver(e, groupIndex) : undefined}
             onDrop={isToday ? (e) => handleDrop(e, groupIndex, groupTasks) : undefined}
             data-task-group-index={groupIndex}
-            className={isToday && !task.completed ? 'cursor-grab hover:opacity-75 transition' : ''}
             style={draggedTaskId === task.id ? { opacity: 0.5 } : {}}
           >
             <TaskItem
               task={task}
               showCompleted={showCompleted}
+              isToday={isToday}
+              isDragged={draggedTaskId === task.id}
               onToggle={onToggle}
               onDelete={onDelete}
               onUpdateDetails={onUpdateDetails}
               onUpdateTask={onUpdateTask}
+              onDragStart={(e) => handleDragStart(e, task.id)}
+              onDragEnd={handleDragEnd}
             />
           </div>
 

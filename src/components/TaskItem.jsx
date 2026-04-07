@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { formatDate } from '../utils/dateFormat';
 import { COUNTDOWN_CONFIG } from '../config';
 
-export default function TaskItem({ task, showCompleted, onToggle, onDelete, onUpdateDetails, onUpdateTask }) {
+export default function TaskItem({ task, showCompleted, isToday, isDragged, onToggle, onDelete, onUpdateDetails, onUpdateTask, onDragStart, onDragEnd }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -112,18 +112,31 @@ export default function TaskItem({ task, showCompleted, onToggle, onDelete, onUp
       {!isEditing ? (
         <>
           <div
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-start gap-3 p-4 cursor-pointer hover:bg-gray-50 transition"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setIsExpanded(!isExpanded);
-              }
-            }}
+            className="flex items-start gap-3 p-4 hover:bg-gray-50 transition"
           >
-            <div className="flex-1">
+            {isToday && !task.completed && (
+              <div
+                draggable
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
+                className="cursor-grab hover:opacity-75 transition flex-shrink-0 text-gray-400 select-none"
+                title="Drag to reorder"
+              >
+                ⋮⋮
+              </div>
+            )}
+            <div
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex-1 cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsExpanded(!isExpanded);
+                }
+              }}
+            >
               <span
                 className={`block ${
                   task.completed ? 'line-through text-gray-400' : 'text-gray-800'
@@ -132,7 +145,7 @@ export default function TaskItem({ task, showCompleted, onToggle, onDelete, onUp
                 {task.title}
               </span>
             </div>
-            <span className="text-blue-500 font-medium text-sm flex-shrink-0">
+            <span className="text-blue-500 font-medium text-sm flex-shrink-0 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
               {isExpanded ? '▼' : '▶'}
             </span>
           </div>
