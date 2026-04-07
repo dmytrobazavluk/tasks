@@ -80,14 +80,6 @@ export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onD
       return;
     }
 
-    // If dropping at the end of the group and source is in this group,
-    // it's a no-op (task is already at the end of its group)
-    if (dropIndex >= groupTasks.length && sourceGroupIndex >= 0) {
-      // Task is being dropped beyond the last position in its group
-      // This is effectively keeping it in place if it's the last incomplete task
-      return;
-    }
-
     // Map group index to array index
     let targetIndex;
     if (dropIndex === 0) {

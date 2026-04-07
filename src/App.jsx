@@ -106,7 +106,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-2xl mx-auto p-6">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">Task Planner</h1>
+        <h1 className="text-xl font-bold text-gray-800 mb-6">Task Planner</h1>
 
         <div className="mb-4 flex items-center justify-between">
           <div className="flex-1"></div>
