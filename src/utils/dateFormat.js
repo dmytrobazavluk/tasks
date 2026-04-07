@@ -43,3 +43,31 @@ export const formatRelativeTime = (isoString) => {
   // Fall back to absolute format for older dates
   return formatDate(isoString);
 };
+
+/**
+ * Format a date key for group headers (e.g., "Apr 5" or "Apr 5, 2025")
+ * @param {string} dateKey - Date in YYYY-MM-DD format
+ * @returns {string} Formatted date for group header
+ */
+export const formatGroupDate = (dateKey) => {
+  if (!dateKey) return '';
+
+  // Parse YYYY-MM-DD format
+  const [year, month, day] = dateKey.split('-');
+  const date = new Date(year, parseInt(month) - 1, parseInt(day));
+  const today = new Date();
+
+  // If same year, show "Apr 5"; otherwise show "Apr 5, 2025"
+  if (date.getFullYear() === today.getFullYear()) {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric'
+    }).format(date);
+  } else {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(date);
+  }
+};

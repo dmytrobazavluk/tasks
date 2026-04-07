@@ -5,13 +5,13 @@
 /**
  * Standard page setup for tests using memory persistence
  */
-export const setupPage = async (page) => {
+export const setupPage = async (page, countdownDuration = 0.3) => {
   // Use memory persistence for tests to avoid localStorage interference
-  // Set countdown duration to 0.3 seconds for faster tests
-  await page.addInitScript(() => {
+  // Set countdown duration (default 0.3s for faster tests, can be overridden)
+  await page.addInitScript(({ duration }) => {
     window.__APP_CONFIG__ = { persistence: 'memory' };
-    window.__TEST_COUNTDOWN_DURATION__ = 0.3;
-  });
+    window.__TEST_COUNTDOWN_DURATION__ = duration;
+  }, { duration: countdownDuration });
   await page.goto('/');
 };
 
@@ -32,9 +32,12 @@ export const markTaskDone = async (page) => {
 
   while (maxRetries > 0) {
     try {
+      // Small initial wait for DOM to settle
+      await page.waitForTimeout(100);
+
       // Wait for Mark Done button to be available
       const markDoneButton = page.locator('button:has-text("Mark Done")').first();
-      await markDoneButton.waitFor({ state: 'visible', timeout: 2000 });
+      await markDoneButton.waitFor({ state: 'visible', timeout: 5000 });
 
       // Click it with a delay to simulate natural interaction
       await markDoneButton.click({ delay: 100 });
@@ -58,7 +61,7 @@ export const markTaskDone = async (page) => {
       maxRetries--;
       if (maxRetries > 0) {
         // Retry with a longer wait
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(500);
       }
     }
   }

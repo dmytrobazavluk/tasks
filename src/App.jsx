@@ -71,6 +71,28 @@ export default function App() {
     updateTask(id, { details });
   };
 
+  const reorderTasks = (fromIndex, toIndex) => {
+    if (fromIndex < 0 || fromIndex >= tasks.length || toIndex < 0 || toIndex > tasks.length) {
+      return;
+    }
+
+    // Adjust toIndex for array manipulation when moving forward
+    let adjustedToIndex = toIndex;
+    if (fromIndex < toIndex) {
+      adjustedToIndex = toIndex - 1;
+    }
+
+    if (fromIndex === adjustedToIndex) {
+      return;
+    }
+
+    const newTasks = [...tasks];
+    const [movedTask] = newTasks.splice(fromIndex, 1);
+    newTasks.splice(adjustedToIndex, 0, movedTask);
+
+    setTasks(newTasks);
+  };
+
   // Show incomplete tasks, completed tasks if toggle is on, and all tasks with active countdown
   const filteredTasks = showCompleted
     ? tasks
@@ -100,7 +122,7 @@ export default function App() {
           </button>
         </div>
 
-        <TaskList tasks={filteredTasks} showCompleted={showCompleted} onToggle={toggleTask} onDelete={deleteTask} onUpdateDetails={updateTaskDetails} onUpdateTask={updateTask} />
+        <TaskList tasks={filteredTasks} allTasks={tasks} showCompleted={showCompleted} onToggle={toggleTask} onDelete={deleteTask} onUpdateDetails={updateTaskDetails} onUpdateTask={updateTask} onReorderTasks={reorderTasks} />
 
         {isFormOpen && (
           <TaskForm onAdd={handleAddTask} onClose={() => setIsFormOpen(false)} />

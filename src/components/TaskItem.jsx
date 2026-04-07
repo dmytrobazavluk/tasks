@@ -86,8 +86,19 @@ export default function TaskItem({ task, showCompleted, onToggle, onDelete, onUp
 
     // Proceed with completion
     const isoDate = selectedDate.toISOString();
-    onUpdateTask(task.id, { completionDate: isoDate });
-    onToggle(task.id);
+
+    // Calculate countdown only if "show completed" is OFF (matching App.jsx logic)
+    let removalCountdown = null;
+    if (!showCompleted) {
+      removalCountdown = Math.ceil(COUNTDOWN_CONFIG.duration / COUNTDOWN_CONFIG.decrement);
+    }
+
+    // Update task with completion date and countdown (don't call onToggle to avoid overwriting the date)
+    onUpdateTask(task.id, {
+      completed: true,
+      completionDate: isoDate,
+      removalCountdown: removalCountdown
+    });
     setIsSelectingCompletionDate(false);
   };
 

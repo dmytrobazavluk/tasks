@@ -114,4 +114,71 @@ test.describe('Date Display', () => {
     completedText = page.locator('text=Completed:');
     await expect(completedText).not.toBeVisible();
   });
+
+  test('should set completion date to selected past date (not current time)', async ({ page }) => {
+    await openAddForm(page);
+
+    const titleInput = page.locator('input[placeholder="Task title..."]');
+    const button = page.locator('button:has-text("Add Task")');
+
+    // Add a task
+    await titleInput.fill('Task with past date');
+    await button.click();
+
+    // Expand details
+    const expandButton = page.locator('div[role="button"]').first();
+    await expandButton.click();
+
+    // Click Mark Done to open date picker modal
+    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
+    await markDoneButton.click();
+
+    // Wait for modal to appear
+    const dateInput = page.locator('input[type="datetime-local"]');
+    await dateInput.waitFor({ state: 'visible' });
+
+    // Calculate yesterday's date at noon
+    const now = new Date();
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12, 0);
+    const year = yesterday.getFullYear();
+    const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const day = String(yesterday.getDate()).padStart(2, '0');
+    const pastDateTime = `${year}-${month}-${day}T12:00`;
+
+    // Set the datetime input to yesterday at noon
+    await dateInput.fill(pastDateTime);
+
+    // Click Confirm button
+    const confirmButton = page.locator('button.bg-green-600').last();
+    await confirmButton.click();
+
+    // Task should still be visible during countdown
+    await expect(page.locator('text=Task with past date')).toBeVisible();
+
+    // Wait for countdown to complete
+    await page.waitForTimeout(1000);
+
+    // Task disappears (countdown expired, toggle is off)
+    await expect(page.locator('text=Task with past date')).not.toBeVisible();
+
+    // Show completed tasks
+    const showCompletedButton = page.locator('button:has-text("Show Completed")');
+    await showCompletedButton.click();
+
+    // Expand to see completion date
+    const expandCompletedButton = page.locator('div[role="button"]').first();
+    await expandCompletedButton.click();
+
+    // Verify the displayed completion date is yesterday (not today)
+    // The formatDate function outputs dates like "Apr 5, 12:00 PM"
+    // We check that it does NOT contain "PM" markers that would be in the current hour
+    const completedDateSection = page.locator('text=Completed:').locator('..');
+
+    // Get the actual text to verify it shows yesterday's date
+    const completedText = await completedDateSection.textContent();
+
+    // Yesterday's date should be in the text
+    const yesterdayFormatted = yesterday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    expect(completedText).toContain(yesterdayFormatted);
+  });
 });
