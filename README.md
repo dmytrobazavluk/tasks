@@ -11,11 +11,21 @@ A simple task management app built with React and Tailwind CSS.
   - Form closes automatically after adding task
 - ✅ Mark tasks as complete/incomplete with explicit buttons
   - No checkbox—use "Mark Done" / "Unmark Done" buttons (visible when expanded)
-  - Completion timestamp tracked automatically
+  - Set custom completion date/time (defaults to current time)
   - 3-second countdown after marking done (displayed as decimal seconds: "Unmark Done (2.9)" → "(1.8)" → "(0.7)" etc.)
   - Countdown only starts when "Show Completed" toggle is OFF
   - Click "Unmark Done" anytime during countdown to cancel and revert to incomplete
   - After countdown expires, task becomes a completed task (persisted but hidden by default)
+- 📅 Task grouping by date
+  - "Today" group contains all incomplete tasks
+  - Completed tasks grouped by their completion date
+  - Completed tasks show in their completion date group when "Show Completed" is ON
+- 🎯 Drag-and-drop reordering (Today group only)
+  - Drag handle (⋮⋮) appears on the left of each incomplete task
+  - Click and drag the handle to reorder incomplete tasks
+  - Blue line indicator shows where task will be inserted
+  - Drop anywhere (on tasks or empty space) to reorder
+  - Completed tasks cannot be reordered
 - 👁️ Toggle visibility of completed tasks
   - Completed tasks hidden by default to reduce clutter  
   - "Show Completed" / "Hide Completed" button (top right) to toggle visibility
@@ -23,7 +33,7 @@ A simple task management app built with React and Tailwind CSS.
   - When you toggle "Show Completed" ON, all active countdowns are cancelled
   - After countdown expires, completed tasks are hidden until you click "Show Completed"
 - 📋 Collapsible task details with read-only view
-  - Click anywhere on the task header (title area) to expand/collapse
+  - Click anywhere on the task title to expand/collapse
   - Arrow icon indicates state: ▶ (collapsed) or ▼ (expanded)
   - View metadata when expanded: added date, completion date
   - View task descriptions and notes in read-only mode
@@ -71,7 +81,7 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes **43 tests** organized by functionality:
+The test suite includes **49 tests** organized by functionality:
 
 **Core Functionality (12 tests)** — `core.spec.js`
 - Load app with title, empty state display
@@ -93,11 +103,12 @@ The test suite includes **43 tests** organized by functionality:
 - Tasks survive page reload
 - Task state (completion) persists
 
-**Date Display (4 tests)** — `dates.spec.js`
+**Date Display (5 tests)** — `dates.spec.js`
 - Display added date in expanded details
 - Hide completion date for incomplete tasks
 - Display completion date when completed
 - Toggle completion date on state change
+- Set completion date to custom past date (not current time)
 
 **Completed Tasks Toggle (9 tests)** — `toggle.spec.js`
 - Show/Hide Completed button visible by default
@@ -126,6 +137,13 @@ The test suite includes **43 tests** organized by functionality:
 - Countdown is disabled when "Show Completed" is on
 - Active countdowns are cancelled when toggling to "Show Completed"
 
+**Task Reordering - Structure (5 tests)** — `reorder.spec.js`
+- Incomplete tasks have draggable handle
+- Completed tasks do not have draggable handle
+- Today group renders with tasks
+- Incomplete and completed tasks are grouped correctly
+- Dragging task without significant position change doesn't move it (edge case)
+
 Tests use **Playwright** for headless browser automation and automatically manage the dev server.
 
 ## Project Structure
@@ -146,14 +164,16 @@ frontend/
 ├── src/
 │   ├── main.jsx           # React app initialization
 │   ├── App.jsx            # Main component with state management
+│   ├── config.js          # Countdown configuration
 │   ├── components/
 │   │   ├── TaskForm.jsx   # Form to add new tasks
-│   │   ├── TaskList.jsx   # Renders all tasks
-│   │   └── TaskItem.jsx   # Individual task card with date display
+│   │   ├── TaskList.jsx   # Renders task groups with drag-drop support
+│   │   └── TaskItem.jsx   # Individual task card with drag handle
 │   ├── models/
 │   │   └── Task.js        # Task model and utilities
 │   ├── utils/
-│   │   └── dateFormat.js  # Date formatting utilities
+│   │   ├── dateFormat.js  # Date formatting utilities
+│   │   └── taskGrouping.js # Task grouping by date
 │   └── persistence/
 │       ├── index.js       # Persistence factory
 │       ├── localStorage.js # Browser storage implementation
@@ -163,10 +183,11 @@ frontend/
     ├── core.spec.js          # Core functionality tests (12 tests)
     ├── validation.spec.js    # Form validation tests (3 tests)
     ├── persistence.spec.js   # Persistence tests (2 tests)
-    ├── dates.spec.js         # Date display tests (4 tests)
+    ├── dates.spec.js         # Date display tests (5 tests)
     ├── toggle.spec.js        # Completed tasks toggle tests (9 tests)
     ├── countdown.spec.js     # Task removal countdown tests (10 tests)
-    └── show-completed.spec.js # Show Completed toggle tests (4 tests)
+    ├── show-completed.spec.js # Show Completed toggle tests (4 tests)
+    └── reorder.spec.js       # Task reordering tests (5 tests)
 ```
 
 ## Technology Stack
@@ -197,7 +218,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ## Future Enhancements
 
-- Backend API integration
 - Task priorities and due dates
-- Categories/tags
-- Database persistence
+- Search/filter functionality
+- Task categories/tags
+- Dark mode toggle
+- Backend API integration
