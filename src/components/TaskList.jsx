@@ -6,12 +6,13 @@ import { formatGroupDate } from '../utils/dateFormat';
 export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onDelete, onUpdateDetails, onUpdateTask, onReorderTasks }) {
   const [draggedTaskId, setDraggedTaskId] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
-  const dragOverIndexRef = useRef(null);
+  const draggedTaskRef = useRef(null);
 
   // Group tasks by date
   const groups = getTaskGroups(tasks, showCompleted);
 
   const handleDragStart = (e, taskId) => {
+    draggedTaskRef.current = taskId;
     setDraggedTaskId(taskId);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('taskId', String(taskId));
@@ -20,7 +21,7 @@ export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onD
   const handleDragEnd = () => {
     setDraggedTaskId(null);
     setDragOverIndex(null);
-    dragOverIndexRef.current = null;
+    draggedTaskRef.current = null;
   };
 
   const handleDragOver = (e, taskIndex) => {
@@ -37,7 +38,6 @@ export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onD
       newIndex = taskIndex + 1;
     }
 
-    dragOverIndexRef.current = newIndex;
     setDragOverIndex(newIndex);
   };
 
@@ -62,6 +62,32 @@ export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onD
     const sourceIndex = allTasks.findIndex(t => t.id === sourceId);
     if (sourceIndex === -1) return;
 
+    // Find where source task is in the current group
+    const sourceTask = allTasks[sourceIndex];
+    const sourceGroupIndex = groupTasks.findIndex(t => t.id === sourceTask.id);
+
+    // If source task is not in this group, something is wrong
+    if (sourceGroupIndex === -1) return;
+
+    // If drop index is same as source position in group, don't move (no-op)
+    if (dropIndex === sourceGroupIndex) {
+      return;
+    }
+
+    // Also handle the case where dropping just below the source task doesn't actually move it
+    // After removing source, inserting at sourceGroupIndex+1 would put it right where it was
+    if (dropIndex === sourceGroupIndex + 1) {
+      return;
+    }
+
+    // If dropping at the end of the group and source is in this group,
+    // it's a no-op (task is already at the end of its group)
+    if (dropIndex >= groupTasks.length && sourceGroupIndex >= 0) {
+      // Task is being dropped beyond the last position in its group
+      // This is effectively keeping it in place if it's the last incomplete task
+      return;
+    }
+
     // Map group index to array index
     let targetIndex;
     if (dropIndex === 0) {
@@ -80,21 +106,24 @@ export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onD
 
   const handleDrop = (e, taskIndex, groupTasks) => {
     e.preventDefault();
+    e.stopPropagation();
     setDraggedTaskId(null);
 
     const sourceId = parseInt(e.dataTransfer.getData('taskId'));
     if (!sourceId) {
       setDragOverIndex(null);
-      dragOverIndexRef.current = null;
+      draggedTaskRef.current = null;
       return;
     }
 
-    // Always calculate from drop event
-    const dropIndex = calculateDropIndex(e, groupTasks);
+    // When drop happens on a task element, use dragOverIndex which was calculated
+    // during dragOver events on the entire group. Don't recalculate since
+    // e.currentTarget is just this single task, not the whole group
+    const dropIndex = dragOverIndex !== null ? dragOverIndex : taskIndex;
     performReorder(sourceId, groupTasks, dropIndex);
 
     setDragOverIndex(null);
-    dragOverIndexRef.current = null;
+    draggedTaskRef.current = null;
   };
 
   const handleContainerDragOver = (e, groupTasks) => {
@@ -103,7 +132,6 @@ export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onD
 
     // Calculate where drop will occur and show blue line
     const newDragOverIndex = calculateDropIndex(e, groupTasks);
-    dragOverIndexRef.current = newDragOverIndex;
     setDragOverIndex(newDragOverIndex);
   };
 
@@ -115,7 +143,7 @@ export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onD
     const sourceId = parseInt(e.dataTransfer.getData('taskId'));
     if (!sourceId) {
       setDragOverIndex(null);
-      dragOverIndexRef.current = null;
+      draggedTaskRef.current = null;
       return;
     }
 
@@ -124,7 +152,7 @@ export default function TaskList({ tasks, allTasks, showCompleted, onToggle, onD
     performReorder(sourceId, groupTasks, dropIndex);
 
     setDragOverIndex(null);
-    dragOverIndexRef.current = null;
+    draggedTaskRef.current = null;
   };
 
   const renderTaskGroup = (groupTasks, isToday = false) => (
