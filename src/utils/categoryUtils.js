@@ -3,6 +3,8 @@
  * Works with explicit Category entities (id, name)
  */
 
+import { hasAnyFutureScheduling } from '../models/Task';
+
 /**
  * Get category by ID
  * @param {Array} categories - Array of Category objects
@@ -108,21 +110,24 @@ const getDateKey = (isoString) => {
 };
 
 /**
- * Get all tasks for "Today" tab (incomplete + today's completed + any with active countdown)
+ * Get all tasks for "Today" tab (incomplete + today's completed + any with active countdown, excluding scheduled)
  * @param {Array} tasks - Array of task objects
- * @returns {Array} Tasks for Today (incomplete, completed today, or in countdown grace period)
+ * @returns {Array} Tasks for Today (incomplete non-scheduled, completed today, or in countdown grace period)
  */
 export const getTodayTasks = (tasks) => {
   const todayDateKey = getTodayDateKey();
 
   return tasks.filter(task => {
-    // Incomplete tasks with no future scheduled date
-    if (!task.completed && !task.scheduledDate) {
+    // Exclude any task with future scheduling (soon or specific date)
+    if (hasAnyFutureScheduling(task)) return false;
+
+    // Incomplete tasks
+    if (!task.completed) {
       return true;
     }
 
     // Completed tasks - include if completed today or has active countdown
-    if (task.completed && task.completionDate) {
+    if (task.completionDate) {
       const completionDateKey = getDateKey(task.completionDate);
       const completedToday = completionDateKey === todayDateKey;
       const hasCountdown = task.removalCountdown && task.removalCountdown > 0;
@@ -150,6 +155,15 @@ export const countTasksInCategoryId = (tasks, categoryId) => {
  */
 export const countTodayTasks = (tasks) => {
   return getTodayTasks(tasks).length;
+};
+
+/**
+ * Count tasks for Future tab (scheduled tasks)
+ * @param {Array} tasks - Array of task objects
+ * @returns {number} Count of future scheduled tasks
+ */
+export const countFutureTasks = (tasks) => {
+  return tasks.filter(task => !task.completed && hasAnyFutureScheduling(task)).length;
 };
 
 /**

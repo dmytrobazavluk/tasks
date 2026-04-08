@@ -1,5 +1,6 @@
 import {
   countTodayTasks,
+  countFutureTasks,
   countTasksInCategoryId,
   getUniqueCategoriesFromTasks,
   countClosedTasksWithoutCountdown,
@@ -9,6 +10,7 @@ import {
 export default function Sidebar({ tasks, categories, selectedTab, onSelectTab }) {
   const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
   const todayCount = countTodayTasks(tasks);
+  const futureCount = countFutureTasks(tasks);
   const closedCount = countClosedTasksWithoutCountdown(tasks);
 
   return (
@@ -25,6 +27,20 @@ export default function Sidebar({ tasks, categories, selectedTab, onSelectTab })
         >
           Today <span className="float-right">({todayCount})</span>
         </button>
+
+        {/* Future Tab */}
+        {futureCount > 0 && (
+          <button
+            onClick={() => onSelectTab('future')}
+            className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+              selectedTab === 'future'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Future <span className="float-right">({futureCount})</span>
+          </button>
+        )}
 
         {/* Category Tabs */}
         {categoryNames.map(categoryName => {

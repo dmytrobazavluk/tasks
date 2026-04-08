@@ -18,6 +18,7 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
   const [validationError, setValidationError] = useState('');
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDetails, setEditDetails] = useState(task.details);
+  const [editScheduleType, setEditScheduleType] = useState(task.scheduleType || 'none');
   const [editScheduledDate, setEditScheduledDate] = useState(task.scheduledDate || '');
   const [editCategories, setEditCategories] = useState(getCategoryNamesFromIds(task.categoryIds || []));
   const [newCategory, setNewCategory] = useState('');
@@ -90,10 +91,12 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
     if (editTitle.trim() && !dateError) {
       // Update task with all fields
       // Pass categoryNames (not IDs) - App.jsx will handle conversion
+      const finalScheduledDate = editScheduleType === 'specific' ? (editScheduledDate || null) : null;
       onUpdateTask(task.id, {
         title: editTitle,
         details: editDetails,
-        scheduledDate: editScheduledDate || null,
+        scheduleType: editScheduleType,
+        scheduledDate: finalScheduledDate,
         categoryNames: editCategories
       });
       setIsEditing(false);
@@ -103,6 +106,7 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
   const handleCancelEdit = () => {
     setEditTitle(task.title);
     setEditDetails(task.details);
+    setEditScheduleType(task.scheduleType || 'none');
     setEditScheduledDate(task.scheduledDate || '');
     setEditCategories(getCategoryNamesFromIds(task.categoryIds || []));
     setNewCategory('');
@@ -298,33 +302,84 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
             />
           </div>
 
-          {/* Scheduled Date */}
+          {/* Schedule in the Future */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Schedule for a specific date (optional)
+            <label className="block text-xs font-medium text-gray-700 mb-2">
+              Schedule in the future (optional)
             </label>
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={editScheduledDate}
-                onChange={handleDateChange}
-                min={getMinDate()}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {editScheduledDate && (
-                <button
-                  type="button"
-                  onClick={() => {
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="editScheduleType"
+                  value="none"
+                  checked={editScheduleType === 'none'}
+                  onChange={(e) => {
+                    setEditScheduleType(e.target.value);
                     setEditScheduledDate('');
                     setDateError('');
                   }}
-                  className="px-3 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
-                >
-                  Clear
-                </button>
-              )}
+                  className="w-4 h-4"
+                />
+                <span className="text-gray-700">Don't schedule</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="editScheduleType"
+                  value="soon"
+                  checked={editScheduleType === 'soon'}
+                  onChange={(e) => {
+                    setEditScheduleType(e.target.value);
+                    setEditScheduledDate('');
+                    setDateError('');
+                  }}
+                  className="w-4 h-4"
+                />
+                <span className="text-gray-700">Some time in the future</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="editScheduleType"
+                  value="specific"
+                  checked={editScheduleType === 'specific'}
+                  onChange={(e) => {
+                    setEditScheduleType(e.target.value);
+                  }}
+                  className="w-4 h-4"
+                />
+                <span className="text-gray-700">Specific date in the future</span>
+              </label>
             </div>
-            {dateError && <p className="text-red-600 text-sm mt-1">{dateError}</p>}
+
+            {/* Date input only visible when editScheduleType is 'specific' */}
+            {editScheduleType === 'specific' && (
+              <div className="mt-2">
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={editScheduledDate}
+                    onChange={handleDateChange}
+                    min={getMinDate()}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {editScheduledDate && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditScheduledDate('');
+                        setDateError('');
+                      }}
+                      className="px-3 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                {dateError && <p className="text-red-600 text-sm mt-1">{dateError}</p>}
+              </div>
+            )}
           </div>
 
           {/* Categories */}

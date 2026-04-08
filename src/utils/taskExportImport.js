@@ -15,6 +15,7 @@ export const exportTasks = (tasks, categories = []) => {
       title: task.title,
       completed: task.completed,
       details: task.details,
+      scheduleType: task.scheduleType || 'none',
       scheduledDate: task.scheduledDate,
       categoryIds: task.categoryIds || [],
       addedDate: task.addedDate,

@@ -69,6 +69,39 @@ export function needsMigration(tasks) {
 }
 
 /**
+ * Migrate tasks to new scheduleType field (v2.1.0)
+ * Old tasks without scheduleType: if has scheduledDate, set to 'specific', else 'none'
+ * @param {Array} tasks - Tasks to migrate
+ * @returns {Array} Tasks with scheduleType field
+ */
+export function migrateScheduleType(tasks) {
+  return tasks.map(task => {
+    if (task.scheduleType !== undefined) {
+      // Already migrated
+      return task;
+    }
+
+    // Old format: infer scheduleType from scheduledDate
+    const scheduleType = task.scheduledDate ? 'specific' : 'none';
+
+    return {
+      ...task,
+      scheduleType
+    };
+  });
+}
+
+/**
+ * Check if tasks need schedule type migration
+ * @param {Array} tasks - Tasks to check
+ * @returns {boolean} True if any task lacks scheduleType field
+ */
+export function needsScheduleTypeMigration(tasks) {
+  if (!Array.isArray(tasks) || tasks.length === 0) return false;
+  return tasks.some(task => task.scheduleType === undefined);
+}
+
+/**
  * Cleanup orphaned categories (ones not referenced by any task)
  * @param {Array} tasks - All tasks
  * @param {Array} categories - All categories

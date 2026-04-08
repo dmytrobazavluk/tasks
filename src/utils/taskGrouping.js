@@ -2,10 +2,13 @@
  * Task Grouping Utilities (Tab-based)
  *
  * Groups tasks based on selected tab:
- * - "Today": All incomplete + today's completed tasks
+ * - "Today": All incomplete + today's completed tasks (excluding scheduled tasks)
+ * - "Future": All scheduled tasks (both 'soon' and 'specific' date tasks)
  * - Categories: Tasks with that category, grouped by scheduledDate
  * - "Closed Tasks": All completed tasks, grouped by completionDate
  */
+
+import { hasAnyFutureScheduling } from '../models/Task';
 
 /**
  * Get today's date in YYYY-MM-DD format (local time)
@@ -89,19 +92,23 @@ const groupByCompletionDate = (taskList) => {
 
 /**
  * Get tasks for "Today" tab
- * (Incomplete + today's completed + any completed with active countdown)
+ * (Incomplete + today's completed + any completed with active countdown, excluding scheduled tasks)
  * @param {Array} tasks - All tasks
  * @returns {Array} Groups: [{ dateKey, tasks }]
  */
 export const getTasksForToday = (tasks) => {
   const todayDate = getTodayDateKey();
   const todayTasks = tasks.filter(task => {
-    // Incomplete with no future scheduled date
-    if (!task.completed && !task.scheduledDate) return true;
+    // Exclude any task with future scheduling (soon or specific date)
+    if (hasAnyFutureScheduling(task)) return false;
+
+    // Incomplete tasks
+    if (!task.completed) return true;
+
     // Completed tasks - include if:
     // 1. Completed today, OR
     // 2. Has active countdown (grace period - keep visible)
-    if (task.completed && task.completionDate) {
+    if (task.completionDate) {
       const completedToday = getDateKey(task.completionDate) === todayDate;
       const hasCountdown = task.removalCountdown && task.removalCountdown > 0;
       if (completedToday || hasCountdown) return true;
@@ -111,6 +118,55 @@ export const getTasksForToday = (tasks) => {
 
   // Group by date (Today only)
   return [{ dateKey: todayDate, tasks: todayTasks }];
+};
+
+/**
+ * Get tasks for "Future" tab
+ * (All tasks marked as scheduled: 'soon' or 'specific' date)
+ * Groups: First "Some time in the future" tasks, then specific date tasks in descending order
+ * @param {Array} tasks - All tasks
+ * @returns {Array} Groups: [{ dateKey, label, tasks }]
+ */
+export const getTasksForFutureTab = (tasks) => {
+  // Separate soon and specific tasks
+  const soonTasks = tasks.filter(task => task.scheduleType === 'soon' && !task.completed);
+
+  const specificTasks = tasks.filter(
+    task => task.scheduleType === 'specific' && task.scheduledDate && !task.completed
+  );
+
+  // Group specific date tasks by date
+  const groupsByDate = {};
+  specificTasks.forEach(task => {
+    const dateKey = task.scheduledDate;
+    if (!groupsByDate[dateKey]) {
+      groupsByDate[dateKey] = [];
+    }
+    groupsByDate[dateKey].push(task);
+  });
+
+  // Build groups array: 'soon' first, then dates in descending order
+  const groups = [];
+
+  // Add "Some time in the future" group if there are any
+  if (soonTasks.length > 0) {
+    groups.push({
+      dateKey: 'soon',
+      tasks: soonTasks
+    });
+  }
+
+  // Add specific date groups in descending order (newest/nearest first)
+  Object.entries(groupsByDate)
+    .sort((a, b) => new Date(b[0]) - new Date(a[0])) // Descending date order
+    .forEach(([dateKey, groupTasks]) => {
+      groups.push({
+        dateKey,
+        tasks: groupTasks
+      });
+    });
+
+  return groups;
 };
 
 /**

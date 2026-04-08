@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import TaskItem from './TaskItem';
 import {
   getTasksForToday,
+  getTasksForFutureTab,
   getTasksForCategory,
   getTasksForClosedTab,
   getTodayDateKey,
@@ -31,11 +32,15 @@ export default function TaskList({
   // Get groups based on selected tab
   let groups = [];
   let isTodayTab = false;
+  let isFutureTab = false;
   let isClosedTab = false;
 
   if (selectedTab === 'today') {
     groups = getTasksForToday(tasks);
     isTodayTab = true;
+  } else if (selectedTab === 'future') {
+    groups = getTasksForFutureTab(tasks);
+    isFutureTab = true;
   } else if (selectedTab === 'closed') {
     groups = getTasksForClosedTab(tasks);
     isClosedTab = true;

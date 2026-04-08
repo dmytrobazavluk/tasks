@@ -1,7 +1,12 @@
 // Browser localStorage implementation
 // Persists tasks and categories to the browser's local storage
 
-import { migrateFromStringCategories, needsMigration } from './migrations';
+import {
+  migrateFromStringCategories,
+  needsMigration,
+  migrateScheduleType,
+  needsScheduleTypeMigration
+} from './migrations';
 
 const TASKS_STORAGE_KEY = 'taskplanner_tasks';
 const CATEGORIES_STORAGE_KEY = 'taskplanner_categories';
@@ -15,12 +20,24 @@ export const localStoragePersistence = {
       let tasks = tasksStored ? JSON.parse(tasksStored) : [];
       let categories = categoriesStored ? JSON.parse(categoriesStored) : [];
 
+      let needsSave = false;
+
       // Handle migration from old format (task.categories as strings)
       if (needsMigration(tasks)) {
         const migrated = migrateFromStringCategories(tasks);
         tasks = migrated.tasks;
         categories = migrated.categories;
-        // Save migrated data back to localStorage
+        needsSave = true;
+      }
+
+      // Handle migration to add scheduleType field
+      if (needsScheduleTypeMigration(tasks)) {
+        tasks = migrateScheduleType(tasks);
+        needsSave = true;
+      }
+
+      // Save migrated data back to localStorage if needed
+      if (needsSave) {
         localStoragePersistence.save(tasks, categories);
       }
 

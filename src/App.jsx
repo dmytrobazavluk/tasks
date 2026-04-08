@@ -33,7 +33,7 @@ export default function App() {
     }
   }, [tasks, categories, loaded]);
 
-  const addTask = (title, details = '', scheduledDate = null, categoryNames = []) => {
+  const addTask = (title, details = '', scheduleType = 'none', scheduledDate = null, categoryNames = []) => {
     // Create new categories for any names that don't exist yet
     const newCategories = [...categories];
     const categoryIds = categoryNames.map(name => {
@@ -48,7 +48,7 @@ export default function App() {
     });
 
     setCategories(newCategories);
-    setTasks([...tasks, createTask(title, details, scheduledDate, categoryIds)]);
+    setTasks([...tasks, createTask(title, details, scheduleType, scheduledDate, categoryIds)]);
   };
 
   const deleteTask = (id) => {
@@ -132,8 +132,8 @@ export default function App() {
     setTasks(newTasks);
   };
 
-  const handleAddTask = (title, details, scheduledDate, categoryNames) => {
-    addTask(title, details, scheduledDate, categoryNames);
+  const handleAddTask = (title, details, scheduleType, scheduledDate, categoryNames) => {
+    addTask(title, details, scheduleType, scheduledDate, categoryNames);
     setIsFormOpen(false);
   };
 

@@ -3,6 +3,7 @@ import { useState } from 'react';
 export default function TaskForm({ onAdd, onClose, existingCategories = [] }) {
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
+  const [scheduleType, setScheduleType] = useState('none');
   const [scheduledDate, setScheduledDate] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
@@ -52,9 +53,11 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [] }) {
     e.preventDefault();
     if (title.trim() && !dateError) {
       const allCategories = [...selectedCategories];
-      onAdd(title, details, scheduledDate || null, allCategories);
+      const finalScheduledDate = scheduleType === 'specific' ? (scheduledDate || null) : null;
+      onAdd(title, details, scheduleType, finalScheduledDate, allCategories);
       setTitle('');
       setDetails('');
+      setScheduleType('none');
       setScheduledDate('');
       setSelectedCategories([]);
       setNewCategory('');
@@ -65,6 +68,7 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [] }) {
   const handleCancel = () => {
     setTitle('');
     setDetails('');
+    setScheduleType('none');
     setScheduledDate('');
     setSelectedCategories([]);
     setNewCategory('');
@@ -93,19 +97,70 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [] }) {
           rows="2"
         />
 
-        {/* Scheduled Date */}
+        {/* Schedule in the Future */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
-            Schedule for a specific date (optional)
+          <label className="block text-xs font-medium text-gray-700 mb-2">
+            Schedule in the future (optional)
           </label>
-          <input
-            type="date"
-            value={scheduledDate}
-            onChange={handleDateChange}
-            min={getMinDate()}
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {dateError && <p className="text-red-600 text-sm mt-1">{dateError}</p>}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="scheduleType"
+                value="none"
+                checked={scheduleType === 'none'}
+                onChange={(e) => {
+                  setScheduleType(e.target.value);
+                  setScheduledDate('');
+                  setDateError('');
+                }}
+                className="w-4 h-4"
+              />
+              <span className="text-gray-700">Don't schedule</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="scheduleType"
+                value="soon"
+                checked={scheduleType === 'soon'}
+                onChange={(e) => {
+                  setScheduleType(e.target.value);
+                  setScheduledDate('');
+                  setDateError('');
+                }}
+                className="w-4 h-4"
+              />
+              <span className="text-gray-700">Some time in the future</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="scheduleType"
+                value="specific"
+                checked={scheduleType === 'specific'}
+                onChange={(e) => {
+                  setScheduleType(e.target.value);
+                }}
+                className="w-4 h-4"
+              />
+              <span className="text-gray-700">Specific date in the future</span>
+            </label>
+          </div>
+
+          {/* Date input only visible when scheduleType is 'specific' */}
+          {scheduleType === 'specific' && (
+            <div className="mt-2">
+              <input
+                type="date"
+                value={scheduledDate}
+                onChange={handleDateChange}
+                min={getMinDate()}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {dateError && <p className="text-red-600 text-sm mt-1">{dateError}</p>}
+            </div>
+          )}
         </div>
 
         {/* Categories */}

@@ -52,6 +52,11 @@ export const formatRelativeTime = (isoString) => {
 export const formatGroupDate = (dateKey) => {
   if (!dateKey) return '';
 
+  // Special case for "some time in the future" group
+  if (dateKey === 'soon') {
+    return 'Some time in the future';
+  }
+
   // Parse YYYY-MM-DD format
   const [year, month, day] = dateKey.split('-');
   const date = new Date(year, parseInt(month) - 1, parseInt(day));

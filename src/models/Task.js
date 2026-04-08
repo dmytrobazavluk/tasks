@@ -60,19 +60,39 @@ export const isScheduledForFuture = (task) => {
 };
 
 /**
+ * Check if task is marked as "some time in the future"
+ * @param {Object} task - Task object
+ * @returns {boolean} Whether task has scheduleType 'soon'
+ */
+export const isScheduledSoon = (task) => {
+  return task.scheduleType === 'soon';
+};
+
+/**
+ * Check if task has any future scheduling (soon or specific date)
+ * @param {Object} task - Task object
+ * @returns {boolean} Whether task is scheduled for the future
+ */
+export const hasAnyFutureScheduling = (task) => {
+  return task.scheduleType === 'soon' || (task.scheduleType === 'specific' && isScheduledForFuture(task));
+};
+
+/**
  * Create a new Task
  * @param {string} title - Task description
  * @param {string} details - Free-form notes/description (optional)
- * @param {string|null} scheduledDate - ISO date for future scheduling (optional)
+ * @param {string} scheduleType - 'none', 'soon', or 'specific' (optional, default 'none')
+ * @param {string|null} scheduledDate - ISO date for future scheduling (optional, only when scheduleType='specific')
  * @param {string[]} categoryIds - Array of category IDs (optional)
  * @returns {Object} New task object
  */
-export const createTask = (title, details = '', scheduledDate = null, categoryIds = []) => ({
+export const createTask = (title, details = '', scheduleType = 'none', scheduledDate = null, categoryIds = []) => ({
   id: Date.now(),
   title,
   completed: false,
   details: details || '',
-  scheduledDate: normalizeScheduledDate(scheduledDate),
+  scheduleType: (scheduleType === 'soon' || scheduleType === 'specific') ? scheduleType : 'none',
+  scheduledDate: scheduleType === 'specific' ? normalizeScheduledDate(scheduledDate) : null,
   categoryIds: Array.isArray(categoryIds) ? categoryIds.filter(c => typeof c === 'string' && c.length > 0) : [],
   addedDate: new Date().toISOString(),
   completionDate: null,
@@ -106,6 +126,13 @@ export const isValidTask = (task) => {
     typeof task.addedDate === 'string' &&
     (task.completionDate === null || typeof task.completionDate === 'string');
 
+  // scheduleType can be undefined (old format) or one of the valid values
+  const hasValidScheduleType =
+    task.scheduleType === undefined ||
+    task.scheduleType === 'none' ||
+    task.scheduleType === 'soon' ||
+    task.scheduleType === 'specific';
+
   const hasValidScheduling =
     (task.scheduledDate === null || typeof task.scheduledDate === 'string');
 
@@ -114,7 +141,7 @@ export const isValidTask = (task) => {
     (Array.isArray(task.categoryIds) && task.categoryIds.every(id => typeof id === 'string')) ||
     (Array.isArray(task.categories) && task.categories.every(cat => typeof cat === 'string'));
 
-  return hasValidBasics && hasValidScheduling && hasValidCategories;
+  return hasValidBasics && hasValidScheduleType && hasValidScheduling && hasValidCategories;
 };
 
 /**
