@@ -9,11 +9,13 @@
  *   title: string - task description
  *   completed: boolean - whether task is done
  *   details: string - free-form notes or description (empty by default)
- *   scheduledDate: string|null - ISO date (YYYY-MM-DD) for future scheduling, null for today
+ *   scheduleType: string - 'none', 'soon', or 'specific'
+ *   scheduledDate: string|null - ISO date (YYYY-MM-DD) for specific scheduling
  *   categoryIds: string[] - array of category IDs (can be empty)
+ *   projectIds: string[] - array of project IDs (can be empty)
  *   addedDate: string - ISO timestamp when task was created
  *   completionDate: string|null - ISO timestamp when task was completed (null if not completed)
- *   removalCountdown: number|null - seconds until task auto-deletes (null if not in countdown)
+ *   removalCountdown: number|null - seconds until task auto-deletes (not persisted)
  * }
  */
 
@@ -84,9 +86,10 @@ export const hasAnyFutureScheduling = (task) => {
  * @param {string} scheduleType - 'none', 'soon', or 'specific' (optional, default 'none')
  * @param {string|null} scheduledDate - ISO date for future scheduling (optional, only when scheduleType='specific')
  * @param {string[]} categoryIds - Array of category IDs (optional)
+ * @param {string[]} projectIds - Array of project IDs (optional)
  * @returns {Object} New task object
  */
-export const createTask = (title, details = '', scheduleType = 'none', scheduledDate = null, categoryIds = []) => ({
+export const createTask = (title, details = '', scheduleType = 'none', scheduledDate = null, categoryIds = [], projectIds = []) => ({
   id: Date.now(),
   title,
   completed: false,
@@ -94,6 +97,7 @@ export const createTask = (title, details = '', scheduleType = 'none', scheduled
   scheduleType: (scheduleType === 'soon' || scheduleType === 'specific') ? scheduleType : 'none',
   scheduledDate: scheduleType === 'specific' ? normalizeScheduledDate(scheduledDate) : null,
   categoryIds: Array.isArray(categoryIds) ? categoryIds.filter(c => typeof c === 'string' && c.length > 0) : [],
+  projectIds: Array.isArray(projectIds) ? projectIds.filter(p => typeof p === 'string' && p.length > 0) : [],
   addedDate: new Date().toISOString(),
   completionDate: null,
 });

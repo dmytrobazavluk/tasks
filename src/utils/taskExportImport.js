@@ -1,12 +1,13 @@
 import { isValidTask } from '../models/Task';
 
 /**
- * Export tasks and categories to JSON
+ * Export tasks, categories, and projects to JSON
  * @param {Array} tasks - Tasks to export
  * @param {Array} categories - Categories to export
- * @returns {string} JSON string with { version, tasks, categories }
+ * @param {Array} projects - Projects to export
+ * @returns {string} JSON string with { version, tasks, categories, projects }
  */
-export const exportTasks = (tasks, categories = []) => {
+export const exportTasks = (tasks, categories = [], projects = []) => {
   // Create a clean export without runtime state (removalCountdown)
   const exportData = {
     version: 1,
@@ -18,12 +19,17 @@ export const exportTasks = (tasks, categories = []) => {
       scheduleType: task.scheduleType || 'none',
       scheduledDate: task.scheduledDate,
       categoryIds: task.categoryIds || [],
+      projectIds: task.projectIds || [],
       addedDate: task.addedDate,
       completionDate: task.completionDate
     })),
     categories: categories.map(cat => ({
       id: cat.id,
       name: cat.name
+    })),
+    projects: projects.map(proj => ({
+      id: proj.id,
+      name: proj.name
     }))
   };
 
@@ -51,26 +57,29 @@ export const downloadFile = (content, fileName) => {
 };
 
 /**
- * Import tasks and categories from JSON
+ * Import tasks, categories, and projects from JSON
  * @param {string} jsonString - JSON string to import
- * @returns {Object} { tasks, categories } both arrays
+ * @returns {Object} { tasks, categories, projects } all arrays
  */
 export const importTasks = (jsonString) => {
   try {
     const data = JSON.parse(jsonString);
 
-    // Handle both old format (array of tasks) and new format (object with version, tasks, categories)
+    // Handle both old format (array of tasks) and new format (object with version, tasks, categories, projects)
     let tasks = [];
     let categories = [];
+    let projects = [];
 
     if (Array.isArray(data)) {
       // Old format: direct array of tasks
       tasks = data;
       categories = [];
+      projects = [];
     } else if (data && typeof data === 'object' && data.tasks) {
-      // New format: { version, tasks, categories }
+      // New format: { version, tasks, categories, projects }
       tasks = data.tasks;
       categories = data.categories || [];
+      projects = data.projects || [];
     } else {
       throw new Error('Import file must contain tasks');
     }
@@ -101,6 +110,7 @@ export const importTasks = (jsonString) => {
         ...task,
         removalCountdown: null,
         categoryIds: categoryIds,
+        projectIds: task.projectIds || [],
         scheduledDate: task.scheduledDate || null
       };
     }).filter(task => task !== null);
@@ -118,7 +128,12 @@ export const importTasks = (jsonString) => {
       return cat && typeof cat.id === 'string' && typeof cat.name === 'string';
     });
 
-    return { tasks: validTasks, categories: validCategories };
+    // Validate projects if present
+    const validProjects = (Array.isArray(projects) ? projects : []).filter(proj => {
+      return proj && typeof proj.id === 'string' && typeof proj.name === 'string';
+    });
+
+    return { tasks: validTasks, categories: validCategories, projects: validProjects };
   } catch (error) {
     if (error instanceof SyntaxError) {
       throw new Error('Invalid JSON format. Please check your import file.');

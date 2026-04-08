@@ -1,12 +1,14 @@
 import { useState } from 'react';
 
-export default function TaskForm({ onAdd, onClose, existingCategories = [] }) {
+export default function TaskForm({ onAdd, onClose, existingCategories = [], existingProjects = [] }) {
   const [title, setTitle] = useState('');
   const [details, setDetails] = useState('');
   const [scheduleType, setScheduleType] = useState('none');
   const [scheduledDate, setScheduledDate] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
+  const [selectedProjects, setSelectedProjects] = useState([]);
+  const [newProject, setNewProject] = useState('');
   const [dateError, setDateError] = useState('');
 
   const getMinDate = () => {
@@ -49,18 +51,41 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [] }) {
     setSelectedCategories(prev => prev.filter(c => c !== category));
   };
 
+  const handleProjectToggle = (project) => {
+    setSelectedProjects(prev =>
+      prev.includes(project)
+        ? prev.filter(p => p !== project)
+        : [...prev, project]
+    );
+  };
+
+  const handleAddNewProject = () => {
+    const trimmed = newProject.trim();
+    if (trimmed && !selectedProjects.includes(trimmed) && !existingProjects.includes(trimmed)) {
+      setSelectedProjects(prev => [...prev, trimmed]);
+      setNewProject('');
+    }
+  };
+
+  const handleRemoveProject = (project) => {
+    setSelectedProjects(prev => prev.filter(p => p !== project));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (title.trim() && !dateError) {
       const allCategories = [...selectedCategories];
+      const allProjects = [...selectedProjects];
       const finalScheduledDate = scheduleType === 'specific' ? (scheduledDate || null) : null;
-      onAdd(title, details, scheduleType, finalScheduledDate, allCategories);
+      onAdd(title, details, scheduleType, finalScheduledDate, allCategories, allProjects);
       setTitle('');
       setDetails('');
       setScheduleType('none');
       setScheduledDate('');
       setSelectedCategories([]);
       setNewCategory('');
+      setSelectedProjects([]);
+      setNewProject('');
       setDateError('');
     }
   };
@@ -72,6 +97,8 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [] }) {
     setScheduledDate('');
     setSelectedCategories([]);
     setNewCategory('');
+    setSelectedProjects([]);
+    setNewProject('');
     setDateError('');
     onClose?.();
   };
@@ -225,6 +252,75 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [] }) {
             <button
               type="button"
               onClick={handleAddNewCategory}
+              className="px-3 py-2 text-sm bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        {/* Projects */}
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-2">
+            Projects
+          </label>
+
+          {/* Existing Projects Checkboxes */}
+          {existingProjects.length > 0 && (
+            <div className="space-y-1 mb-2">
+              {existingProjects.map(project => (
+                <label key={project} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selectedProjects.includes(project)}
+                    onChange={() => handleProjectToggle(project)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-gray-700">{project}</span>
+                </label>
+              ))}
+            </div>
+          )}
+
+          {/* Selected Projects Tags */}
+          {selectedProjects.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {selectedProjects.map(project => (
+                <span
+                  key={project}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
+                >
+                  {project}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveProject(project)}
+                    className="text-purple-600 hover:text-purple-800 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* New Project Input */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newProject}
+              onChange={(e) => setNewProject(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddNewProject();
+                }
+              }}
+              placeholder="Type new project name..."
+              className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleAddNewProject}
               className="px-3 py-2 text-sm bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
             >
               Add

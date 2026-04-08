@@ -117,3 +117,34 @@ export function cleanupOrphanedCategories(tasks, categories) {
 
   return categories.filter(category => usedCategoryIds.has(category.id));
 }
+
+/**
+ * Migrate tasks to have projectIds field (v3.0.0)
+ * Old tasks without projectIds get empty array
+ * @param {Array} tasks - Tasks to migrate
+ * @returns {Array} Tasks with projectIds field
+ */
+export function migrateProjectIds(tasks) {
+  return tasks.map(task => {
+    if (task.projectIds !== undefined) {
+      // Already has projectIds
+      return task;
+    }
+
+    // Add empty projectIds array to old tasks
+    return {
+      ...task,
+      projectIds: []
+    };
+  });
+}
+
+/**
+ * Check if tasks need projectIds migration
+ * @param {Array} tasks - Tasks to check
+ * @returns {boolean} True if any task lacks projectIds field
+ */
+export function needsProjectIdsMigration(tasks) {
+  if (!Array.isArray(tasks) || tasks.length === 0) return false;
+  return tasks.some(task => task.projectIds === undefined);
+}

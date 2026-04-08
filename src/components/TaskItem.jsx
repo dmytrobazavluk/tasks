@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { formatDate } from '../utils/dateFormat';
 import { COUNTDOWN_CONFIG } from '../config';
 
-export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete, onUpdateDetails, onUpdateTask, onDragStart, onDragEnd, allCategories = [], categoryObjects = [] }) {
+export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete, onUpdateDetails, onUpdateTask, onDragStart, onDragEnd, allCategories = [], categoryObjects = [], allProjects = [], projectObjects = [] }) {
   // Helper to convert category IDs to names
   const getCategoryNamesFromIds = (categoryIds) => {
     return (categoryIds || []).map(id => {
@@ -10,6 +10,15 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
       return category ? category.name : null;
     }).filter(Boolean);
   };
+
+  // Helper to convert project IDs to names
+  const getProjectNamesFromIds = (projectIds) => {
+    return (projectIds || []).map(id => {
+      const project = projectObjects.find(proj => proj.id === id);
+      return project ? project.name : null;
+    }).filter(Boolean);
+  };
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -22,6 +31,8 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
   const [editScheduledDate, setEditScheduledDate] = useState(task.scheduledDate || '');
   const [editCategories, setEditCategories] = useState(getCategoryNamesFromIds(task.categoryIds || []));
   const [newCategory, setNewCategory] = useState('');
+  const [editProjects, setEditProjects] = useState(getProjectNamesFromIds(task.projectIds || []));
+  const [newProject, setNewProject] = useState('');
   const [dateError, setDateError] = useState('');
 
   // Handle countdown timer
@@ -82,6 +93,26 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
     setEditCategories(prev => prev.filter(c => c !== category));
   };
 
+  const handleProjectToggle = (project) => {
+    setEditProjects(prev =>
+      prev.includes(project)
+        ? prev.filter(p => p !== project)
+        : [...prev, project]
+    );
+  };
+
+  const handleAddNewProject = () => {
+    const trimmed = newProject.trim();
+    if (trimmed && !editProjects.includes(trimmed) && !allProjects.includes(trimmed)) {
+      setEditProjects(prev => [...prev, trimmed]);
+      setNewProject('');
+    }
+  };
+
+  const handleRemoveProject = (project) => {
+    setEditProjects(prev => prev.filter(p => p !== project));
+  };
+
   const handleUnmarkDone = () => {
     onUpdateTask(task.id, { removalCountdown: null });
     onToggle(task.id);
@@ -90,14 +121,15 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
   const handleSaveEdit = () => {
     if (editTitle.trim() && !dateError) {
       // Update task with all fields
-      // Pass categoryNames (not IDs) - App.jsx will handle conversion
+      // Pass categoryNames and projectNames (not IDs) - App.jsx will handle conversion
       const finalScheduledDate = editScheduleType === 'specific' ? (editScheduledDate || null) : null;
       onUpdateTask(task.id, {
         title: editTitle,
         details: editDetails,
         scheduleType: editScheduleType,
         scheduledDate: finalScheduledDate,
-        categoryNames: editCategories
+        categoryNames: editCategories,
+        projectNames: editProjects
       });
       setIsEditing(false);
     }
@@ -110,6 +142,8 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
     setEditScheduledDate(task.scheduledDate || '');
     setEditCategories(getCategoryNamesFromIds(task.categoryIds || []));
     setNewCategory('');
+    setEditProjects(getProjectNamesFromIds(task.projectIds || []));
+    setNewProject('');
     setDateError('');
     setIsEditing(false);
   };
@@ -444,6 +478,75 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
               <button
                 type="button"
                 onClick={handleAddNewCategory}
+                className="px-3 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Projects */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-2">
+              Projects
+            </label>
+
+            {/* Existing Projects Checkboxes */}
+            {allProjects.length > 0 && (
+              <div className="space-y-1 mb-2">
+                {allProjects.map(project => (
+                  <label key={project} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={editProjects.includes(project)}
+                      onChange={() => handleProjectToggle(project)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-gray-700">{project}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {/* Selected Projects Tags */}
+            {editProjects.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {editProjects.map(project => (
+                  <span
+                    key={project}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
+                  >
+                    {project}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveProject(project)}
+                      className="text-purple-600 hover:text-purple-800 font-bold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* New Project Input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newProject}
+                onChange={(e) => setNewProject(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddNewProject();
+                  }
+                }}
+                placeholder="Type new project name..."
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={handleAddNewProject}
                 className="px-3 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
               >
                 Add

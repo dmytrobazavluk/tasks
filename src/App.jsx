@@ -6,34 +6,38 @@ import Sidebar from './components/Sidebar';
 import { persistence } from './persistence';
 import { createTask, toggleTaskCompletion } from './models/Task';
 import { createCategory } from './models/Category';
+import { createProject } from './models/Project';
 import { COUNTDOWN_CONFIG } from './config';
 import { exportTasks, generateFileName, downloadFile } from './utils/taskExportImport';
 import { getUniqueCategoriesFromTasks, cleanupOrphanedCategories } from './utils/categoryUtils';
+import { getUniqueProjectsFromTasks, cleanupOrphanedProjects } from './utils/projectUtils';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState('today');
 
-  // Load tasks and categories from persistence on mount
+  // Load tasks, categories, and projects from persistence on mount
   useEffect(() => {
-    const { tasks: savedTasks, categories: savedCategories } = persistence.load();
+    const { tasks: savedTasks, categories: savedCategories, projects: savedProjects } = persistence.load();
     setTasks(savedTasks);
     setCategories(savedCategories);
+    setProjects(savedProjects);
     setLoaded(true);
   }, []);
 
-  // Save tasks and categories to persistence whenever they change (but skip initial load)
+  // Save tasks, categories, and projects to persistence whenever they change (but skip initial load)
   useEffect(() => {
     if (loaded) {
-      persistence.save(tasks, categories);
+      persistence.save(tasks, categories, projects);
     }
-  }, [tasks, categories, loaded]);
+  }, [tasks, categories, projects, loaded]);
 
-  const addTask = (title, details = '', scheduleType = 'none', scheduledDate = null, categoryNames = []) => {
+  const addTask = (title, details = '', scheduleType = 'none', scheduledDate = null, categoryNames = [], projectNames = []) => {
     // Create new categories for any names that don't exist yet
     const newCategories = [...categories];
     const categoryIds = categoryNames.map(name => {
@@ -47,16 +51,32 @@ export default function App() {
       return newCat.id;
     });
 
+    // Create new projects for any names that don't exist yet
+    const newProjects = [...projects];
+    const projectIds = projectNames.map(name => {
+      const existing = newProjects.find(proj => proj.name === name);
+      if (existing) {
+        return existing.id;
+      }
+      // Create new project
+      const newProj = createProject(name);
+      newProjects.push(newProj);
+      return newProj.id;
+    });
+
     setCategories(newCategories);
-    setTasks([...tasks, createTask(title, details, scheduleType, scheduledDate, categoryIds)]);
+    setProjects(newProjects);
+    setTasks([...tasks, createTask(title, details, scheduleType, scheduledDate, categoryIds, projectIds)]);
   };
 
   const deleteTask = (id) => {
     const newTasks = tasks.filter(task => task.id !== id);
     setTasks(newTasks);
-    // Cleanup orphaned categories
+    // Cleanup orphaned categories and projects
     const cleanedCategories = cleanupOrphanedCategories(newTasks, categories);
+    const cleanedProjects = cleanupOrphanedProjects(newTasks, projects);
     setCategories(cleanedCategories);
+    setProjects(cleanedProjects);
   };
 
   const toggleTask = (id) => {
@@ -79,6 +99,7 @@ export default function App() {
 
   const updateTask = (id, updates) => {
     let newCategories = [...categories];
+    let newProjects = [...projects];
     let updatesCopy = { ...updates };
 
     // Handle categoryNames conversion to categoryIds (similar to addTask)
@@ -100,7 +121,27 @@ export default function App() {
       delete updatesCopy.categoryNames;
     }
 
+    // Handle projectNames conversion to projectIds (similar to categoryNames)
+    if (updates.projectNames && Array.isArray(updates.projectNames)) {
+      const projectNames = updates.projectNames;
+      const projectIds = projectNames.map(name => {
+        const existing = newProjects.find(proj => proj.name === name);
+        if (existing) {
+          return existing.id;
+        }
+        // Create new project
+        const newProj = createProject(name);
+        newProjects.push(newProj);
+        return newProj.id;
+      });
+
+      // Replace projectNames with projectIds and remove the temporary property
+      updatesCopy.projectIds = projectIds;
+      delete updatesCopy.projectNames;
+    }
+
     setCategories(newCategories);
+    setProjects(newProjects);
     setTasks(tasks.map(task =>
       task.id === id ? { ...task, ...updatesCopy } : task
     ));
@@ -132,19 +173,26 @@ export default function App() {
     setTasks(newTasks);
   };
 
-  const handleAddTask = (title, details, scheduleType, scheduledDate, categoryNames) => {
-    addTask(title, details, scheduleType, scheduledDate, categoryNames);
+  const handleAddTask = (title, details, scheduleType, scheduledDate, categoryNames, projectNames = []) => {
+    addTask(title, details, scheduleType, scheduledDate, categoryNames, projectNames);
     setIsFormOpen(false);
   };
 
   const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
+  const projectNames = getUniqueProjectsFromTasks(tasks, projects).map(p => p.name);
 
   // Get current tab display name
   const getTabDisplayName = () => {
     if (selectedTab === 'today') {
       return 'Today';
+    } else if (selectedTab === 'future') {
+      return 'Future';
     } else if (selectedTab === 'closed') {
       return 'Closed Tasks';
+    } else if (selectedTab.startsWith('project:')) {
+      const projectId = selectedTab.substring('project:'.length);
+      const project = projects.find(proj => proj.id === projectId);
+      return project ? project.name : 'Unknown Project';
     } else if (selectedTab.startsWith('category:')) {
       const categoryId = selectedTab.substring('category:'.length);
       const category = categories.find(cat => cat.id === categoryId);
@@ -154,14 +202,15 @@ export default function App() {
   };
 
   const handleExport = () => {
-    const jsonContent = exportTasks(tasks, categories);
+    const jsonContent = exportTasks(tasks, categories, projects);
     const fileName = generateFileName();
     downloadFile(jsonContent, fileName);
   };
 
-  const handleImport = (importedTasks, importedCategories = []) => {
+  const handleImport = (importedTasks, importedCategories = [], importedProjects = []) => {
     setTasks(importedTasks);
     setCategories(importedCategories);
+    setProjects(importedProjects);
     setIsImportModalOpen(false);
   };
 
@@ -169,7 +218,7 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex h-screen">
         {/* Sidebar */}
-        <Sidebar tasks={tasks} categories={categories} selectedTab={selectedTab} onSelectTab={setSelectedTab} />
+        <Sidebar tasks={tasks} categories={categories} projects={projects} selectedTab={selectedTab} onSelectTab={setSelectedTab} />
 
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
@@ -197,6 +246,7 @@ export default function App() {
             <TaskList
               tasks={tasks}
               categories={categories}
+              projects={projects}
               selectedTab={selectedTab}
               onToggle={toggleTask}
               onDelete={deleteTask}
@@ -210,6 +260,7 @@ export default function App() {
                 onAdd={handleAddTask}
                 onClose={() => setIsFormOpen(false)}
                 existingCategories={categoryNames}
+                existingProjects={projectNames}
               />
             )}
 

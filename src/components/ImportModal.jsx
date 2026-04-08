@@ -26,8 +26,8 @@ export default function ImportModal({ onImport, onCancel }) {
 
     try {
       const content = await selectedFile.text();
-      const { tasks, categories } = importTasks(content);
-      onImport(tasks, categories);
+      const { tasks, categories, projects } = importTasks(content);
+      onImport(tasks, categories, projects);
     } catch (err) {
       setError(err.message);
       setImporting(false);

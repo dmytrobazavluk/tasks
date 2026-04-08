@@ -189,6 +189,25 @@ export const getTasksForCategory = (tasks, categoryId) => {
 };
 
 /**
+ * Get tasks for a specific project tab
+ * (Grouped by scheduledDate chronologically)
+ * @param {Array} tasks - All tasks
+ * @param {string|Object} projectId - Project ID (string) or Project object with id property
+ * @returns {Array} Groups: [{ dateKey, tasks }] sorted chronologically
+ */
+export const getTasksForProjectTab = (tasks, projectId) => {
+  // Handle both string ID and object with id property
+  const id = typeof projectId === 'string' ? projectId : projectId?.id;
+
+  const projectTasks = tasks.filter(task => {
+    const projectIds = task.projectIds || [];
+    return Array.isArray(projectIds) && projectIds.includes(id);
+  });
+
+  return groupByScheduledDate(projectTasks);
+};
+
+/**
  * Get tasks for "Closed Tasks" tab
  * (Completed tasks without active countdown)
  * @param {Array} tasks - All tasks

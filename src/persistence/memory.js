@@ -6,15 +6,18 @@ import {
   migrateFromStringCategories,
   needsMigration,
   migrateScheduleType,
-  needsScheduleTypeMigration
+  needsScheduleTypeMigration,
+  migrateProjectIds,
+  needsProjectIdsMigration
 } from './migrations';
 
-let store = { tasks: [], categories: [] };
+let store = { tasks: [], categories: [], projects: [] };
 
 export const memoryPersistence = {
   load: () => {
     let tasks = [...store.tasks];
     let categories = [...store.categories];
+    let projects = [...store.projects];
 
     let needsSave = false;
 
@@ -32,22 +35,29 @@ export const memoryPersistence = {
       needsSave = true;
     }
 
-    // Save migrated data back if needed
-    if (needsSave) {
-      memoryPersistence.save(tasks, categories);
+    // Handle migration to add projectIds field
+    if (needsProjectIdsMigration(tasks)) {
+      tasks = migrateProjectIds(tasks);
+      needsSave = true;
     }
 
-    return { tasks, categories };
+    // Save migrated data back if needed
+    if (needsSave) {
+      memoryPersistence.save(tasks, categories, projects);
+    }
+
+    return { tasks, categories, projects };
   },
 
-  save: (tasks, categories = []) => {
+  save: (tasks, categories = [], projects = []) => {
     store = {
       tasks: [...tasks],
-      categories: [...categories]
+      categories: [...categories],
+      projects: [...projects]
     };
   },
 
   clear: () => {
-    store = { tasks: [], categories: [] };
+    store = { tasks: [], categories: [], projects: [] };
   },
 };

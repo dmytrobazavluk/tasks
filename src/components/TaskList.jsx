@@ -4,6 +4,7 @@ import {
   getTasksForToday,
   getTasksForFutureTab,
   getTasksForCategory,
+  getTasksForProjectTab,
   getTasksForClosedTab,
   getTodayDateKey,
   getDateKey,
@@ -11,10 +12,12 @@ import {
 } from '../utils/taskGrouping';
 import { formatGroupDate } from '../utils/dateFormat';
 import { getUniqueCategoriesFromTasks } from '../utils/categoryUtils';
+import { getUniqueProjectsFromTasks } from '../utils/projectUtils';
 
 export default function TaskList({
   tasks,
   categories = [],
+  projects = [],
   selectedTab,
   onToggle,
   onDelete,
@@ -26,8 +29,9 @@ export default function TaskList({
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const draggedTaskRef = useRef(null);
 
-  // Get unique category names for edit form
+  // Get unique category names and project names for edit form
   const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
+  const projectNames = getUniqueProjectsFromTasks(tasks, projects).map(p => p.name);
 
   // Get groups based on selected tab
   let groups = [];
@@ -44,9 +48,12 @@ export default function TaskList({
   } else if (selectedTab === 'closed') {
     groups = getTasksForClosedTab(tasks);
     isClosedTab = true;
+  } else if (selectedTab.startsWith('project:')) {
+    const projectId = selectedTab.substring('project:'.length);
+    groups = getTasksForProjectTab(tasks, projectId);
   } else if (selectedTab.startsWith('category:')) {
-    const category = selectedTab.substring('category:'.length);
-    groups = getTasksForCategory(tasks, category);
+    const categoryId = selectedTab.substring('category:'.length);
+    groups = getTasksForCategory(tasks, categoryId);
   }
 
   const handleDragStart = (e, taskId) => {
@@ -171,6 +178,8 @@ export default function TaskList({
                 isDragged={draggedTaskId === task.id}
                 allCategories={categoryNames}
                 categoryObjects={categories}
+                allProjects={projectNames}
+                projectObjects={projects}
                 onToggle={onToggle}
                 onDelete={onDelete}
                 onUpdateDetails={onUpdateDetails}
