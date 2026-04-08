@@ -1,14 +1,13 @@
-import { getTodayDateKey } from '../utils/taskGrouping';
 import {
   countTodayTasks,
-  countTasksInCategory,
-  countClosedTasks,
+  countTasksInCategoryId,
   getUniqueCategoriesFromTasks,
-  countClosedTasksWithoutCountdown
+  countClosedTasksWithoutCountdown,
+  getCategoryById
 } from '../utils/categoryUtils';
 
-export default function Sidebar({ tasks, selectedTab, onSelectTab }) {
-  const categories = getUniqueCategoriesFromTasks(tasks);
+export default function Sidebar({ tasks, categories, selectedTab, onSelectTab }) {
+  const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
   const todayCount = countTodayTasks(tasks);
   const closedCount = countClosedTasksWithoutCountdown(tasks);
 
@@ -28,19 +27,25 @@ export default function Sidebar({ tasks, selectedTab, onSelectTab }) {
         </button>
 
         {/* Category Tabs */}
-        {categories.map(category => (
-          <button
-            key={category}
-            onClick={() => onSelectTab(`category:${category}`)}
-            className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
-              selectedTab === `category:${category}`
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {category} <span className="float-right">({countTasksInCategory(tasks, category)})</span>
-          </button>
-        ))}
+        {categoryNames.map(categoryName => {
+          // Find the category object by name to get its ID
+          const categoryObj = categories.find(cat => cat.name === categoryName);
+          if (!categoryObj) return null;
+
+          return (
+            <button
+              key={categoryObj.id}
+              onClick={() => onSelectTab(`category:${categoryObj.id}`)}
+              className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+                selectedTab === `category:${categoryObj.id}`
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {categoryName} <span className="float-right">({countTasksInCategoryId(tasks, categoryObj.id)})</span>
+            </button>
+          );
+        })}
 
         {/* Closed Tasks Tab */}
         {closedCount > 0 && (

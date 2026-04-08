@@ -5,37 +5,58 @@ import ImportModal from './components/ImportModal';
 import Sidebar from './components/Sidebar';
 import { persistence } from './persistence';
 import { createTask, toggleTaskCompletion } from './models/Task';
+import { createCategory } from './models/Category';
 import { COUNTDOWN_CONFIG } from './config';
 import { exportTasks, generateFileName, downloadFile } from './utils/taskExportImport';
-import { getUniqueCategoriesFromTasks } from './utils/categoryUtils';
+import { getUniqueCategoriesFromTasks, cleanupOrphanedCategories } from './utils/categoryUtils';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState('today');
 
-  // Load tasks from persistence on mount
+  // Load tasks and categories from persistence on mount
   useEffect(() => {
-    const savedTasks = persistence.load();
+    const { tasks: savedTasks, categories: savedCategories } = persistence.load();
     setTasks(savedTasks);
+    setCategories(savedCategories);
     setLoaded(true);
   }, []);
 
-  // Save tasks to persistence whenever they change (but skip initial load)
+  // Save tasks and categories to persistence whenever they change (but skip initial load)
   useEffect(() => {
     if (loaded) {
-      persistence.save(tasks);
+      persistence.save(tasks, categories);
     }
-  }, [tasks, loaded]);
+  }, [tasks, categories, loaded]);
 
-  const addTask = (title, details = '', scheduledDate = null, categories = []) => {
-    setTasks([...tasks, createTask(title, details, scheduledDate, categories)]);
+  const addTask = (title, details = '', scheduledDate = null, categoryNames = []) => {
+    // Create new categories for any names that don't exist yet
+    const newCategories = [...categories];
+    const categoryIds = categoryNames.map(name => {
+      const existing = newCategories.find(cat => cat.name === name);
+      if (existing) {
+        return existing.id;
+      }
+      // Create new category
+      const newCat = createCategory(name);
+      newCategories.push(newCat);
+      return newCat.id;
+    });
+
+    setCategories(newCategories);
+    setTasks([...tasks, createTask(title, details, scheduledDate, categoryIds)]);
   };
 
   const deleteTask = (id) => {
-    setTasks(tasks.filter(task => task.id !== id));
+    const newTasks = tasks.filter(task => task.id !== id);
+    setTasks(newTasks);
+    // Cleanup orphaned categories
+    const cleanedCategories = cleanupOrphanedCategories(newTasks, categories);
+    setCategories(cleanedCategories);
   };
 
   const toggleTask = (id) => {
@@ -57,8 +78,31 @@ export default function App() {
   };
 
   const updateTask = (id, updates) => {
+    let newCategories = [...categories];
+    let updatesCopy = { ...updates };
+
+    // Handle categoryNames conversion to categoryIds (similar to addTask)
+    if (updates.categoryNames && Array.isArray(updates.categoryNames)) {
+      const categoryNames = updates.categoryNames;
+      const categoryIds = categoryNames.map(name => {
+        const existing = newCategories.find(cat => cat.name === name);
+        if (existing) {
+          return existing.id;
+        }
+        // Create new category
+        const newCat = createCategory(name);
+        newCategories.push(newCat);
+        return newCat.id;
+      });
+
+      // Replace categoryNames with categoryIds and remove the temporary property
+      updatesCopy.categoryIds = categoryIds;
+      delete updatesCopy.categoryNames;
+    }
+
+    setCategories(newCategories);
     setTasks(tasks.map(task =>
-      task.id === id ? { ...task, ...updates } : task
+      task.id === id ? { ...task, ...updatesCopy } : task
     ));
   };
 
@@ -88,12 +132,12 @@ export default function App() {
     setTasks(newTasks);
   };
 
-  const handleAddTask = (title, details, scheduledDate, categories) => {
-    addTask(title, details, scheduledDate, categories);
+  const handleAddTask = (title, details, scheduledDate, categoryNames) => {
+    addTask(title, details, scheduledDate, categoryNames);
     setIsFormOpen(false);
   };
 
-  const categories = getUniqueCategoriesFromTasks(tasks);
+  const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
 
   // Get current tab display name
   const getTabDisplayName = () => {
@@ -102,19 +146,22 @@ export default function App() {
     } else if (selectedTab === 'closed') {
       return 'Closed Tasks';
     } else if (selectedTab.startsWith('category:')) {
-      return selectedTab.substring('category:'.length);
+      const categoryId = selectedTab.substring('category:'.length);
+      const category = categories.find(cat => cat.id === categoryId);
+      return category ? category.name : 'Unknown Category';
     }
     return 'Task Planner';
   };
 
   const handleExport = () => {
-    const jsonContent = exportTasks(tasks);
+    const jsonContent = exportTasks(tasks, categories);
     const fileName = generateFileName();
     downloadFile(jsonContent, fileName);
   };
 
-  const handleImport = (importedTasks) => {
+  const handleImport = (importedTasks, importedCategories = []) => {
     setTasks(importedTasks);
+    setCategories(importedCategories);
     setIsImportModalOpen(false);
   };
 
@@ -122,7 +169,7 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex h-screen">
         {/* Sidebar */}
-        <Sidebar tasks={tasks} selectedTab={selectedTab} onSelectTab={setSelectedTab} />
+        <Sidebar tasks={tasks} categories={categories} selectedTab={selectedTab} onSelectTab={setSelectedTab} />
 
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
@@ -149,6 +196,7 @@ export default function App() {
 
             <TaskList
               tasks={tasks}
+              categories={categories}
               selectedTab={selectedTab}
               onToggle={toggleTask}
               onDelete={deleteTask}
@@ -161,7 +209,7 @@ export default function App() {
               <TaskForm
                 onAdd={handleAddTask}
                 onClose={() => setIsFormOpen(false)}
-                existingCategories={categories}
+                existingCategories={categoryNames}
               />
             )}
 

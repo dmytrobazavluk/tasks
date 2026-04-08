@@ -1,33 +1,50 @@
 /**
  * Category Management Utilities
+ * Works with explicit Category entities (id, name)
  */
 
 /**
- * Get all unique categories from tasks, sorted alphabetically
- * @param {Array} tasks - Array of task objects
- * @returns {Array} Sorted array of unique category names
+ * Get category by ID
+ * @param {Array} categories - Array of Category objects
+ * @param {string} categoryId - Category ID to find
+ * @returns {Object|null} Category object or null if not found
  */
-export const getUniqueCategoriesFromTasks = (tasks) => {
-  const categories = new Set();
-  tasks.forEach(task => {
-    const taskCategories = task.categories || [];
-    if (Array.isArray(taskCategories)) {
-      taskCategories.forEach(cat => categories.add(cat));
-    }
-  });
-  return Array.from(categories).sort();
+export const getCategoryById = (categories, categoryId) => {
+  return categories.find(cat => cat.id === categoryId) || null;
 };
 
 /**
- * Get tasks that belong to a specific category
+ * Get all unique category names used in tasks, sorted alphabetically
  * @param {Array} tasks - Array of task objects
- * @param {string} category - Category name to filter by
- * @returns {Array} Tasks that have the specified category
+ * @param {Array} categories - Array of Category objects
+ * @returns {Array} Sorted array of unique category names (strings)
  */
-export const getTasksByCategory = (tasks, category) => {
+export const getUniqueCategoriesFromTasks = (tasks, categories) => {
+  const categoryNames = new Set();
+  tasks.forEach(task => {
+    const categoryIds = task.categoryIds || [];
+    if (Array.isArray(categoryIds)) {
+      categoryIds.forEach(id => {
+        const category = getCategoryById(categories, id);
+        if (category) {
+          categoryNames.add(category.name);
+        }
+      });
+    }
+  });
+  return Array.from(categoryNames).sort();
+};
+
+/**
+ * Get tasks that belong to a specific category by category ID
+ * @param {Array} tasks - Array of task objects
+ * @param {string} categoryId - Category ID to filter by
+ * @returns {Array} Tasks that have the specified category ID
+ */
+export const getTasksByCategoryId = (tasks, categoryId) => {
   return tasks.filter(task => {
-    const categories = task.categories || [];
-    return Array.isArray(categories) && categories.includes(category);
+    const categoryIds = task.categoryIds || [];
+    return Array.isArray(categoryIds) && categoryIds.includes(categoryId);
   });
 };
 
@@ -117,13 +134,13 @@ export const getTodayTasks = (tasks) => {
 };
 
 /**
- * Count tasks in a category
+ * Count incomplete tasks in a category by ID
  * @param {Array} tasks - Array of task objects
- * @param {string} category - Category name
- * @returns {number} Count of tasks in category (only incomplete tasks)
+ * @param {string} categoryId - Category ID
+ * @returns {number} Count of incomplete tasks in category
  */
-export const countTasksInCategory = (tasks, category) => {
-  return getTasksByCategory(tasks, category).filter(task => !task.completed).length;
+export const countTasksInCategoryId = (tasks, categoryId) => {
+  return getTasksByCategoryId(tasks, categoryId).filter(task => !task.completed).length;
 };
 
 /**
@@ -157,4 +174,29 @@ export const countClosedTasksWithoutCountdown = (tasks) => {
     // Exclude any completed task with active countdown
     return !hasCountdown;
   }).length;
+};
+
+/**
+ * Get category IDs used in tasks
+ * @param {Array} tasks - Array of task objects
+ * @returns {Set} Set of used category IDs
+ */
+const getUsedCategoryIds = (tasks) => {
+  const used = new Set();
+  tasks.forEach(task => {
+    const categoryIds = task.categoryIds || [];
+    categoryIds.forEach(id => used.add(id));
+  });
+  return used;
+};
+
+/**
+ * Cleanup orphaned categories (ones not referenced by any task)
+ * @param {Array} tasks - All tasks
+ * @param {Array} categories - All categories
+ * @returns {Array} Filtered categories that are referenced by at least one task
+ */
+export const cleanupOrphanedCategories = (tasks, categories) => {
+  const usedCategoryIds = getUsedCategoryIds(tasks);
+  return categories.filter(category => usedCategoryIds.has(category.id));
 };

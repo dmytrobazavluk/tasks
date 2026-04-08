@@ -10,7 +10,7 @@
  *   completed: boolean - whether task is done
  *   details: string - free-form notes or description (empty by default)
  *   scheduledDate: string|null - ISO date (YYYY-MM-DD) for future scheduling, null for today
- *   categories: string[] - array of category names (can be empty)
+ *   categoryIds: string[] - array of category IDs (can be empty)
  *   addedDate: string - ISO timestamp when task was created
  *   completionDate: string|null - ISO timestamp when task was completed (null if not completed)
  *   removalCountdown: number|null - seconds until task auto-deletes (null if not in countdown)
@@ -64,16 +64,16 @@ export const isScheduledForFuture = (task) => {
  * @param {string} title - Task description
  * @param {string} details - Free-form notes/description (optional)
  * @param {string|null} scheduledDate - ISO date for future scheduling (optional)
- * @param {string[]} categories - Array of category names (optional)
+ * @param {string[]} categoryIds - Array of category IDs (optional)
  * @returns {Object} New task object
  */
-export const createTask = (title, details = '', scheduledDate = null, categories = []) => ({
+export const createTask = (title, details = '', scheduledDate = null, categoryIds = []) => ({
   id: Date.now(),
   title,
   completed: false,
   details: details || '',
   scheduledDate: normalizeScheduledDate(scheduledDate),
-  categories: Array.isArray(categories) ? categories.filter(c => c.trim()) : [],
+  categoryIds: Array.isArray(categoryIds) ? categoryIds.filter(c => typeof c === 'string' && c.length > 0) : [],
   addedDate: new Date().toISOString(),
   completionDate: null,
 });
@@ -109,9 +109,10 @@ export const isValidTask = (task) => {
   const hasValidScheduling =
     (task.scheduledDate === null || typeof task.scheduledDate === 'string');
 
+  // Support both new format (categoryIds) and old format (categories) for backward compatibility
   const hasValidCategories =
-    Array.isArray(task.categories) &&
-    task.categories.every(c => typeof c === 'string');
+    (Array.isArray(task.categoryIds) && task.categoryIds.every(id => typeof id === 'string')) ||
+    (Array.isArray(task.categories) && task.categories.every(cat => typeof cat === 'string'));
 
   return hasValidBasics && hasValidScheduling && hasValidCategories;
 };
@@ -124,7 +125,7 @@ export const isValidTask = (task) => {
  * @property {boolean} completed
  * @property {string} details - Free-form notes/description
  * @property {string|null} scheduledDate - ISO date (YYYY-MM-DD) for future dates or null
- * @property {string[]} categories - Array of category names
+ * @property {string[]} categoryIds - Array of category IDs
  * @property {string} addedDate - ISO timestamp
  * @property {string|null} completionDate - ISO timestamp or null
  */

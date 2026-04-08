@@ -2,7 +2,14 @@ import { useState, useEffect } from 'react';
 import { formatDate } from '../utils/dateFormat';
 import { COUNTDOWN_CONFIG } from '../config';
 
-export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete, onUpdateDetails, onUpdateTask, onDragStart, onDragEnd, allCategories = [] }) {
+export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete, onUpdateDetails, onUpdateTask, onDragStart, onDragEnd, allCategories = [], categoryObjects = [] }) {
+  // Helper to convert category IDs to names
+  const getCategoryNamesFromIds = (categoryIds) => {
+    return (categoryIds || []).map(id => {
+      const category = categoryObjects.find(cat => cat.id === id);
+      return category ? category.name : null;
+    }).filter(Boolean);
+  };
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -12,7 +19,7 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDetails, setEditDetails] = useState(task.details);
   const [editScheduledDate, setEditScheduledDate] = useState(task.scheduledDate || '');
-  const [editCategories, setEditCategories] = useState(task.categories || []);
+  const [editCategories, setEditCategories] = useState(getCategoryNamesFromIds(task.categoryIds || []));
   const [newCategory, setNewCategory] = useState('');
   const [dateError, setDateError] = useState('');
 
@@ -82,11 +89,12 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
   const handleSaveEdit = () => {
     if (editTitle.trim() && !dateError) {
       // Update task with all fields
+      // Pass categoryNames (not IDs) - App.jsx will handle conversion
       onUpdateTask(task.id, {
         title: editTitle,
         details: editDetails,
         scheduledDate: editScheduledDate || null,
-        categories: editCategories
+        categoryNames: editCategories
       });
       setIsEditing(false);
     }
@@ -96,7 +104,7 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
     setEditTitle(task.title);
     setEditDetails(task.details);
     setEditScheduledDate(task.scheduledDate || '');
-    setEditCategories(task.categories || []);
+    setEditCategories(getCategoryNamesFromIds(task.categoryIds || []));
     setNewCategory('');
     setDateError('');
     setIsEditing(false);

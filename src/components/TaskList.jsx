@@ -13,6 +13,7 @@ import { getUniqueCategoriesFromTasks } from '../utils/categoryUtils';
 
 export default function TaskList({
   tasks,
+  categories = [],
   selectedTab,
   onToggle,
   onDelete,
@@ -24,8 +25,8 @@ export default function TaskList({
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const draggedTaskRef = useRef(null);
 
-  // Get unique categories for edit form
-  const categories = getUniqueCategoriesFromTasks(tasks);
+  // Get unique category names for edit form
+  const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
 
   // Get groups based on selected tab
   let groups = [];
@@ -163,7 +164,8 @@ export default function TaskList({
                 task={task}
                 isToday={isTodayTab}
                 isDragged={draggedTaskId === task.id}
-                allCategories={categories}
+                allCategories={categoryNames}
+                categoryObjects={categories}
                 onToggle={onToggle}
                 onDelete={onDelete}
                 onUpdateDetails={onUpdateDetails}

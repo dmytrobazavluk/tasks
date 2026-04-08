@@ -117,13 +117,16 @@ export const getTasksForToday = (tasks) => {
  * Get tasks for a specific category tab
  * (Grouped by scheduledDate chronologically)
  * @param {Array} tasks - All tasks
- * @param {string} category - Category name
+ * @param {string|Object} categoryId - Category ID (string) or Category object with id property
  * @returns {Array} Groups: [{ dateKey, tasks }] sorted chronologically
  */
-export const getTasksForCategory = (tasks, category) => {
+export const getTasksForCategory = (tasks, categoryId) => {
+  // Handle both string ID and object with id property
+  const id = typeof categoryId === 'string' ? categoryId : categoryId?.id;
+
   const categoryTasks = tasks.filter(task => {
-    const categories = task.categories || [];
-    return Array.isArray(categories) && categories.includes(category);
+    const categoryIds = task.categoryIds || [];
+    return Array.isArray(categoryIds) && categoryIds.includes(id);
   });
 
   return groupByScheduledDate(categoryTasks);
