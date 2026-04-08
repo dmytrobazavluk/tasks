@@ -150,10 +150,12 @@ export default function TaskList({
       onDragOver={isTodayTab ? (e) => handleContainerDragOver(e, group.tasks) : undefined}
       onDrop={isTodayTab ? (e) => handleContainerDrop(e, group.tasks) : undefined}
     >
-      {/* Group Header */}
-      <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
-        {formatGroupDate(group.dateKey)}
-      </h3>
+      {/* Group Header — hidden for Today tab since date is shown in the main header */}
+      {!isTodayTab && (
+        <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
+          {formatGroupDate(group.dateKey)}
+        </h3>
+      )}
 
       {/* Tasks */}
       {group.tasks.length === 0 ? (

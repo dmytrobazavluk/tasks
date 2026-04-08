@@ -72,10 +72,6 @@ test.describe('Task Reordering - Structure Verification', () => {
       await expect(page.locator(`text=Task ${i}`)).toBeVisible();
     }
 
-    // Verify there's a group header (h3 element) for the tasks
-    const groupHeader = page.locator('h3').first();
-    await expect(groupHeader).toBeVisible();
-
     // Verify initial order
     const taskTexts = page.locator('span').filter({ hasText: /^Task [123]$/ });
     const texts = await taskTexts.allTextContents();

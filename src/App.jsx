@@ -184,7 +184,10 @@ export default function App() {
   // Get current tab display name
   const getTabDisplayName = () => {
     if (selectedTab === 'today') {
-      return 'Today';
+      const today = new Date();
+      const month = today.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+      const day = today.getDate();
+      return `Today (${month} ${day})`;
     } else if (selectedTab === 'future') {
       return 'Future';
     } else if (selectedTab === 'closed') {

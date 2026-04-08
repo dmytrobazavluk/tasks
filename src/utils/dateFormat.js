@@ -61,6 +61,13 @@ export const formatGroupDate = (dateKey) => {
   const [year, month, day] = dateKey.split('-');
   const date = new Date(year, parseInt(month) - 1, parseInt(day));
   const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  // Special case for today
+  if (dateKey === todayKey) {
+    const m = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+    return `Today (${m} ${date.getDate()})`;
+  }
 
   // If same year, show "Apr 5"; otherwise show "Apr 5, 2025"
   if (date.getFullYear() === today.getFullYear()) {

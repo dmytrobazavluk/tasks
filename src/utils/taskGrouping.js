@@ -42,16 +42,18 @@ export const isToday = (isoDateString) => {
 };
 
 /**
- * Group tasks by scheduled date (for future dates view)
+ * Group tasks by scheduled date (for category/project tabs)
+ * Sorts with Today first, then future dates in ascending order (nearest first)
  * @param {Array} taskList - Tasks to group
- * @returns {Array} Groups: [{ dateKey, tasks }] sorted chronologically
+ * @returns {Array} Groups: [{ dateKey, tasks }] sorted with today first, then ascending by date
  */
 const groupByScheduledDate = (taskList) => {
   const groups = {};
   const todayKey = getTodayDateKey();
 
   taskList.forEach(task => {
-    const dateKey = task.scheduledDate || todayKey;
+    // 'soon' tasks get their own group, not folded into today
+    const dateKey = task.scheduleType === 'soon' ? 'soon' : (task.scheduledDate || todayKey);
     if (!groups[dateKey]) {
       groups[dateKey] = [];
     }
@@ -63,7 +65,9 @@ const groupByScheduledDate = (taskList) => {
     .sort((a, b) => {
       if (a.dateKey === todayKey) return -1; // Today first
       if (b.dateKey === todayKey) return 1;
-      return new Date(a.dateKey) - new Date(b.dateKey); // Chronologically
+      if (a.dateKey === 'soon') return 1;   // Soon last
+      if (b.dateKey === 'soon') return -1;
+      return new Date(a.dateKey) - new Date(b.dateKey); // Ascending order (nearest first)
     });
 };
 
@@ -145,26 +149,26 @@ export const getTasksForFutureTab = (tasks) => {
     groupsByDate[dateKey].push(task);
   });
 
-  // Build groups array: 'soon' first, then dates in descending order
+  // Build groups array: specific dates in ascending order, 'soon' last
   const groups = [];
 
-  // Add "Some time in the future" group if there are any
-  if (soonTasks.length > 0) {
-    groups.push({
-      dateKey: 'soon',
-      tasks: soonTasks
-    });
-  }
-
-  // Add specific date groups in descending order (newest/nearest first)
+  // Add specific date groups in ascending order (nearest first)
   Object.entries(groupsByDate)
-    .sort((a, b) => new Date(b[0]) - new Date(a[0])) // Descending date order
+    .sort((a, b) => new Date(a[0]) - new Date(b[0]))
     .forEach(([dateKey, groupTasks]) => {
       groups.push({
         dateKey,
         tasks: groupTasks
       });
     });
+
+  // Add "Some time in the future" group at the end
+  if (soonTasks.length > 0) {
+    groups.push({
+      dateKey: 'soon',
+      tasks: soonTasks
+    });
+  }
 
   return groups;
 };
