@@ -110,80 +110,104 @@ docs/description       # Documentation: docs/add-contributing-guide
 
 ## How to Add a Feature
 
-### Step-by-Step Example: Add "Clear All Completed" Button
+### Step-by-Step Example: Add Task Priority Levels
 
 #### 1. Plan Your Changes
 **Files you'll need to modify:**
-- `src/App.jsx` — Add handler function
-- `src/components/TaskList.jsx` — Add button (optional, or in App)
-- `tests/core.spec.js` — Add test
+- `src/models/Task.js` — Add priority field to Task model
+- `src/components/TaskForm.jsx` — Add priority dropdown to form
+- `src/components/TaskItem.jsx` — Display priority with visual indicator
+- `src/utils/taskGrouping.js` — Sort tasks by priority within each category
+- `tests/core.spec.js` — Add test for priority
 
 **Think about:**
-- Where does the button go? (usually with other action buttons)
-- What does clicking it do? (delete all completed tasks)
-- What about the countdown? (not relevant here)
-- Edge case: What if no completed tasks? (button disabled or hide)
+- Where does the priority selector go? (in form and edit modal)
+- What priority levels? (High, Medium, Low, or numeric 1-3)
+- How do we sort? (within category: High first, then Medium, then Low)
+- What about persistence? (included in Task model automatically)
+- Edge case: What if task has no priority set? (default to Medium)
 
 #### 2. Write the Test First (Optional but Recommended)
 ```javascript
 // In tests/core.spec.js
-test('should clear all completed tasks', async ({ page }) => {
+test('should assign and display priority levels', async ({ page }) => {
   await setupPage(page);
   await openAddForm(page);
 
   const titleInput = page.locator('input[placeholder="Task title..."]');
   const addButton = page.locator('button:has-text("Add Task")').first();
 
-  // Create two tasks
-  await titleInput.fill('Task 1');
+  // Add a task (priority defaults to Medium)
+  await titleInput.fill('Important task');
   await addButton.click();
   await openAddForm(page);
-  await titleInput.fill('Task 2');
+
+  // Add another with different priority
+  await titleInput.fill('Low priority task');
+  
+  // Select priority (assuming new dropdown)
+  const prioritySelect = page.locator('select[name="priority"]');
+  await prioritySelect.selectOption('low');
   await addButton.click();
 
-  // Mark both as complete
-  const expandButtons = page.locator('div[role="button"]');
-  await expandButtons.nth(0).click();
-  let markDoneButton = page.locator('button:has-text("Mark Done")').first();
-  await markDoneButton.click();
-
-  await expandButtons.nth(1).click();
-  markDoneButton = page.locator('button:has-text("Mark Done")').first();
-  await markDoneButton.click();
-
-  // Wait for countdown to finish
-  await page.waitForTimeout(400);
-
-  // Click "Clear Completed" button
-  const clearButton = page.locator('button:has-text("Clear Completed")');
-  await clearButton.click();
-
-  // Both tasks should be gone
-  await expect(page.locator('text=Task 1')).not.toBeVisible();
-  await expect(page.locator('text=Task 2')).not.toBeVisible();
+  // Verify both tasks show priority indicator
+  const tasks = page.locator('div[role="button"]');
   
-  // But Show Completed toggle should show nothing (all are deleted, not just hidden)
-  const showCompletedButton = page.locator('button:has-text("Show Completed")');
-  await showCompletedButton.click();
-  await expect(page.locator('text=Task 1')).not.toBeVisible();
+  // First task should have medium priority
+  let task1 = tasks.nth(0);
+  await expect(task1.locator('text=Medium')).toBeVisible();
+  
+  // Second task should have low priority
+  let task2 = tasks.nth(1);
+  await expect(task2.locator('text=Low')).toBeVisible();
 });
 ```
 
 #### 3. Implement the Feature
-**In `src/App.jsx`:**
+**In `src/models/Task.js`:**
 ```javascript
-// Add handler function
-const clearCompleted = () => {
-  setTasks(tasks.filter(task => !task.completed));
-};
+export function createTask(title, details = '', scheduledDate = null, categoryIds = [], priority = 'medium') {
+  return {
+    id: Date.now(),
+    title,
+    completed: false,
+    details,
+    scheduledDate: normalizeScheduledDate(scheduledDate),
+    categoryIds: categoryIds.filter(id => id?.trim()),
+    priority,  // NEW: default to 'medium'
+    addedDate: new Date().toISOString(),
+    completionDate: null,
+  };
+}
+```
 
-// Add button in JSX (near Show Completed toggle)
-<button
-  onClick={clearCompleted}
-  className="px-4 py-2 text-sm font-medium rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition"
+**In `src/components/TaskForm.jsx`:**
+```javascript
+// Add priority select to the form
+<select
+  name="priority"
+  value={priority}
+  onChange={(e) => setPriority(e.target.value)}
+  className="px-3 py-2 border rounded text-sm"
 >
-  Clear Completed
-</button>
+  <option value="high">High</option>
+  <option value="medium">Medium</option>
+  <option value="low">Low</option>
+</select>
+
+// Pass priority when adding task
+onAddTask(title, details, scheduledDate, categoryNames, priority);
+```
+
+**In `src/utils/taskGrouping.js`:**
+```javascript
+// Sort by priority within each category
+const priorityOrder = { high: 0, medium: 1, low: 2 };
+tasksInCategory.sort((a, b) => {
+  const aPriority = priorityOrder[a.priority] ?? 1;
+  const bPriority = priorityOrder[b.priority] ?? 1;
+  return aPriority - bPriority;
+});
 ```
 
 #### 4. Test It
@@ -202,11 +226,13 @@ npm run dev
 #### 5. Commit
 ```bash
 git add .
-git commit -m "Add Clear Completed button
+git commit -m "Add task priority levels
 
-- New button in header removes all completed tasks
-- Added test to verify functionality
-- All 44 tests passing"
+- Add priority field to Task model (high/medium/low)
+- Priority dropdown in add/edit form
+- Tasks sorted by priority within each category
+- Priority indicator displayed in task header
+- All 51 tests passing"
 ```
 
 ---
@@ -308,10 +334,43 @@ npm test:headed       # See browser during tests
 ### Adding State to App.jsx
 ```javascript
 // Follow the existing pattern
-const [showCompleted, setShowCompleted] = useState(false);
+const [selectedCategory, setSelectedCategory] = useState(null);
+const [tasks, setTasks] = useState([]);
+const [categories, setCategories] = useState([]);
 
 // Pass to children if needed
-<TaskList showCompleted={showCompleted} ... />
+<Sidebar categories={categories} selectedCategory={selectedCategory} ... />
+<TaskList tasks={tasks} categories={categories} ... />
+```
+
+### Working with Categories
+```javascript
+// Categories are explicit entities with IDs
+const category = {
+  id: crypto.randomUUID(),
+  name: 'Work'
+};
+
+// Tasks reference categories by ID
+const task = {
+  ...taskData,
+  categoryIds: ['uuid-1', 'uuid-2']  // Array of category IDs
+};
+
+// Resolve IDs to names at display time
+const categoryName = categories.find(c => c.id === categoryId)?.name;
+```
+
+### Working with Scheduling
+```javascript
+// Scheduled date is ISO string (YYYY-MM-DD) for future dates only
+const task = {
+  ...taskData,
+  scheduledDate: '2026-04-15'  // Only future dates
+};
+
+// Past/current dates are normalized to null
+const normalizedDate = new Date(dateStr) > new Date() ? dateStr : null;
 ```
 
 ### Conditional Rendering Based on State
@@ -323,10 +382,23 @@ const [showCompleted, setShowCompleted] = useState(false);
 {isLoading && <LoadingSpinner />}
 ```
 
+### Category-Related Changes
+- Categories are auto-created when first assigned, auto-deleted when unused
+- Always work with category IDs (`categoryIds`) internally, resolve to names for display
+- When editing tasks, convert category names back to IDs before saving
+- See `src/utils/categoryUtils.js` for helpers like `getUniqueCategoriesFromTasks()`
+
+### Scheduling-Related Changes
+- Validate that scheduled dates are in the future (use `normalizeScheduledDate()`)
+- Scheduled tasks don't appear in Today tab, only on their assigned date
+- When scheduled date arrives, task automatically moves to Today tab
+- See `src/models/Task.js` for `normalizeScheduledDate()` and `isScheduledForFuture()` helpers
+
 ### Countdown-Related Changes
-- Always check `!showCompleted` if countdown is involved
-- Remember: countdown logic is in `src/App.jsx` and `src/config.js`
-- See `IMPLEMENTATION_NOTES.md` for countdown details
+- Countdown initializes when a task is marked done
+- Countdown is a grace period: task stays visible but can be unmarked
+- After countdown, task moves to Closed Tasks tab (unless it has a category)
+- See `IMPLEMENTATION_NOTES.md` for countdown timer details
 
 ### Persistence
 - Changes to tasks automatically persist (handled in App.jsx)

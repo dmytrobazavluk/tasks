@@ -1,9 +1,9 @@
 # Task Planner - Project Progress
 
-## Current Status: ✅ Feature Complete (All 49 Tests Passing)
+## Current Status: ✅ Feature Complete (All 51 Tests Passing)
 
 **Location:** Frontend repository  
-**Last Updated:** 2026-04-06
+**Last Updated:** 2026-04-08
 
 ---
 
@@ -22,42 +22,45 @@
 ## Completed Features
 
 ### ✅ Core Task Management
-- Add tasks with required title and optional details
+- Add tasks with required title, optional details, and optional scheduling
+- Assign one or more categories to each task (auto-created on first use)
 - Mark tasks as complete/incomplete with explicit buttons
 - Set custom completion date/time (defaults to current time, can select past dates)
 - Delete tasks with confirmation modal
-- Edit task title and details
+- Edit task title, details, scheduled date, and categories
 - Expand/collapse task details (click anywhere on header)
 - Display task metadata (added date, completion date)
 
-### ✅ Task Grouping by Date
-- "Today" group contains all incomplete tasks
-- Completed tasks grouped by their completion date
-- Completed tasks appear in date-grouped sections when "Show Completed" is ON
-- Date formatting: "Apr 5" or "Apr 5, 2025"
+### ✅ Sidebar Navigation with Tabs
+- **Today tab**: All incomplete tasks + tasks completed today
+- **Category tabs**: All tasks with that category (one tab per unique category)
+- **Closed Tasks tab**: Completed tasks without active countdown (ready for archival)
+- Task counts displayed next to each tab
+- Active tab highlighted in blue
+- One-click filtering by category or status
+
+### ✅ Task Scheduling
+- Schedule tasks for specific future dates
+- Scheduled tasks only appear on their assigned date (not in Today tab)
+- When scheduled date arrives, task automatically moves to Today tab
+- Validation prevents scheduling for past/current dates
 
 ### ✅ Drag-and-Drop Reordering
-- Draggable handle (⋮⋮) on left side of each incomplete task in Today group
+- Draggable handle (⋮⋮) on left side of each incomplete task in Today tab
 - Blue line indicator shows exact insertion position during drag
-- Drop anywhere in Today group (on tasks or empty space) to reorder
+- Drop anywhere in Today tab (on tasks or empty space) to reorder
 - Edge case handling: dragging without moving doesn't trigger unexpected moves
 - Completed tasks cannot be reordered (no drag handle)
+- Reordering preserved across page reloads
 
 ### ✅ Task Removal Countdown System
-- 3-second countdown after marking task done
+- 3-second countdown (grace period) after marking task done
 - Countdown displays as decimal seconds (2.9s format)
 - Countdown decrements at 0.1s intervals
-- **Countdown only starts when "Show Completed" toggle is OFF**
-- Click "Unmark Done" to cancel countdown
-- Task hides after countdown expires (unless toggle is ON)
+- Click "Unmark Done" to cancel countdown and revert to incomplete
+- Task stays visible during countdown (grace period for accidental completions)
+- After countdown: tasks completed today stay in Today tab, older completions move to Closed Tasks
 - Task persists in storage after countdown
-
-### ✅ Show Completed Toggle
-- Toggle button in top right (Show Completed/Hide Completed)
-- Completed tasks hidden by default
-- Turn ON to show all completed tasks
-- Turn ON to cancel active countdowns immediately
-- Completed tasks have strikethrough styling
 
 ### ✅ UI/UX Features
 - Form positioned at bottom of page (collapsible)
@@ -69,16 +72,19 @@
 
 ### ✅ Data Persistence
 - Tasks persist to browser localStorage
+- Categories persist separately with auto-migration from old format
 - Completion state persists
 - Task details/notes persist
 - Completion date/time persists
+- Scheduled dates persist
+- Category assignments persist
 - Survive page reload
 - Pluggable persistence layer (easy to add server backend)
 
 ### ✅ Testing & Automation
-- 49 comprehensive automated tests (Playwright)
+- 51 comprehensive automated tests (Playwright)
 - 8 test files organized by feature
-- ~13 second test execution
+- ~13-15 second test execution
 - Test helpers for common operations
 - 100% test pass rate
 
@@ -90,7 +96,7 @@
 
 ---
 
-## Test Coverage (49 Tests Total)
+## Test Coverage (51 Tests Total)
 
 | Category | Count | Status |
 |----------|-------|--------|
@@ -98,9 +104,9 @@
 | Form Validation | 3 | ✅ Passing |
 | Persistence | 2 | ✅ Passing |
 | Date Display | 5 | ✅ Passing |
-| Toggle Feature | 9 | ✅ Passing |
-| Countdown System | 10 | ✅ Passing |
-| Show Completed | 4 | ✅ Passing |
+| Task Removal Countdown | 11 | ✅ Passing |
+| Task Scheduling & Categories | 8 | ✅ Passing |
+| Export/Import Functionality | 7 | ✅ Passing |
 | Task Reordering | 5 | ✅ Passing |
 
 ---
@@ -116,7 +122,7 @@ npm run dev
 
 ### Testing
 ```bash
-npm test              # Run all 49 tests (headless)
+npm test              # Run all 51 tests (headless)
 npm test:ui          # Interactive test UI
 npm test:headed      # See browser during tests
 ```
@@ -132,102 +138,141 @@ npm run build        # Creates dist/bundle.js
 
 ```
 frontend/
-├── README.md              # Full feature documentation
-├── TESTING.md             # Testing guide and patterns
-├── PROGRESS.md            # This file
+├── README.md               # Full feature documentation
+├── TESTING.md              # Testing guide and patterns
+├── PROGRESS.md             # This file
+├── CONTRIBUTING.md         # Contribution guide
 ├── IMPLEMENTATION_NOTES.md # Developer notes
 ├── package.json
-├── playwright.config.js   # Test configuration
-├── dev-server.js         # Development server
-├── build.js              # Production build script
+├── playwright.config.js    # Test configuration
+├── dev-server.js          # Development server
+├── build.js               # Production build script
 ├── src/
-│   ├── main.jsx          # React entry point
-│   ├── App.jsx           # Main component, state management
-│   ├── config.js         # Countdown configuration
+│   ├── main.jsx           # React entry point
+│   ├── App.jsx            # Main component, state management
+│   ├── config.js          # Countdown configuration
 │   ├── components/
-│   │   ├── TaskForm.jsx  # Add task form
-│   │   ├── TaskList.jsx  # Task grouping and drag-drop
-│   │   └── TaskItem.jsx  # Individual task card with handle
+│   │   ├── Sidebar.jsx    # Category/status tab navigation
+│   │   ├── TaskForm.jsx   # Add task form
+│   │   ├── TaskList.jsx   # Task grouping and drag-drop
+│   │   ├── TaskItem.jsx   # Individual task card with handle
+│   │   └── ImportModal.jsx # Import modal dialog
 │   ├── models/
-│   │   └── Task.js       # Task model and utilities
+│   │   ├── Task.js        # Task model and utilities
+│   │   └── Category.js    # Category model (NEW)
 │   ├── utils/
-│   │   ├── dateFormat.js # Date formatting
-│   │   └── taskGrouping.js # Task grouping by date
+│   │   ├── dateFormat.js        # Date formatting utilities
+│   │   ├── taskGrouping.js      # Task grouping by tab/category
+│   │   ├── categoryUtils.js     # Category filtering and aggregation
+│   │   └── taskExportImport.js  # Export/import functionality
 │   └── persistence/
-│       ├── index.js      # Persistence factory
-│       ├── localStorage.js
-│       └── memory.js
+│       ├── index.js       # Persistence factory
+│       ├── localStorage.js # Browser storage with auto-migration
+│       ├── memory.js      # In-memory implementation
+│       └── migrations.js  # Format migration utilities
 └── tests/
-    ├── setup.js          # Test helpers
-    ├── core.spec.js      # 12 tests
-    ├── validation.spec.js # 3 tests
-    ├── persistence.spec.js # 2 tests
-    ├── dates.spec.js     # 5 tests
-    ├── toggle.spec.js    # 9 tests
-    ├── countdown.spec.js # 10 tests
-    ├── show-completed.spec.js # 4 tests
-    └── reorder.spec.js   # 5 tests
+    ├── setup.js                    # Test helpers
+    ├── core.spec.js                # 12 tests
+    ├── validation.spec.js          # 3 tests
+    ├── persistence.spec.js         # 2 tests
+    ├── dates.spec.js               # 5 tests
+    ├── countdown.spec.js           # 11 tests
+    ├── scheduling-categories.spec.js # 8 tests
+    ├── export-import.spec.js       # 7 tests
+    └── reorder.spec.js             # 5 tests
 ```
 
 ---
 
 ## Key Implementation Details
 
+### Category System (NEW - v2.0.0)
+- **File:** `src/models/Category.js` - Category factory with UUID generation
+- **Data Model:** `{ id: string (UUID), name: string }`
+- **Storage:** Categories stored separately from tasks in localStorage
+- **Lifecycle:** Auto-created when first assigned, auto-deleted when no longer used
+- **Resolution:** IDs resolved to names at display time
+- **Backward Compatibility:** Auto-migration from old string-based categories
+
+### Task Model (UPDATED - v2.0.0)
+- **File:** `src/models/Task.js` - Now uses `categoryIds` instead of `categories`
+- **Scheduling:** New `scheduledDate` field (ISO date string for future dates)
+- **Category References:** Array of UUID strings instead of category names
+- **Factory:** `createTask(title, details, scheduledDate, categoryIds)`
+
+### Sidebar Navigation (NEW - v2.0.0)
+- **File:** `src/components/Sidebar.jsx` - Tab-based navigation
+- **Tabs:** Today, Category tabs (dynamic), Closed Tasks
+- **Filtering:** Click tab to view only that category's tasks
+- **Counts:** Task counts updated in real-time
+- **Active Indicator:** Blue highlight shows current tab
+
 ### Countdown System
 - **Config:** `src/config.js` with `COUNTDOWN_CONFIG`
 - **Duration:** 3 seconds (production), 0.3 seconds (tests)
 - **Decrement:** 0.1 seconds per tick
 - **Display:** Decimal format with 1 decimal place
-- **Behavior:** Only starts when "Show Completed" toggle is OFF
+- **Behavior:** Active countdown prevents task from moving to Closed Tasks
 
 ### Task Grouping
-- **File:** `src/utils/taskGrouping.js`
-- **Today group:** All incomplete tasks first, then today's completed tasks
-- **Past groups:** Completed tasks grouped by completion date (most recent first)
-- **Sorting:** Date-based with local time handling
+- **File:** `src/utils/taskGrouping.js` - Groups by tab/category and status
+- **Today tab:** All incomplete + completed-today tasks
+- **Category tabs:** All tasks with that category (any completion state)
+- **Closed Tasks tab:** Completed tasks without active countdown
+- **Sorting:** Category-based with alphabetical ordering
 
 ### Drag-and-Drop
-- **Handle:** Draggable element with ⋮⋮ icon on incomplete tasks in Today group
+- **Handle:** Draggable element with ⋮⋮ icon on incomplete tasks in Today tab
 - **Indicator:** Blue line shows insertion position during drag
-- **Reordering:** Only works within Today group for incomplete tasks
+- **Reordering:** Only works within Today tab for incomplete tasks
 - **Edge cases:** Prevents no-op moves (same position or adjacent moves)
 
-### Completion Date Picker
-- **Input:** datetime-local HTML element
-- **Default:** Current date/time
-- **Validation:** Prevents future dates
-- **Format:** Local time (not UTC) for user expectations
-
 ### Persistence Layer
-- Abstraction allows swapping implementations
-- Current: localStorage (default), memory (tests)
-- Extensible for future server backend
+- **Abstraction:** Swappable implementations (localStorage, memory, extensible)
+- **Storage Keys:** `taskplanner_tasks`, `taskplanner_categories`
+- **Auto-Migration:** Format conversion on load from old string-based categories
+- **Return Format:** `{ tasks: [], categories: [] }`
 
-### UI State
-- Tasks expand/collapse via full-header click
-- Form toggles at bottom
-- Countdown display conditional on toggle state
-- Drag handle conditional on task state (incomplete in Today only)
-- All state managed via React Hooks
+### Export/Import
+- **Format:** JSON with `{ version, tasks, categories }`
+- **Backward Compatibility:** Accepts old array format and new object format
+- **Bug Fix:** Categories now properly included in exports
+- **Validation:** Comprehensive error handling with user feedback
 
 ---
 
-## Recent Changes (This Session)
+## Recent Changes (v2.0.0 - Session of 2026-04-08)
 
-### Features Added
-1. **Task Grouping by Date** — Tasks now organized into Today section and completed task sections
-2. **Drag-and-Drop Reordering** — Reorder incomplete tasks in Today group with visual blue line indicator
-3. **Completion Date Picker** — Set custom date/time when marking task done (defaults to now)
+### Major Features Added
+1. **Categories as Explicit Entities** — Refactored from string arrays to UUID-based Category objects with separate storage
+2. **Task Scheduling** — Schedule tasks for future dates; scheduled tasks appear only on their assigned date
+3. **Sidebar Navigation** — Replaced "Show Completed" toggle with tab-based navigation (Today, Categories, Closed Tasks)
+4. **Category Auto-Cleanup** — Categories automatically deleted when no longer assigned to any task
+5. **Export/Import Categories** — Fixed long-standing bug where categories were not exported; now included in JSON
+
+### Data Model Changes
+1. **Task.categoryIds** — Changed from `categories: string[]` to `categoryIds: string[]` (UUID references)
+2. **Category Model** — Created new `src/models/Category.js` with factory and validation
+3. **Persistence** — Categories stored separately with auto-migration from old format
+4. **Data Flow** — Category IDs resolved to names at display time
+
+### UI/UX Changes
+1. **Sidebar Tabs** — One-click filtering by category or status
+2. **Task Counts** — Real-time counts next to each tab
+3. **Countdown Preservation** — Tasks stay in working location during countdown grace period
+4. **Active Tab Highlighting** — Blue indicator shows current view
 
 ### Bug Fixes
-1. **Drop Position Accuracy** — Fixed issue where dropping without moving mouse would place task at end
-2. **Handle Placement** — Only head of task is draggable now (⋮⋮ icon), not entire task card
-3. **Edge Case Handling** — Dragging task without significant movement no longer causes unexpected reorder
+1. **Export/Import Categories** — Categories now properly exported and reimported
+2. **Countdown Visibility** — Fixed "Closed Tasks" tab appearing during countdown
+3. **Category Resolution** — Fixed header showing UUID instead of category name
+4. **Backward Compatibility** — Auto-migration handles old string-based format seamlessly
 
 ### Test Coverage Improvements
-- Added 5 new tests for reordering feature
-- Updated date tests to include completion date picker functionality
-- All 49 tests passing
+- Added 11 new tests for countdown/scheduling behavior
+- Added 8 new tests for category features
+- Added 7 new tests for export/import functionality
+- Total: 51 tests (up from 49), all passing
 
 ---
 
@@ -236,7 +281,7 @@ frontend/
 - No backend API (localStorage only)
 - Single device storage (no sync)
 - No user authentication
-- No task priorities or categories
+- No task priorities
 - No recurring tasks
 - No mobile app (web-only)
 
@@ -245,17 +290,18 @@ frontend/
 ## Future Enhancement Ideas
 
 ### High Priority
-- [ ] Task priorities
+- [ ] Task priorities within category
 - [ ] Due dates with notifications
-- [ ] Search/filter functionality
-- [ ] Bulk operations
+- [ ] Search/filter across all tasks
+- [ ] Bulk operations (multi-select)
 - [ ] Dark mode toggle
 
 ### Medium Priority
-- [ ] Task categories/tags
+- [ ] Category colors/icons
 - [ ] Recurring tasks
-- [ ] Undo/Redo
-- [ ] Export tasks (CSV, JSON)
+- [ ] Undo/Redo functionality
+- [ ] CSV export option
+- [ ] Archive instead of delete
 
 ### Lower Priority
 - [ ] Backend API integration
@@ -263,6 +309,7 @@ frontend/
 - [ ] User authentication
 - [ ] Mobile app
 - [ ] Desktop app
+- [ ] Subtasks/nested tasks
 
 ---
 
@@ -274,18 +321,24 @@ frontend/
 3. **Date Tracking** — Added date display and completion date picker
 4. **Task Grouping** — Organized tasks by date (Today + completed by date)
 5. **Drag-Drop & Reordering** — Added drag-drop with handle and blue line indicator
-6. **Current** — All features complete, 49 tests passing, full documentation
+6. **Categories Refactoring** — Explicit Category entities with UUID-based references
+7. **Task Scheduling** — Schedule tasks for future dates with auto-appearance
+8. **Sidebar Navigation** — Tab-based filtering by category/status
+9. **Current (v2.0.0)** — All features complete, 51 tests passing, full documentation
 
 ### For Next Session
 1. Check memory files: `./.claude/projects/.../memory/session_summary.md`
-2. Verify tests: `npm test` (should show 49 passed)
+2. Verify tests: `npm test` (should show 51 passed)
 3. Start dev server: `npm run dev`
-4. Make changes, test, commit
+4. Check memory for context: categories refactoring, persistence layer changes, data model updates
+5. Make changes, test, commit
 
 ### Code Quality
 - Clear separation of concerns (components, models, utils, persistence)
 - No unnecessary dependencies
-- Comprehensive test coverage (49 tests)
+- Comprehensive test coverage (51 tests, 100% pass rate)
 - Self-documenting code
 - Follows React best practices
 - Proper error handling and edge case coverage
+- Auto-migration for backward compatibility
+- Pluggable persistence layer for extensibility

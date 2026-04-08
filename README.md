@@ -4,46 +4,74 @@ A simple task management app built with React and Tailwind CSS.
 
 ## Features
 
-- ✨ Add new tasks with optional details
-  - Click "+ Add Task" button at the bottom to open the form
+- ✨ **Add tasks with optional details and scheduling**
+  - Click "+ Add Task" button to open the form
   - Title is required
-  - Details/notes field available during task creation
-  - Form closes automatically after adding task
-- ✅ Mark tasks as complete/incomplete with explicit buttons
-  - No checkbox—use "Mark Done" / "Unmark Done" buttons (visible when expanded)
+  - Optional details/notes field
+  - Schedule tasks for specific future dates
+  - Assign one or more categories
+  - Form closes automatically after adding
+
+- 🏷️ **Flexible Categories**
+  - Assign multiple categories to each task
+  - Categories auto-created on-the-fly
+  - Sidebar tabs show all categories with task counts
+  - Filter tasks by category
+  - Categories persist in export/import
+
+- 📅 **Task Scheduling**
+  - Schedule tasks for specific future dates
+  - Scheduled tasks only appear on their assigned date (not in Today)
+  - When scheduled date arrives, task moves to Today tab
+  - Validate against past dates
+
+- 📂 **Sidebar Navigation** (replaces old "Show Completed" toggle)
+  - **Today** tab: All incomplete tasks + tasks completed today
+  - **Category tabs**: All tasks with that category (sorted alphabetically)
+  - **Closed Tasks** tab: Completed tasks without active countdown
+  - Task counts next to each tab
+  - Active tab highlighted in blue
+  - One-click filtering
+
+- ✅ **Mark tasks as complete/incomplete**
+  - Use "Mark Done" / "Unmark Done" buttons (visible when expanded)
   - Set custom completion date/time (defaults to current time)
-  - 3-second countdown after marking done (displayed as decimal seconds: "Unmark Done (2.9)" → "(1.8)" → "(0.7)" etc.)
-  - Countdown only starts when "Show Completed" toggle is OFF
-  - Click "Unmark Done" anytime during countdown to cancel and revert to incomplete
-  - After countdown expires, task becomes a completed task (persisted but hidden by default)
-- 📅 Task grouping by date
-  - "Today" group contains all incomplete tasks
-  - Completed tasks grouped by their completion date
-  - Completed tasks show in their completion date group when "Show Completed" is ON
-- 🎯 Drag-and-drop reordering (Today group only)
-  - Drag handle (⋮⋮) appears on the left of each incomplete task
-  - Click and drag the handle to reorder incomplete tasks
-  - Blue line indicator shows where task will be inserted
-  - Drop anywhere (on tasks or empty space) to reorder
+  - Countdown timer after marking done (3 seconds by default)
+  - Countdown displayed as "Unmark Done (2.9)" → "(1.8)" → "(0.7)"
+  - Click "Unmark Done" during countdown to revert to incomplete
+  - Tasks stay visible during countdown grace period
+  - After countdown: tasks completed today stay in Today tab, older completions move to Closed Tasks
+
+- 🎯 **Drag-and-drop reordering**
+  - Drag handle (⋮⋮) on the left of each incomplete task in Today tab
+  - Blue line indicator shows drop position
   - Completed tasks cannot be reordered
-- 👁️ Toggle visibility of completed tasks
-  - Completed tasks hidden by default to reduce clutter  
-  - "Show Completed" / "Hide Completed" button (top right) to toggle visibility
-  - Completed tasks remain visible during countdown period (when toggle is OFF)
-  - When you toggle "Show Completed" ON, all active countdowns are cancelled
-  - After countdown expires, completed tasks are hidden until you click "Show Completed"
-- 📋 Collapsible task details with read-only view
-  - Click anywhere on the task title to expand/collapse
-  - Arrow icon indicates state: ▶ (collapsed) or ▼ (expanded)
-  - View metadata when expanded: added date, completion date
-  - View task descriptions and notes in read-only mode
-  - Action buttons in expanded view: "Mark Done"/"Unmark Done", "Edit", and "Delete"
-- ✏️ Dedicated edit form
-  - Click "Edit" button to open edit form
-  - Edit both title and description together
+  - Reordering only available in Today tab
+
+- 📋 **Collapsible task details**
+  - Click task title to expand/collapse
+  - Arrow icon: ▶ (collapsed) or ▼ (expanded)
+  - View metadata: added date, completion date
+  - Strikethrough styling for completed tasks
+  - Action buttons: "Mark Done"/"Unmark Done", "Edit", "Delete"
+
+- ✏️ **Dedicated edit form**
+  - Edit title, description, scheduled date, and categories
+  - Clear scheduled date or change it to a different future date
+  - Add/remove category assignments
   - Save or cancel changes
-- 💾 Persist tasks to browser storage (survives page reload)
-- 📱 Responsive design
+
+- 💾 **Persist tasks to browser storage**
+  - Tasks survive page reload
+  - Categories stored separately with auto-migration from old format
+
+- 📤 **Export/Import**
+  - Export all tasks and categories to JSON file
+  - Import JSON file to replace all tasks
+  - Auto-migration from old formats
+  - Filename format: `tasks-YYYY-MM-DD.json`
+
+- 📱 **Responsive design**
 
 ## How to Run
 
@@ -81,7 +109,7 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes **49 tests** organized by functionality:
+The test suite includes **51 tests** organized by functionality:
 
 **Core Functionality (12 tests)** — `core.spec.js`
 - Load app with title, empty state display
@@ -110,39 +138,41 @@ The test suite includes **49 tests** organized by functionality:
 - Toggle completion date on state change
 - Set completion date to custom past date (not current time)
 
-**Completed Tasks Toggle (9 tests)** — `toggle.spec.js`
-- Show/Hide Completed button visible by default
-- Completed tasks hidden initially
-- Toggle shows completed tasks
-- Toggle hides completed tasks again
-- Button text updates based on state
-- Display both completed and incomplete tasks correctly
-- Completed tasks have correct styling (strikethrough)
-- Operations available on completed tasks when visible
-- Handle toggling with multiple completed tasks
-
-**Task Removal Countdown (10 tests)** — `countdown.spec.js`
-- Tasks don't disappear immediately when marked done
+**Task Removal Countdown (11 tests)** — `countdown.spec.js`
+- Tasks visible during countdown (grace period)
 - Countdown displays on unmark button as decimal seconds (e.g., 2.9, 1.8, 0.7)
 - Countdown properly decrements at 0.1 second intervals
-- Task hidden after countdown completes (when toggle is off)
+- Task moves to Closed Tasks after countdown completes
 - Clicking "Unmark Done" cancels countdown and reverts to incomplete
 - Edit and delete operations available during countdown
-- Countdown only shows when "Show Completed" toggle is off
 - Multiple tasks with concurrent countdowns
+- Countdown behavior during tab switching
 
-**Show Completed Toggle - Visibility (4 tests)** — `show-completed.spec.js`
-- Toggle shows completed tasks on button click
-- Toggle properly switches "Show Completed" ↔ "Hide Completed" states
-- Countdown is disabled when "Show Completed" is on
-- Active countdowns are cancelled when toggling to "Show Completed"
+**Task Scheduling & Categories (8 tests)** — `scheduling-categories.spec.js`
+- Add task with single category
+- Filter tasks by category tab
+- Display correct task counts in sidebar
+- Display current tab name in header
+- Clear scheduled date during edit
+- Keep task in category tab during countdown, move to closed after
+- Show closed tasks in closed tasks tab
+- Keep past-completed task in today tab during countdown
 
-**Task Reordering - Structure (5 tests)** — `reorder.spec.js`
+**Export/Import Functionality (7 tests)** — `export-import.spec.js`
+- Have export and import buttons
+- Export button is clickable
+- Import tasks and categories from JSON file
+- Show error for invalid JSON
+- Show error for invalid task structure
+- Cancel import without changes
+- Require file selection before import
+
+**Task Reordering (5 tests)** — `reorder.spec.js`
 - Incomplete tasks have draggable handle
 - Completed tasks do not have draggable handle
 - Today group renders with tasks
 - Incomplete and completed tasks are grouped correctly
-- Dragging task without significant position change doesn't move it (edge case)
+- Dragging task without significant position change doesn't move it
 
 Tests use **Playwright** for headless browser automation and automatically manage the dev server.
 
@@ -166,28 +196,34 @@ frontend/
 │   ├── App.jsx            # Main component with state management
 │   ├── config.js          # Countdown configuration
 │   ├── components/
+│   │   ├── Sidebar.jsx    # Category/status tab navigation
 │   │   ├── TaskForm.jsx   # Form to add new tasks
 │   │   ├── TaskList.jsx   # Renders task groups with drag-drop support
-│   │   └── TaskItem.jsx   # Individual task card with drag handle
+│   │   ├── TaskItem.jsx   # Individual task card with drag handle
+│   │   └── ImportModal.jsx # Import modal dialog
 │   ├── models/
-│   │   └── Task.js        # Task model and utilities
+│   │   ├── Task.js        # Task model and utilities
+│   │   └── Category.js    # Category model (NEW)
 │   ├── utils/
-│   │   ├── dateFormat.js  # Date formatting utilities
-│   │   └── taskGrouping.js # Task grouping by date
+│   │   ├── dateFormat.js        # Date formatting utilities
+│   │   ├── taskGrouping.js      # Task grouping by tab/category
+│   │   ├── categoryUtils.js     # Category filtering and aggregation
+│   │   └── taskExportImport.js  # Export/import functionality
 │   └── persistence/
-│       ├── index.js       # Persistence factory
-│       ├── localStorage.js # Browser storage implementation
-│       └── memory.js      # In-memory implementation
+│       ├── index.js           # Persistence factory
+│       ├── localStorage.js    # Browser storage implementation
+│       ├── memory.js          # In-memory implementation
+│       └── migrations.js      # Format migration utilities
 └── tests/
-    ├── setup.js              # Common test utilities
-    ├── core.spec.js          # Core functionality tests (12 tests)
-    ├── validation.spec.js    # Form validation tests (3 tests)
-    ├── persistence.spec.js   # Persistence tests (2 tests)
-    ├── dates.spec.js         # Date display tests (5 tests)
-    ├── toggle.spec.js        # Completed tasks toggle tests (9 tests)
-    ├── countdown.spec.js     # Task removal countdown tests (10 tests)
-    ├── show-completed.spec.js # Show Completed toggle tests (4 tests)
-    └── reorder.spec.js       # Task reordering tests (5 tests)
+    ├── setup.js                    # Common test utilities
+    ├── core.spec.js                # Core functionality tests (12 tests)
+    ├── validation.spec.js          # Form validation tests (3 tests)
+    ├── persistence.spec.js         # Persistence tests (2 tests)
+    ├── dates.spec.js               # Date display tests (5 tests)
+    ├── countdown.spec.js           # Task removal countdown tests (11 tests)
+    ├── scheduling-categories.spec.js # Scheduling & categories tests (8 tests)
+    ├── export-import.spec.js       # Export/import tests (7 tests)
+    └── reorder.spec.js             # Task reordering tests (5 tests)
 ```
 
 ## Technology Stack
@@ -198,6 +234,31 @@ frontend/
 - **Build Tool:** esbuild (JSX transpilation and bundling)
 - **Testing:** Playwright (end-to-end browser testing)
 - **Dev Server:** Node.js HTTP server with auto-rebuild
+
+## Data Model
+
+### Task
+```javascript
+{
+  id: number,                    // Generated with Date.now()
+  title: string,                 // Required
+  completed: boolean,
+  details: string,               // Optional
+  scheduledDate: string|null,    // ISO date (YYYY-MM-DD) for future scheduling
+  categoryIds: string[],         // Array of category UUIDs
+  addedDate: string,             // ISO timestamp
+  completionDate: string|null,   // ISO timestamp when completed
+  removalCountdown: number|null  // Grace period countdown (runtime only)
+}
+```
+
+### Category
+```javascript
+{
+  id: string,    // UUID
+  name: string   // User-provided category name
+}
+```
 
 ## Contributing
 
@@ -216,10 +277,18 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Testing requirements
 - Troubleshooting common issues
 
-## Future Enhancements
+## Release History
 
-- Task priorities and due dates
-- Search/filter functionality
-- Task categories/tags
-- Dark mode toggle
-- Backend API integration
+### v2.0.0 (2026-04-08)
+- **NEW:** Categories as explicit entities with IDs
+- **NEW:** Task scheduling for future dates
+- **NEW:** Sidebar tab navigation (replaces Show Completed toggle)
+- **FIXED:** Export/import now includes categories
+- **IMPROVED:** Auto-migration from old data formats
+- All 51 tests passing
+
+### v1.0.0 (Earlier)
+- Core task management with completion countdown
+- Task grouping by date
+- Drag-and-drop reordering
+- Browser persistence

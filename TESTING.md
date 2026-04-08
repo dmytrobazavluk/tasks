@@ -30,55 +30,76 @@ npm run build        # Build for production
 ## Test Suite
 
 **Framework:** Playwright (headless browser automation)
-- **43 tests total** organized by feature
+- **51 tests total** organized by feature
 - Runs headless by default (no visible browser window)
 - Auto-starts dev server before tests
 - Reuses existing server if already running (speeds up iterations)
-- Average execution time: ~8 seconds
+- Average execution time: ~13-15 seconds
 
 **Test Coverage by Category:**
 
-**Core Functionality (10 tests)** — `tests/core.spec.js`
+**Core Functionality (12 tests)** — `tests/core.spec.js`
 - Load app with title, empty state display
 - Add single/multiple tasks
+- Add task details during creation
 - Mark tasks complete/incomplete
-- Delete tasks with confirmation modal
-- Edit task details inline and during creation
-- Expand/collapse task details
+- Delete tasks
 - Multi-operation sequences
+- Expand and collapse task details
+- Add and edit task details
+- Real-time detail updates
 
 **Form Validation (3 tests)** — `tests/validation.spec.js`
 - Reject empty task submission
 - Reject whitespace-only input
-- Form reset after submission
+- Clear input after submission
 
 **Persistence (2 tests)** — `tests/persistence.spec.js`
 - Tasks survive page reload
-- Task completion state persists
+- Task state (completion) persists
 
-**Date Display (4 tests)** — `tests/dates.spec.js`
-- Added date shown in expanded details
-- Completion date only shown when completed
-- Dates update on state changes
+**Date Display (5 tests)** — `tests/dates.spec.js`
+- Display added date in expanded details
+- Hide completion date for incomplete tasks
+- Display completion date when completed
+- Toggle completion date on state change
+- Set completion date to custom past date (not current time)
 
-**Completed Tasks Toggle (9 tests)** — `tests/toggle.spec.js`
-- Show/Hide Completed button behavior
-- Completed tasks hidden by default
-- Toggle visibility with multiple tasks
-- Proper styling (strikethrough) for completed tasks
+**Task Removal Countdown (11 tests)** — `tests/countdown.spec.js`
+- Tasks visible during countdown (grace period)
+- Countdown displays on unmark button as decimal seconds (e.g., 2.9, 1.8, 0.7)
+- Countdown properly decrements at 0.1 second intervals
+- Task moves to Closed Tasks after countdown completes
+- Clicking "Unmark Done" cancels countdown and reverts to incomplete
+- Edit and delete operations available during countdown
+- Multiple tasks with concurrent countdowns
+- Countdown behavior during tab switching
 
-**Task Removal Countdown (10 tests)** — `tests/countdown.spec.js`
-- Countdown displays as decimal seconds (2.9s format)
-- Countdown decrements at 0.1s intervals
-- Countdown only starts when "Show Completed" is OFF
-- Unmark Done cancels countdown
-- Edit/Delete available during countdown
-- Multiple concurrent countdowns
+**Task Scheduling & Categories (8 tests)** — `tests/scheduling-categories.spec.js`
+- Add task with single category
+- Filter tasks by category tab
+- Display correct task counts in sidebar
+- Display current tab name in header
+- Clear scheduled date during edit
+- Keep task in category tab during countdown, move to closed after
+- Show closed tasks in closed tasks tab
+- Keep past-completed task in today tab during countdown
 
-**Show Completed Toggle Visibility (4 tests)** — `tests/show-completed.spec.js`
-- Toggle shows/hides completed tasks
-- Countdowns cancel when toggle turned ON
-- Button text updates correctly
+**Export/Import Functionality (7 tests)** — `tests/export-import.spec.js`
+- Have export and import buttons
+- Export button is clickable
+- Import tasks and categories from JSON file
+- Show error for invalid JSON
+- Show error for invalid task structure
+- Cancel import without changes
+- Require file selection before import
+
+**Task Reordering (5 tests)** — `tests/reorder.spec.js`
+- Incomplete tasks have draggable handle
+- Completed tasks do not have draggable handle
+- Today group renders with tasks
+- Incomplete and completed tasks are grouped correctly
+- Dragging task without significant position change doesn't move it
 
 **Config:** `playwright.config.js`
 - Base URL: `http://localhost:8000`
@@ -184,14 +205,26 @@ test('should add a task', async ({ page }) => {
 | File | Purpose |
 |------|---------|
 | `src/main.jsx` | React entry point |
-| `src/App.jsx` | Main component, state management, countdown logic |
+| `src/App.jsx` | Main component, state management, countdown logic, category/task persistence |
 | `src/config.js` | Countdown configuration (production/test durations) |
+| `src/components/Sidebar.jsx` | Category/status tab navigation |
+| `src/components/TaskForm.jsx` | Add task form with category/scheduling inputs |
+| `src/components/TaskList.jsx` | Task list renderer with drag-drop support |
 | `src/components/TaskItem.jsx` | Individual task card with expand/collapse |
-| `src/components/TaskList.jsx` | Task list renderer |
-| `src/components/TaskForm.jsx` | Add task form |
+| `src/components/ImportModal.jsx` | Import modal dialog |
+| `src/models/Task.js` | Task model, factory, and utilities |
+| `src/models/Category.js` | Category model, factory, and utilities |
+| `src/utils/taskGrouping.js` | Task grouping by tab/category/status |
+| `src/utils/categoryUtils.js` | Category filtering and aggregation |
+| `src/utils/taskExportImport.js` | Export/import functionality |
+| `src/utils/dateFormat.js` | Date formatting utilities |
+| `src/persistence/index.js` | Persistence factory |
+| `src/persistence/localStorage.js` | Browser storage with auto-migration |
+| `src/persistence/memory.js` | In-memory implementation (tests) |
+| `src/persistence/migrations.js` | Auto-migration utilities |
 | `dist/bundle.js` | Compiled app (auto-generated) |
 | `tests/setup.js` | Test helpers and initialization |
-| `tests/*.spec.js` | 7 test files, 43 total tests |
+| `tests/*.spec.js` | 8 test files, 51 total tests |
 | `playwright.config.js` | Test configuration |
 | `dev-server.js` | Dev server with rebuild |
 | `build.js` | Production build script |
@@ -214,8 +247,34 @@ test-results/index.html
 The app has an abstraction layer for data persistence, making it easy to swap implementations:
 
 **Implementations:**
-- `localStorage` (default) — Persists to browser storage, survives page reload
+- `localStorage` (default) — Persists tasks AND categories to browser storage, survives page reload
 - `memory` — In-memory only, lost on reload (used in tests)
+
+**Storage Format (v2.0.0):**
+```javascript
+// localStorage keys:
+localStorage['taskplanner_tasks']      // Array of Task objects with categoryIds
+localStorage['taskplanner_categories'] // Array of Category objects
+
+// Each Task object:
+{
+  id: number,
+  title: string,
+  completed: boolean,
+  details: string,
+  scheduledDate: string|null,  // ISO date (YYYY-MM-DD)
+  categoryIds: string[],        // Array of UUID strings
+  addedDate: string,            // ISO timestamp
+  completionDate: string|null,  // ISO timestamp
+  removalCountdown: number|null // Not persisted, runtime only
+}
+
+// Each Category object:
+{
+  id: string,      // UUID
+  name: string
+}
+```
 
 **How to switch:**
 ```javascript
@@ -225,23 +284,31 @@ window.__APP_CONFIG__ = { persistence: 'localStorage' };  // Use browser storage
 ```
 
 **Files:**
-- `src/persistence/localStorage.js` — Browser storage implementation
+- `src/persistence/localStorage.js` — Browser storage with auto-migration
 - `src/persistence/memory.js` — In-memory implementation
 - `src/persistence/index.js` — Factory that selects implementation
+- `src/persistence/migrations.js` — Auto-migration from old format
+
+**Auto-Migration (v2.0.0):**
+When loading old data with `task.categories: string[]`, automatically:
+1. Creates Category entities for each unique category name
+2. Converts tasks to use `categoryIds` (UUID references)
+3. Saves migrated data back to persistence
+4. Future loads use new format
 
 **For Future Server Backend:**
 Create `src/persistence/server.js` with API calls:
 ```javascript
 export const serverPersistence = {
   load: async () => { /* GET /api/tasks */ },
-  save: async (tasks) => { /* POST /api/tasks */ },
+  save: async (tasks, categories) => { /* POST /api/tasks */ },
   clear: async () => { /* DELETE /api/tasks */ },
 };
 ```
 Then add it to the factory in `index.js`.
 
 **Tests Use In-Memory:**
-Tests automatically use memory persistence via `page.addInitScript()` to avoid localStorage conflicts between test runs.
+Tests automatically use memory persistence via `page.addInitScript()` to avoid localStorage conflicts between test runs. Also sets countdown duration to 0.3s for fast tests.
 
 ## Known Constraints
 

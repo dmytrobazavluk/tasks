@@ -1,135 +1,202 @@
 # Implementation Notes
 
-Developer-focused guide to understand code patterns, recent changes, and implementation decisions.
+Developer-focused guide to understand code patterns, architecture decisions, and recent implementation details.
 
 ---
 
-## File Changes from Latest Session
+## Version 2.0.0 Changes (2026-04-08)
 
-### Core Logic Changes
+### Major Refactoring: Categories as Explicit Entities
 
-**App.jsx**
-- Added `showCompleted` state to control countdown behavior
-- Modified `toggleTask()` to check `!showCompleted` before starting countdown
-  - Countdown only initializes when toggle is OFF
-  - Prevents background timers when showing all completed tasks
-- Added `useEffect` hook to cancel active countdowns when toggle turned ON
-  - Clears all `removalCountdown` values when `showCompleted` becomes true
-  - Ensures clean state when user toggles visibility
-- Added `reorderTasks()` function with array bounds checking
-  - Adjusts target index when moving forward (accounts for removal shift)
-  - Prevents moving task to invalid positions
-- Passes `showCompleted` and task reordering callbacks through component hierarchy
+**What Changed:**
+- Categories were stored as string arrays directly on tasks: `task.categories: string[]`
+- Now categories are explicit entities with IDs and stored separately: `task.categoryIds: string[]` + separate `Category` objects
+- New persistence model: `{ tasks: Task[], categories: Category[] }`
+- Auto-migration from old format on first load
 
-**TaskList.jsx**
-- Added `draggedTaskId` state to track dragged task
-- Added `dragOverIndex` state for blue line indicator position
-- Accepts `allTasks` (full array) and `onReorderTasks` callback
-- Implemented drag handlers:
-  - `handleDragStart()` — sets data transfer ID
-  - `handleDragEnd()` — clears drag state
-  - `handleDragOver()` — calculates drop position
-  - `handleDrop()` — performs reorder
-- Renders task groups with proper structure:
-  - Container with dragOver/drop handlers
-  - Renders blue line indicator at drag position
-  - Renders insert line after last task if needed
-- Passes drag props to TaskItem (not entire task wrapper)
+**Why This Matters:**
+- Provides foundation for category features (colors, descriptions, permissions, etc.)
+- Proper data model with single source of truth for category metadata
+- Cleaner architecture with explicit relationships
+- Backward compatible - old data automatically migrates
 
-**TaskItem.jsx**
-- Converted expand/collapse from `<button>` to full-header `<div role="button">`
-  - Makes entire header clickable, not just arrow icon
-  - Improves UX: larger click target, more intuitive
-- Added keyboard support: Enter/Space keys toggle expansion
-  - `onKeyDown` handler on div with `tabIndex={0}`
-- Added hover effect: `hover:bg-gray-50` for visual feedback
-- Countdown display conditional: `{task.removalCountdown && !showCompleted && ...}`
-  - Only shows countdown when toggle is OFF
-  - Prevents confusing UI when showing all completed tasks
-- Added draggable handle (⋮⋮) only for incomplete tasks in Today group
-  - Receives `onDragStart` and `onDragEnd` callbacks from parent
-  - Receives `isToday` and `isDragged` flags
-  - Handle disappears for completed tasks
-- Added completion date picker modal
-  - Shows when user clicks "Mark Done"
-  - `getLocalDateTimeString()` helper converts Date to datetime-local format
-  - Validates against future dates
-  - Defaults to current date/time
+**Key Files:**
+- `src/models/Category.js` — NEW: Category factory and validation
+- `src/models/Task.js` — UPDATED: Uses categoryIds instead of categories
+- `src/persistence/migrations.js` — NEW: Auto-migration from old format
+- `src/utils/categoryUtils.js` — COMPLETE REWRITE: ID-based operations
 
-**TaskForm.jsx**
-- Changed margin from `mb-8` (top) to `mt-6` (bottom)
-- Reflects new position at bottom of page
-- Form is now conditionally rendered (not always visible)
+---
 
-**src/config.js**
-- Centralized countdown configuration
-- `COUNTDOWN_CONFIG.duration` — configurable via `window.__TEST_COUNTDOWN_DURATION__`
-- `COUNTDOWN_CONFIG.decrement` — 0.1 seconds per tick (100ms intervals)
-- Allows fast tests (0.3s) while keeping production reasonable (3s)
+## File Changes from v2.0.0
 
-**src/utils/taskGrouping.js** (NEW)
-- `getTaskGroups(tasks, showCompleted)` groups tasks by date
-- Returns `{ today: [...], pastDates: [...] }`
-- Today group: all incomplete tasks first, then today's completed tasks
-- Past groups: completed tasks grouped by completion date (most recent first)
-- Handles local time properly (not UTC)
+### Data Model Changes
 
-**src/utils/dateFormat.js** (UPDATED)
-- Added `formatGroupDate(dateKey)` for grouping headers
-- Formats YYYY-MM-DD as "Apr 5" or "Apr 5, 2025"
+**src/models/Category.js** (NEW)
+- `createCategory(name)` — Factory: generates UUID, returns `{ id, name }`
+- `isValidCategory(category)` — Validates Category object structure
+- Uses `crypto.randomUUID()` with fallback for older browsers
+
+**src/models/Task.js** (UPDATED)
+- Changed: `categories: string[]` → `categoryIds: string[]`
+- Updated: `createTask(title, details, scheduledDate, categoryIds)`
+- Added: `normalizeScheduledDate(dateStr)` — validates future dates only
+- Added: `isScheduledForFuture(task)` — checks if task has future date
+- Updated: `isValidTask()` — backward compatible with old string-based format
+
+### Persistence Layer Changes
+
+**src/persistence/migrations.js** (NEW)
+- Detects old format: `task.categories: string[]`
+- Auto-converts to new format: `task.categoryIds + Category[]`
+- Creates Category entities for each unique category name
+- Called automatically on load (transparent to caller)
+
+**src/persistence/localStorage.js** (UPDATED)
+- Changed: Single key → Two keys
+  - `taskplanner_tasks` — Task array with categoryIds
+  - `taskplanner_categories` — Category array
+- Updated: `load()` returns `{ tasks, categories }`
+- Updated: `save(tasks, categories)` — stores both
+
+**src/persistence/memory.js** (UPDATED)
+- Matches localStorage interface
+- Stores tasks and categories separately
+- Used in tests with auto-migration
+
+### Component Changes
+
+**src/App.jsx** (SIGNIFICANT UPDATES)
+- Added: `const [categories, setCategories] = useState([])`
+- Updated: Load and save both tasks and categories
+- Updated: `addTask()` — auto-creates Category entities for new names
+- Updated: `updateTask()` — handles categoryNames parameter, converts to IDs
+- Updated: `deleteTask()` — calls `cleanupOrphanedCategories()`
+- Added: `getTabDisplayName()` — resolves category ID to name
+- Updated: Export/import handlers pass categories
+
+**src/components/Sidebar.jsx** (NEW)
+- Displays category tabs with task counts
+- Shows Today, Closed Tasks, and dynamic category tabs
+- Active tab highlighted in blue
+- Click to filter tasks by category
+
+**src/components/TaskForm.jsx** (UPDATED)
+- Added: Category input field (text, comma-separated)
+- Added: Scheduled date input (date picker)
+- Extracts categories and scheduling from form
+- Passes to App for processing
+
+**src/components/TaskList.jsx** (UPDATED)
+- Added: `categories` prop
+- Updated: `getUniqueCategoriesFromTasks()` call includes categories parameter
+- Updated: Task grouping for sidebar navigation (Today, categories, Closed Tasks)
+- Passes: Category objects to TaskItem
+
+**src/components/TaskItem.jsx** (UPDATED)
+- Added: `categoryObjects` prop
+- Added: Helper `getCategoryNamesFromIds()` for edit form display
+- Updated: Edit modal initializes with category names (from IDs)
+- Updated: `handleSaveEdit()` passes `categoryNames` back to App
+
+**src/components/ImportModal.jsx** (UPDATED)
+- Updated: `importTasks()` destructures `{ tasks, categories }`
+- Updated: `onImport()` callback passes both parameters
+
+### Utility Changes
+
+**src/utils/categoryUtils.js** (COMPLETE REWRITE)
+- `getCategoryById(categories, categoryId)` — ID lookup
+- `getUniqueCategoriesFromTasks(tasks, categories)` — Resolve IDs to Category objects
+- `getTasksByCategoryId(tasks, categoryId)` — Filter by category
+- `countTasksInCategoryId(tasks, categoryId)` — Count in category
+- `countClosedTasksWithoutCountdown(tasks)` — Count closed (no countdown)
+- `cleanupOrphanedCategories(tasks, categories)` — Remove unused
+- All operations now ID-based instead of string-based
+
+**src/utils/taskGrouping.js** (UPDATED)
+- Updated: `getTasksForCategory(tasks, categoryId)` — uses ID instead of name
+- Added: Support for `category` as either string ID or object with id property
+
+**src/utils/taskExportImport.js** (UPDATED)
+- Fixed BUG: Categories now included in export
+- Updated: `exportTasks(tasks, categories)` returns `{ version, tasks, categories }`
+- Updated: `importTasks(jsonString)` returns `{ tasks, categories }`
+- Added: Backward compatibility for old array format
+- Added: Auto-migration detection and conversion
 
 ### Test Infrastructure Changes
 
 **tests/setup.js**
-- Added `openAddForm(page)` helper function
-  - Clicks the "+ Add Task" button
-  - Waits for form to appear
-  - Needed because form is now conditionally rendered
-- Added `markTaskDone(page)` helper for completion date picker
-  - Handles the modal interaction
-  - Clicks Mark Done, waits for datetime input, confirms
+- `setupPage(page)` — Initializes memory persistence, 0.3s countdown duration
+- `openAddForm(page)` — Opens the task form (now conditionally rendered)
 
-**All test files**
-- Updated all expand/collapse selectors: `button:has-text("▶")` → `div[role="button"]`
-- Form tests now call `openAddForm(page)` before filling inputs
-  - Ensures form is visible before interacting with it
-- Updated countdown button selectors: `button:has-text("Unmark Done (0.")`
-  - Matches decimal format (2.9, 1.8, 0.7, etc.)
-- Updated date tests to verify completion date is set to selected value (not current time)
-
-**tests/reorder.spec.js** (NEW)
-- 5 tests for drag-drop reordering structure
-- Tests verify:
-  - Incomplete tasks have draggable handle
-  - Completed tasks don't have draggable handle
-  - Today group renders with all tasks
-  - Task grouping works correctly
-  - Edge case: dragging without movement doesn't cause unexpected moves
+**Test Files Organization**
+- 51 tests across 8 files, 100% pass rate
+- Core, validation, persistence, dates, countdown, scheduling, export, reorder
+- Each test file self-contained with clear patterns
 
 ---
 
 ## Implementation Patterns
 
-### Countdown System (Critical Behavior)
+### Category System Architecture
+
+**Data Flow:**
+1. User enters categories in TaskForm (comma-separated text)
+2. App extracts category names and checks if they exist
+3. For new names, creates Category entities with UUID
+4. Task stores array of category IDs (not names)
+5. At display time, resolve IDs back to names for UI
+
+**Why ID-based instead of name-based:**
+- Categories become queryable by ID (not string comparison)
+- Allows future features: colors, descriptions, icons per category
+- IDs stable even if category name changes
+- Single source of truth for category metadata
+
+**Auto-Cleanup Pattern:**
+- When task deleted or updated, check for orphaned categories
+- Category is orphaned if no tasks reference its ID
+- `cleanupOrphanedCategories()` removes these
+- Called after task deletion/update
+- Safe to call multiple times (no duplicates)
+
+### Task Scheduling
+
+**How scheduling works:**
+1. User selects date in TaskForm (only future dates allowed)
+2. Validation: `normalizeScheduledDate()` checks date > today
+3. If past/today, date becomes null (not scheduled)
+4. Scheduled tasks DON'T appear in Today tab initially
+5. When scheduled date arrives (checked in grouping), task moves to Today
+6. In taskGrouping: filter tasks by comparing scheduledDate with today
+
+**Why store as ISO string:**
+- Human-readable: "2026-04-15"
+- Easy to persist and compare
+- No timezone issues (stored as date only, not time)
+- Works with date inputs: `<input type="date">`
+
+### Countdown System
 
 **How countdown works:**
-1. User marks task done with `showCompleted` OFF
-2. `toggleTask()` initializes `removalCountdown = Math.ceil(3 / 0.1) = 30` ticks
-3. `TaskItem.useEffect` runs timer: every 100ms, decrements by 1
-4. Countdown display: `30 ticks × 0.1s = 3.0 seconds`
-5. When countdown reaches 0, set `removalCountdown: null` (persist as completed)
-6. Task hidden from view (unless toggle turned ON to show completed)
+1. User marks task done
+2. `removalCountdown` initialized to number of 0.1-second ticks (e.g., 30 for 3s)
+3. Timer decrements every 100ms
+4. When countdown reaches 0, set `removalCountdown: null`
+5. Task moves from working location to Closed Tasks (unless it has active category)
 
-**Key edge case — Toggle turned ON during countdown:**
-- Component never explicitly stops countdown timers (good for cleanup)
-- `useEffect` in App.jsx clears all `removalCountdown` values to null
-- This stops visual display and prevents new timers starting
-- Old timers still fire but have no effect (task already has countdown = null)
+**Countdown Grace Period:**
+- During countdown, task stays in its original location (Today or category tab)
+- User can click "Unmark Done" to revert and cancel countdown
+- After countdown, task moves to Closed Tasks
+- User can still see and restore the task during grace period
 
 **Why tick-based not time-based:**
-- Tick-based countdown is deterministic and testable
-- Time-based would require mocking Date/performance APIs
-- Tick-based allows configurable test duration without refactoring timers
+- Deterministic and testable
+- Can configure duration via `window.__TEST_COUNTDOWN_DURATION__`
+- Tests use 0.3s (3 ticks), production uses 3s (30 ticks)
 
 ### Drag-and-Drop Implementation
 
@@ -175,49 +242,81 @@ Developer-focused guide to understand code patterns, recent changes, and impleme
 - Ensures countdown matches completion in same update
 - Modal confirmation handles all updates together
 
+### Sidebar Navigation Logic
+
+**How tabs work:**
+1. Sidebar displays Today, Category tabs (dynamic), and Closed Tasks
+2. `getTasksForToday()` — All incomplete + completed today + tasks with active countdown
+3. `getTasksForCategory(categoryId)` — All tasks with that category ID (any status)
+4. `getTasksForClosedTab()` — Completed tasks WITHOUT active countdown
+5. Click tab to filter TaskList display
+6. Task counts update in real-time
+
+**Why separate closed tab:**
+- Shows what's actually complete (not just counting)
+- Completed tasks with countdown stay in their working location
+- Once countdown expires, they move to Closed Tasks
+- User can see the archive separately from active work
+
 ### State Management Hierarchy
 
 ```
 App.jsx (state owner)
-├── showCompleted (boolean)
-├── tasks (array of task objects)
+├── tasks (array of Task objects)
+├── categories (array of Category objects)
+├── selectedTab (string: null, categoryId, or 'closed')
 ├── isFormOpen (boolean)
-└── Passes to TaskList and TaskForm
+├── persistence (module that loads/saves both)
+└── Passes to Sidebar and TaskList
+
+Sidebar.jsx (navigation layer)
+├── Receives categories, selectedTab
+├── Displays tabs with counts
+├── Emits: onSelectTab callback
+└── Renders category names resolved from objects
 
 TaskList.jsx (presentation layer)
+├── Receives tasks, categories, selectedTab
 ├── Manages drag state (draggedTaskId, dragOverIndex)
-├── Receives showCompleted, tasks, callbacks
-├── Groups tasks by date
-├── Renders Today + past date groups
+├── Groups tasks by selectedTab
+├── Renders tasks for current tab
 └── Passes drag props to TaskItem
 
 TaskItem.jsx (view layer)
-├── Receives task, callbacks, drag props
+├── Receives task, categories, callbacks
 ├── Manages expansion state
+├── Shows category names (resolved from IDs)
 ├── Shows drag handle for incomplete tasks
 ├── Shows completion date picker modal
 └── Emits events: onToggle, onDelete, onUpdateTask, onDragStart/End
 ```
 
 **Why prop drilling instead of Context?**
-- Simple hierarchy doesn't need Context
-- Props are explicit and easier to follow
-- No performance loss at this scale
-- Easier to test individual components with mock props
+- Hierarchy is straightforward
+- Props document data dependencies clearly
+- No performance loss with 10-50 tasks
+- Easier to test components with explicit props
 
-### Task Grouping Logic
+### Category Lifecycle
 
-**How grouping works:**
-1. `getTaskGroups()` iterates through all tasks
-2. Incomplete tasks go to Today group
-3. Completed tasks go to their completion date group
-4. Within Today: incomplete first, then completed
-5. Past groups sorted by date (most recent first)
+**Creation:**
+- User types category name in TaskForm
+- App checks if category exists by name
+- If new, creates Category with UUID
+- Task gets categoryId added to its categoryIds array
+- New category saved to persistence
 
-**Why Today group includes completed tasks:**
-- Completed tasks from today should show with incomplete tasks when visible
-- Makes sense visually: all work from today in one section
-- Simplifies reordering (all incomplete stay in Today)
+**Usage:**
+- Category ID stored in task.categoryIds
+- Sidebar shows all unique categories
+- Clicking category tab filters to that category's tasks
+- Category counts include all matching tasks
+
+**Deletion (Auto-Cleanup):**
+- When task deleted: check if any category is now orphaned
+- When task updated: if categoryIds changed, check for orphaned
+- `cleanupOrphanedCategories()` removes categories with no tasks
+- Called after mutations, safe to call multiple times
 
 ---
 
@@ -225,73 +324,93 @@ TaskItem.jsx (view layer)
 
 1. **Form collapsing** — Form closes after adding task, button reappears
    - `handleAddTask` in App.jsx calls `setIsFormOpen(false)`
-   - Form visibility bound to `isFormOpen` state
    - Tests must call `openAddForm(page)` to open form again
 
-2. **Countdown cancellation** — Toggling "Show Completed" ON cancels active countdowns
-   - `useEffect` in App.jsx triggered by `showCompleted` change
-   - Clears all `removalCountdown` values to null
-   - Immediate visual effect (countdown disappears from UI)
+2. **Auto-category creation** — Categories created on first assignment
+   - If user enters new category name, Category object created with UUID
+   - If category already exists (by name), reuses existing ID
+   - Cleaned up automatically if no longer used
 
-3. **Countdown doesn't restart** — Unmarking a completed task keeps it incomplete
-   - `toggleTask()` only starts countdown when `!showCompleted`
-   - If toggle is ON when you unmark, countdown never starts
-   - Expected behavior: toggle OFF, mark done, countdown appears
+3. **Task scheduling** — Scheduled tasks don't appear in Today until date arrives
+   - `normalizeScheduledDate()` validates only future dates allowed
+   - `taskGrouping` filters out scheduled tasks from Today
+   - When date equals today, task appears in Today tab
+   - User can edit scheduled date to unschedule (set to null)
 
-4. **Tasks persist after countdown** — Task doesn't delete, just hides
-   - When countdown reaches 0, set `removalCountdown: null`
-   - Task stays in state with `completed: true`
-   - Toggle "Show Completed" to see hidden completed tasks
-   - Allows user to reclaim task accidentally marked done
+4. **Countdown grace period** — Task stays visible during countdown
+   - When marked done, countdown initializes (default 3 seconds)
+   - Task remains in its original location (Today or category tab)
+   - After countdown expires, moves to Closed Tasks
+   - User can click "Unmark Done" to cancel and revert
 
-5. **Drag handle only on incomplete** — Completed tasks can't be reordered
-   - `isToday && !task.completed` condition on handle
-   - Handle removed from DOM for completed tasks
-   - Drag-drop logic only operates on Today group
+5. **Category cleanup** — Unused categories automatically removed
+   - After deleting a task, check for orphaned categories
+   - If category no longer has any tasks, delete it
+   - Sidebar dynamically removes the tab
+   - Can be safely called multiple times (idempotent)
 
-6. **Completion date defaults to now** — User can select past dates only
-   - Modal shows current date/time by default
-   - Validation prevents selecting future dates
-   - Allows backdating task completion
+6. **Drag handle only on incomplete** — Completed tasks can't be reordered
+   - Handle only renders for incomplete tasks in Today tab
+   - Handle hidden from DOM for completed tasks
+   - Drag-drop only works within Today tab
+
+7. **Export includes categories** — Categories now properly exported
+   - Export format: `{ version: 1, tasks: [...], categories: [...] }`
+   - Import detects old format and auto-migrates if needed
+   - Round-trip: export then import preserves all categories
 
 ---
 
 ## Implementation Decisions & Trade-offs
 
-### Decision: Countdown only when toggle OFF
-**Trade-off:** More complex conditional logic vs. cleaner user experience
-- **Pro:** Prevents timer overhead when user shows all tasks
-- **Pro:** Makes sense semantically (countdown is "go away timer", not needed if visible)
-- **Con:** Extra state dependency in toggleTask()
-- **Result:** Worth it — matches user mental model
+### Decision: Categories as Explicit Entities with IDs
+**Trade-off:** More complex data model vs. proper architecture foundation
+- **Pro:** Enables category features (colors, descriptions, etc. in future)
+- **Pro:** Single source of truth for category metadata
+- **Pro:** Categories queryable by ID, not just string comparison
+- **Con:** Must maintain mapping between tasks and categories
+- **Con:** Auto-migration complexity on data load
+- **Result:** Worth it — future-proofs the architecture, backward compatible
 
-### Decision: Tick-based countdown (30 ticks for 3s) instead of milliseconds
+### Decision: UUID-based Category IDs instead of simple names
+**Trade-off:** Longer IDs vs. stable, unique references
+- **Pro:** Categories stable even if name changes
+- **Pro:** Supports concurrent category creation without conflicts
+- **Pro:** Works with databases/APIs (not dependent on string equality)
+- **Con:** IDs must be persisted and resolved at display time
+- **Result:** Worth it — better for extensibility and data integrity
+
+### Decision: Resolve Category IDs to names at display time
+**Trade-off:** Runtime lookup vs. cleaner data storage
+- **Pro:** Tasks store only IDs (smaller, cleaner data)
+- **Pro:** Can change category name without updating all tasks
+- **Pro:** Components don't need to know about category details
+- **Con:** Need helper functions to resolve IDs to names
+- **Result:** Worth it — separation of concerns, data normalization
+
+### Decision: Sidebar tabs instead of "Show Completed" toggle
+**Trade-off:** More UI vs. one-click filtering
+- **Pro:** User can focus on what matters (Today, specific category, or archive)
+- **Pro:** Multiple filtering options clearly visible
+- **Pro:** Task counts show at a glance what's in each category
+- **Con:** More components and state management
+- **Result:** Worth it — better UX, clearer navigation
+
+### Decision: Scheduled tasks DON'T appear in Today until date arrives
+**Trade-off:** Hidden complexity vs. cleaner Today view
+- **Pro:** Today tab shows only relevant work
+- **Pro:** Scheduled tasks don't clutter the active task list
+- **Pro:** Automatic promotion when date arrives
+- **Con:** User might forget about scheduled tasks (mitigated by sidebar count)
+- **Result:** Worth it — keeps Today focused on immediate work
+
+### Decision: Tick-based countdown with configurable duration
 **Trade-off:** Math conversion vs. deterministic testing
 - **Pro:** Configurable duration without changing timer logic
-- **Pro:** 0.1s precision is reasonable for UI countdown
-- **Con:** Slightly more complex calculation: `removalCountdown * COUNTDOWN_CONFIG.decrement`
-- **Result:** Worth it — tests run 10x faster with 0.3s duration
-
-### Decision: Only task header draggable, not entire card
-**Trade-off:** Requires click target vs. prevents accidental drags
-- **Pro:** Buttons/interactions don't trigger drag accidentally
-- **Pro:** Clear visual indicator (⋮⋮ handle)
-- **Con:** User must drag from handle, not anywhere on task
-- **Result:** Worth it — prevents UX issues with button clicks triggering drag
-
-### Decision: Blue line indicator in real-time
-**Trade-off:** State updates on every dragOver vs. user clarity
-- **Pro:** User knows exactly where task will land
-- **Pro:** Updates smoothly during drag
-- **Con:** More frequent state updates
-- **Result:** Worth it — critical for good UX
-
-### Decision: Task grouping by completion date
-**Trade-off:** More complex rendering vs. better organization
-- **Pro:** User can see when tasks were completed
-- **Pro:** Organizes completed work chronologically
-- **Con:** More code, more state management
-- **Result:** Worth it — helps users find recently completed tasks
+- **Pro:** Tests run 10x faster with 0.3s duration
+- **Pro:** 0.1s tick precision is reasonable for UI countdown
+- **Con:** Slightly more complex calculation
+- **Result:** Worth it — crucial for fast test execution
 
 ---
 
@@ -323,25 +442,41 @@ TaskItem.jsx (view layer)
 
 ## Potential Gotchas for Future Changes
 
-1. **Adding features to drag-drop** — Remember edge case handling
-   - Current code prevents no-op moves (same position, adjacent)
-   - If modifying reorder logic, maintain these checks
-   - Test with tasks at start, middle, and end positions
+1. **Modifying Category model** — Impacts multiple files
+   - Changes to Category structure need migration function
+   - Update Task.isValidTask() if Category shape changes
+   - Sidebar needs to handle new category properties
+   - Export/import must include new fields
 
-2. **Changing completion date format** — Update validator and display
-   - Modal uses datetime-local format (YYYY-MM-DDTHH:MM)
-   - Validation prevents future dates
-   - Display uses `formatDate()` for consistency
+2. **Changing category ID generation** — Test backward compatibility
+   - Current: crypto.randomUUID() with fallback
+   - Old data uses UUIDs, new data must also use UUIDs
+   - Migration function should handle if IDs change
+   - Never change how category IDs are generated without migration
 
-3. **Adding more task grouping** — Update filter and rendering logic
-   - `getTaskGroups()` is the source of truth
-   - TaskList depends on group structure
-   - Reordering only works within Today group
+3. **Adding more task grouping** — Remember sidebar tabs are dynamic
+   - Today, categories, Closed Tasks are the three tab types
+   - If adding new grouping, may need new tab type
+   - Task counts must update for each tab type
+   - Reordering only works within Today tab
 
-4. **Moving from prop drilling to Context** — Good long-term improvement
-   - Would need to update component signatures
-   - Tests would still work (no test dependency on prop names)
-   - Remember `showCompleted` affects countdown and grouping behavior
+4. **Changing persistence format** — Implement migration function
+   - New localStorage format must maintain backward compatibility
+   - Add migration function in migrations.js
+   - Update load() to call migration on old data
+   - Test round-trip: old format → load → new format
+
+5. **Adding context or state management** — Refactor gradually
+   - Currently using prop drilling, which works for this scale
+   - If migrating to Context, tests still work
+   - Components expect tasks and categories as props
+   - Changing prop names requires updating all components and tests
+
+6. **Modifying task grouping logic** — Remember multiple dependencies
+   - `taskGrouping.js` is the source of truth for grouping
+   - Sidebar depends on grouping for tab display
+   - TaskList uses grouping to render
+   - Tests verify grouping behavior, update them if logic changes
 
 ---
 
@@ -352,7 +487,7 @@ TaskItem.jsx (view layer)
 npm run dev           # Start dev server at http://localhost:8000
 
 # Testing
-npm test              # Run all 49 tests (headless, fastest)
+npm test              # Run all 51 tests (headless, fastest)
 npm test:ui          # Interactive Playwright UI (debug failures)
 npm test:headed      # Run with visible browser (see what tests do)
 
@@ -364,7 +499,13 @@ npm run build         # Production build to dist/bundle.js
 
 ## Next Session Checklist
 
-- [ ] Run `npm test` — verify all 49 tests pass
-- [ ] Review this file if making countdown, grouping, or drag-drop changes
-- [ ] Check memory files for recent session context
-- [ ] Update IMPLEMENTATION_NOTES if you change core patterns
+- [ ] Run `npm test` — verify all 51 tests pass
+- [ ] Check memory files at `.claude/projects/.../memory/` for recent context
+- [ ] Review this file if making changes to:
+  - Category system (IDs, creation, cleanup)
+  - Persistence layer (migration, storage format)
+  - Task grouping/sidebar (tabs, counts, filtering)
+  - Scheduling logic (future date validation, movement)
+  - Export/import (format, backward compatibility)
+- [ ] Update memory if you make architectural changes
+- [ ] Run tests after changes to verify nothing broke
