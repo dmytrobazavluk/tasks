@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
+import ImportModal from './components/ImportModal';
 import { persistence } from './persistence';
 import { createTask, toggleTaskCompletion } from './models/Task';
 import { COUNTDOWN_CONFIG } from './config';
+import { exportTasks, generateFileName, downloadFile } from './utils/taskExportImport';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Load tasks from persistence on mount
   useEffect(() => {
@@ -103,13 +106,39 @@ export default function App() {
     setIsFormOpen(false);
   };
 
+  const handleExport = () => {
+    const jsonContent = exportTasks(tasks);
+    const fileName = generateFileName();
+    downloadFile(jsonContent, fileName);
+  };
+
+  const handleImport = (importedTasks) => {
+    setTasks(importedTasks);
+    setIsImportModalOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-2xl mx-auto p-6">
         <h1 className="text-xl font-bold text-gray-800 mb-6">Task Planner</h1>
 
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex-1"></div>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex gap-2">
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+              title="Download tasks as JSON"
+            >
+              Export
+            </button>
+            <button
+              onClick={() => setIsImportModalOpen(true)}
+              className="px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
+              title="Upload JSON file to replace tasks"
+            >
+              Import
+            </button>
+          </div>
           <button
             onClick={() => setShowCompleted(!showCompleted)}
             className={`px-4 py-2 text-sm font-medium rounded-md transition ${
@@ -135,6 +164,13 @@ export default function App() {
           >
             + Add Task
           </button>
+        )}
+
+        {isImportModalOpen && (
+          <ImportModal
+            onImport={handleImport}
+            onCancel={() => setIsImportModalOpen(false)}
+          />
         )}
       </div>
     </div>
