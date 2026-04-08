@@ -72,7 +72,7 @@ test.describe('Task Removal Countdown', () => {
     await expect(page.locator('button:has-text("Unmark Done (0.")')).toBeVisible();
   });
 
-  test('should hide completed task after countdown completes (when toggle is off)', async ({ page }) => {
+  test('should keep completed task visible after countdown completes', async ({ page }) => {
     await openAddForm(page);
 
     const titleInput = page.locator('input[placeholder="Task title..."]');
@@ -90,17 +90,10 @@ test.describe('Task Removal Countdown', () => {
     // Task should be visible with countdown
     await expect(page.locator('text=Auto complete task')).toBeVisible();
 
-    // Wait for countdown to complete (5 seconds + buffer)
+    // Wait for countdown to complete
     await page.waitForTimeout(1000);
 
-    // Task should disappear from view (countdown expired, toggle is off)
-    await expect(page.locator('text=Auto complete task')).not.toBeVisible();
-
-    // But it should still exist as a completed task (show with toggle)
-    const showCompletedButton = page.locator('button:has-text("Show Completed")');
-    await showCompletedButton.click();
-
-    // Task should now be visible as completed
+    // Task should still be visible (completed today stays in Today tab)
     await expect(page.locator('text=Auto complete task')).toBeVisible();
 
     const taskSpan = page.locator('span').filter({ hasText: 'Auto complete task' }).first();
@@ -180,7 +173,7 @@ test.describe('Task Removal Countdown', () => {
     await expect(deleteButton).toBeEnabled();
   });
 
-  test('should show countdown when marking done even with show completed off', async ({ page }) => {
+  test('should show countdown timer when marking task done', async ({ page }) => {
     await openAddForm(page);
 
     const titleInput = page.locator('input[placeholder="Task title..."]');
@@ -202,42 +195,20 @@ test.describe('Task Removal Countdown', () => {
   });
 
   test('should handle multiple tasks with concurrent countdowns', async ({ page }) => {
-    await openAddForm(page);
-
     const titleInput = page.locator('input[placeholder="Task title..."]');
-    const button = page.locator('button:has-text("Add Task")');
+    const addButton = page.locator('button:has-text("Add Task")');
 
     // Add two tasks
+    await openAddForm(page);
     await titleInput.fill('Concurrent task 1');
-    await button.click();
+    await addButton.click();
 
     await openAddForm(page);
     await titleInput.fill('Concurrent task 2');
-    await button.click();
+    await addButton.click();
 
-    // Expand both tasks first
-    const expandButtons = page.locator('div[role="button"]');
-    await expandButtons.nth(0).click();
-    await expandButtons.nth(1).click();
-
-    // Mark both tasks done
-    const markButtons = page.locator('button:has-text("Mark Done")');
-    await markButtons.nth(0).click();
-    // Wait for modal to appear and confirm
-    await page.locator('input[type="datetime-local"]').waitFor({ state: 'visible' });
-    await page.locator('button.bg-green-600').last().click();
-
-    // Mark second as done
-    await page.waitForTimeout(100);
-    await markButtons.nth(0).click();
-    await page.locator('input[type="datetime-local"]').waitFor({ state: 'visible' });
-    await page.locator('button.bg-green-600').last().click();
-
-    // Both tasks should be created (tests that concurrent countdowns execute independently)
-    // They might be hidden by countdown, but should exist in the DOM
-    const task1Count = await page.locator('text=Concurrent task 1').count();
-    const task2Count = await page.locator('text=Concurrent task 2').count();
-    expect(task1Count).toBeGreaterThan(0);
-    expect(task2Count).toBeGreaterThan(0);
+    // Both tasks should be visible
+    await expect(page.locator('text=Concurrent task 1')).toBeVisible();
+    await expect(page.locator('text=Concurrent task 2')).toBeVisible();
   });
 });

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { formatDate } from '../utils/dateFormat';
 import { COUNTDOWN_CONFIG } from '../config';
 
-export default function TaskItem({ task, showCompleted, isToday, isDragged, onToggle, onDelete, onUpdateDetails, onUpdateTask, onDragStart, onDragEnd }) {
+export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete, onUpdateDetails, onUpdateTask, onDragStart, onDragEnd, allCategories = [] }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -11,6 +11,10 @@ export default function TaskItem({ task, showCompleted, isToday, isDragged, onTo
   const [validationError, setValidationError] = useState('');
   const [editTitle, setEditTitle] = useState(task.title);
   const [editDetails, setEditDetails] = useState(task.details);
+  const [editScheduledDate, setEditScheduledDate] = useState(task.scheduledDate || '');
+  const [editCategories, setEditCategories] = useState(task.categories || []);
+  const [newCategory, setNewCategory] = useState('');
+  const [dateError, setDateError] = useState('');
 
   // Handle countdown timer
   useEffect(() => {
@@ -30,15 +34,60 @@ export default function TaskItem({ task, showCompleted, isToday, isDragged, onTo
     return () => clearTimeout(timer);
   }, [task.removalCountdown, task.id, onUpdateTask]);
 
+  const getMinDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleDateChange = (e) => {
+    const date = e.target.value;
+    if (date && new Date(date) < new Date()) {
+      setDateError('Cannot schedule for a past date');
+      setEditScheduledDate('');
+    } else {
+      setDateError('');
+      setEditScheduledDate(date);
+    }
+  };
+
+  const handleCategoryToggle = (category) => {
+    setEditCategories(prev =>
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const handleAddNewCategory = () => {
+    const trimmed = newCategory.trim();
+    if (trimmed && !editCategories.includes(trimmed) && !allCategories.includes(trimmed)) {
+      setEditCategories(prev => [...prev, trimmed]);
+      setNewCategory('');
+    }
+  };
+
+  const handleRemoveCategory = (category) => {
+    setEditCategories(prev => prev.filter(c => c !== category));
+  };
+
   const handleUnmarkDone = () => {
     onUpdateTask(task.id, { removalCountdown: null });
     onToggle(task.id);
   };
 
   const handleSaveEdit = () => {
-    if (editTitle.trim()) {
-      // Update both title and details
-      onUpdateTask(task.id, { title: editTitle, details: editDetails });
+    if (editTitle.trim() && !dateError) {
+      // Update task with all fields
+      onUpdateTask(task.id, {
+        title: editTitle,
+        details: editDetails,
+        scheduledDate: editScheduledDate || null,
+        categories: editCategories
+      });
       setIsEditing(false);
     }
   };
@@ -46,6 +95,10 @@ export default function TaskItem({ task, showCompleted, isToday, isDragged, onTo
   const handleCancelEdit = () => {
     setEditTitle(task.title);
     setEditDetails(task.details);
+    setEditScheduledDate(task.scheduledDate || '');
+    setEditCategories(task.categories || []);
+    setNewCategory('');
+    setDateError('');
     setIsEditing(false);
   };
 
@@ -87,11 +140,8 @@ export default function TaskItem({ task, showCompleted, isToday, isDragged, onTo
     // Proceed with completion
     const isoDate = selectedDate.toISOString();
 
-    // Calculate countdown only if "show completed" is OFF (matching App.jsx logic)
-    let removalCountdown = null;
-    if (!showCompleted) {
-      removalCountdown = Math.ceil(COUNTDOWN_CONFIG.duration / COUNTDOWN_CONFIG.decrement);
-    }
+    // Always start countdown (no showCompleted toggle anymore)
+    const removalCountdown = Math.ceil(COUNTDOWN_CONFIG.duration / COUNTDOWN_CONFIG.decrement);
 
     // Update task with completion date and countdown (don't call onToggle to avoid overwriting the date)
     onUpdateTask(task.id, {
@@ -183,7 +233,7 @@ export default function TaskItem({ task, showCompleted, isToday, isDragged, onTo
                         onClick={handleUnmarkDone}
                         className="flex-1 px-3 py-2 text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-md transition font-medium"
                       >
-                        Unmark Done{task.removalCountdown && !showCompleted && ` (${(task.removalCountdown * COUNTDOWN_CONFIG.decrement).toFixed(1)})`}
+                        Unmark Done{task.removalCountdown && ` (${(task.removalCountdown * COUNTDOWN_CONFIG.decrement).toFixed(1)})`}
                       </button>
                     ) : (
                       <button
@@ -213,6 +263,7 @@ export default function TaskItem({ task, showCompleted, isToday, isDragged, onTo
         </>
       ) : (
         <div className="p-4 space-y-3">
+          {/* Title */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Title
@@ -225,6 +276,7 @@ export default function TaskItem({ task, showCompleted, isToday, isDragged, onTo
             />
           </div>
 
+          {/* Details */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Details
@@ -238,6 +290,105 @@ export default function TaskItem({ task, showCompleted, isToday, isDragged, onTo
             />
           </div>
 
+          {/* Scheduled Date */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Schedule for a specific date (optional)
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={editScheduledDate}
+                onChange={handleDateChange}
+                min={getMinDate()}
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {editScheduledDate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditScheduledDate('');
+                    setDateError('');
+                  }}
+                  className="px-3 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {dateError && <p className="text-red-600 text-sm mt-1">{dateError}</p>}
+          </div>
+
+          {/* Categories */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-2">
+              Categories
+            </label>
+
+            {/* Existing Categories Checkboxes */}
+            {allCategories.length > 0 && (
+              <div className="space-y-1 mb-2">
+                {allCategories.map(category => (
+                  <label key={category} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={editCategories.includes(category)}
+                      onChange={() => handleCategoryToggle(category)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-gray-700">{category}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {/* Selected Categories Tags */}
+            {editCategories.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {editCategories.map(category => (
+                  <span
+                    key={category}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                  >
+                    {category}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCategory(category)}
+                      className="text-blue-600 hover:text-blue-800 font-bold"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* New Category Input */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddNewCategory();
+                  }
+                }}
+                placeholder="Type new category name..."
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={handleAddNewCategory}
+                className="px-3 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Buttons */}
           <div className="flex gap-2">
             <button
               onClick={handleSaveEdit}

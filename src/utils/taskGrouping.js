@@ -1,17 +1,16 @@
 /**
- * Task Grouping Utilities
+ * Task Grouping Utilities (Tab-based)
  *
- * Groups tasks by date:
- * - All incomplete tasks → "Today" group
- * - All completed tasks → grouped by completion date
- * - Within "Today": incomplete first, then completed
- * - Past dates ordered most recent first
+ * Groups tasks based on selected tab:
+ * - "Today": All incomplete + today's completed tasks
+ * - Categories: Tasks with that category, grouped by scheduledDate
+ * - "Closed Tasks": All completed tasks, grouped by completionDate
  */
 
 /**
  * Get today's date in YYYY-MM-DD format (local time)
  */
-const getTodayDateKey = () => {
+export const getTodayDateKey = () => {
   const today = new Date();
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -40,21 +39,121 @@ export const isToday = (isoDateString) => {
 };
 
 /**
- * Group tasks by date
- *
- * Returns:
- * {
- *   today: [tasks],  // All incomplete + today's completed tasks
- *   pastDates: [
- *     { dateKey: "2026-04-05", tasks: [...] },
- *     { dateKey: "2026-04-04", tasks: [...] },
- *     ...
- *   ]
- * }
- *
+ * Group tasks by scheduled date (for future dates view)
+ * @param {Array} taskList - Tasks to group
+ * @returns {Array} Groups: [{ dateKey, tasks }] sorted chronologically
+ */
+const groupByScheduledDate = (taskList) => {
+  const groups = {};
+  const todayKey = getTodayDateKey();
+
+  taskList.forEach(task => {
+    const dateKey = task.scheduledDate || todayKey;
+    if (!groups[dateKey]) {
+      groups[dateKey] = [];
+    }
+    groups[dateKey].push(task);
+  });
+
+  return Object.entries(groups)
+    .map(([dateKey, tasks]) => ({ dateKey, tasks }))
+    .sort((a, b) => {
+      if (a.dateKey === todayKey) return -1; // Today first
+      if (b.dateKey === todayKey) return 1;
+      return new Date(a.dateKey) - new Date(b.dateKey); // Chronologically
+    });
+};
+
+/**
+ * Group tasks by completion date (for Closed Tasks tab)
+ * @param {Array} taskList - Completed tasks to group
+ * @returns {Array} Groups: [{ dateKey, tasks }] sorted by date (most recent first)
+ */
+const groupByCompletionDate = (taskList) => {
+  const groups = {};
+
+  taskList.forEach(task => {
+    if (task.completionDate) {
+      const dateKey = getDateKey(task.completionDate);
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(task);
+    }
+  });
+
+  return Object.entries(groups)
+    .map(([dateKey, tasks]) => ({ dateKey, tasks }))
+    .sort((a, b) => new Date(b.dateKey) - new Date(a.dateKey)); // Most recent first
+};
+
+/**
+ * Get tasks for "Today" tab
+ * (Incomplete + today's completed + any completed with active countdown)
+ * @param {Array} tasks - All tasks
+ * @returns {Array} Groups: [{ dateKey, tasks }]
+ */
+export const getTasksForToday = (tasks) => {
+  const todayDate = getTodayDateKey();
+  const todayTasks = tasks.filter(task => {
+    // Incomplete with no future scheduled date
+    if (!task.completed && !task.scheduledDate) return true;
+    // Completed tasks - include if:
+    // 1. Completed today, OR
+    // 2. Has active countdown (grace period - keep visible)
+    if (task.completed && task.completionDate) {
+      const completedToday = getDateKey(task.completionDate) === todayDate;
+      const hasCountdown = task.removalCountdown && task.removalCountdown > 0;
+      if (completedToday || hasCountdown) return true;
+    }
+    return false;
+  });
+
+  // Group by date (Today only)
+  return [{ dateKey: todayDate, tasks: todayTasks }];
+};
+
+/**
+ * Get tasks for a specific category tab
+ * (Grouped by scheduledDate chronologically)
+ * @param {Array} tasks - All tasks
+ * @param {string} category - Category name
+ * @returns {Array} Groups: [{ dateKey, tasks }] sorted chronologically
+ */
+export const getTasksForCategory = (tasks, category) => {
+  const categoryTasks = tasks.filter(task => {
+    const categories = task.categories || [];
+    return Array.isArray(categories) && categories.includes(category);
+  });
+
+  return groupByScheduledDate(categoryTasks);
+};
+
+/**
+ * Get tasks for "Closed Tasks" tab
+ * (Completed tasks without active countdown)
+ * @param {Array} tasks - All tasks
+ * @returns {Array} Groups: [{ dateKey, tasks }] sorted by date (most recent first)
+ */
+export const getTasksForClosedTab = (tasks) => {
+  // Include only completed tasks that have finished their countdown
+  // Tasks with active countdown stay in their original tab (Today or category)
+  const closedTasks = tasks.filter(task => {
+    if (!task.completed) return false;
+    const hasCountdown = task.removalCountdown && task.removalCountdown > 0;
+    // Exclude any task with active countdown
+    return !hasCountdown;
+  });
+
+  return groupByCompletionDate(closedTasks);
+};
+
+/**
+ * Legacy function for backward compatibility
+ * Groups tasks by date (old "Today/PastDates" structure)
  * @param {Array} tasks - Array of task objects
- * @param {boolean} showCompleted - Whether to show completed tasks
- * @returns {Object} Grouped tasks object
+ * @param {boolean} showCompleted - Ignored (kept for compatibility)
+ * @returns {Object} { today, pastDates } - Old structure
  */
 export const getTaskGroups = (tasks, showCompleted) => {
   const todayDateKey = getTodayDateKey();
@@ -64,11 +163,10 @@ export const getTaskGroups = (tasks, showCompleted) => {
   // Distribute tasks into groups
   tasks.forEach(task => {
     if (!task.completed) {
-      // All incomplete tasks go to Today
-      todayTasks.push(task);
-    } else if (!showCompleted && task.removalCountdown && task.removalCountdown > 0) {
-      // Completed tasks in countdown also go to Today (when toggle is OFF)
-      todayTasks.push(task);
+      // All incomplete tasks without future scheduled date go to Today
+      if (!task.scheduledDate) {
+        todayTasks.push(task);
+      }
     } else if (task.completionDate) {
       // Completed tasks go to their completion date group
       const dateKey = getDateKey(task.completionDate);

@@ -7,7 +7,7 @@ test.describe('Core Functionality', () => {
   });
 
   test('should load the app with the title', async ({ page }) => {
-    await expect(page.locator('h1')).toContainText('Task Planner');
+    await expect(page.locator('h1')).toContainText('Today');
   });
 
   test('should display empty state message initially', async ({ page }) => {
@@ -74,22 +74,16 @@ test.describe('Core Functionality', () => {
     // Click Mark Done button and confirm date/time modal
     await markTaskDone(page);
 
-    // Task should be visible with countdown during 5 seconds
+    // Task should remain visible with countdown
     await expect(page.locator('text=Test task')).toBeVisible();
 
-    // Check that the task has strikethrough styling (visible during countdown)
+    // Check that the task has strikethrough styling
     await expect(taskSpan).toHaveClass(/line-through/);
 
     // Wait for countdown to complete
     await page.waitForTimeout(1000);
 
-    // Task should be hidden (toggle is off by default)
-    await expect(page.locator('text=Test task')).not.toBeVisible();
-
-    // But should appear when toggle is on
-    const showCompletedButton = page.locator('button:has-text("Show Completed")');
-    await showCompletedButton.click();
-
+    // Task should still be visible (completed today, stays in Today tab)
     await expect(page.locator('text=Test task')).toBeVisible();
     await expect(taskSpan).toHaveClass(/line-through/);
   });
@@ -183,8 +177,10 @@ test.describe('Core Functionality', () => {
     // Wait for countdown to complete (0.3s test duration = 3 decrements × 300ms each = 900ms+)
     await page.waitForTimeout(1000);
 
-    // Task 2 should now be hidden (countdown expired, toggle is off)
-    await expect(page.locator('text=Task 2')).not.toBeVisible();
+    // Task 2 should still be visible (completed today stays in Today tab)
+    await expect(page.locator('text=Task 2')).toBeVisible();
+    const task2 = page.locator('span').filter({ hasText: 'Task 2' }).first();
+    await expect(task2).toHaveClass(/line-through/);
 
     // Delete first task - need to expand it first
     const expandButton = page.locator('div[role="button"]').first();
@@ -201,13 +197,8 @@ test.describe('Core Functionality', () => {
     await expect(page.locator('text=Task 1')).not.toBeVisible();
     await expect(page.locator('text=Task 3')).toBeVisible();
 
-    // Show completed tasks to verify Task 2 is still there and marked complete
-    const showCompletedButton = page.locator('button:has-text("Show Completed")');
-    await showCompletedButton.click();
-
+    // Verify Task 2 is still visible and marked complete
     await expect(page.locator('text=Task 2')).toBeVisible();
-    const task2 = page.locator('span').filter({ hasText: 'Task 2' }).first();
-    await expect(task2).toHaveClass(/line-through/);
   });
 
   test('should expand and collapse task details', async ({ page }) => {

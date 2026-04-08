@@ -45,15 +45,11 @@ test.describe('Task Reordering - Structure Verification', () => {
 
     await page.waitForTimeout(200);
 
-    // Show completed tasks
-    const showCompletedButton = page.locator('button:has-text("Show Completed")');
-    await showCompletedButton.click();
-
-    // Verify completed task doesn't have a draggable handle
+    // Verify completed task is visible (stays in Today tab with strikethrough)
     const task = page.locator('text=Task to Complete').first();
     await expect(task).toBeVisible();
 
-    // Should not have a draggable handle element
+    // Should not have a draggable handle element (completed tasks can't be dragged)
     const handle = task.locator('xpath=ancestor::div').locator('[draggable="true"]');
     const handleCount = await handle.count();
 
@@ -71,14 +67,14 @@ test.describe('Task Reordering - Structure Verification', () => {
       await addButton.click();
     }
 
-    // Verify Today header exists
-    const todayHeader = page.locator('text=Today');
-    await expect(todayHeader).toBeVisible();
-
     // Verify all tasks are visible
     for (let i = 1; i <= 3; i++) {
       await expect(page.locator(`text=Task ${i}`)).toBeVisible();
     }
+
+    // Verify there's a group header (h3 element) for the tasks
+    const groupHeader = page.locator('h3').first();
+    await expect(groupHeader).toBeVisible();
 
     // Verify initial order
     const taskTexts = page.locator('span').filter({ hasText: /^Task [123]$/ });
@@ -98,10 +94,6 @@ test.describe('Task Reordering - Structure Verification', () => {
     await openAddForm(page);
     await titleInput.fill('Task to Complete');
     await addButton.click();
-
-    // Initially both should be in Today group (both incomplete)
-    let todayHeader = page.locator('text=Today');
-    await expect(todayHeader).toBeVisible();
 
     // Mark second task as done
     const expandButton = page.locator('div[role="button"]').nth(1);

@@ -86,31 +86,17 @@ test.describe('Date Display', () => {
     // Mark as complete
     await markTaskDone(page);
 
-    // Task is visible during countdown
+    // Task is visible with completion date
     await expect(page.locator('text=Toggle completion')).toBeVisible();
-
-    // Wait for countdown to complete
-    await page.waitForTimeout(1000);
-
-    // Task disappears after countdown (toggle is off)
-    await expect(page.locator('text=Toggle completion')).not.toBeVisible();
-
-    // Show completed tasks to verify completion date is shown
-    let showCompletedButton = page.locator('button:has-text("Show Completed")');
-    await showCompletedButton.click();
-
-    // Expand the completed task to see the details (it will be collapsed after re-render)
-    let expandCompletedButton = page.locator('div[role="button"]').first();
-    await expandCompletedButton.click();
-
     let completedText = page.locator('text=Completed:');
     await expect(completedText).toBeVisible();
 
-    // Mark as incomplete
+    // Mark as incomplete (click Unmark Done)
     let unmarkButton = page.locator('button:has-text("Unmark Done")').first();
     await unmarkButton.click();
 
-    // Task remains visible in completed view but should not have completion date
+    // Task should remain visible but without completion date
+    await expect(page.locator('text=Toggle completion')).toBeVisible();
     completedText = page.locator('text=Completed:');
     await expect(completedText).not.toBeVisible();
   });
@@ -152,18 +138,12 @@ test.describe('Date Display', () => {
     const confirmButton = page.locator('button.bg-green-600').last();
     await confirmButton.click();
 
-    // Task should still be visible during countdown
-    await expect(page.locator('text=Task with past date')).toBeVisible();
+    await page.waitForTimeout(500);
 
-    // Wait for countdown to complete
-    await page.waitForTimeout(1000);
-
-    // Task disappears (countdown expired, toggle is off)
-    await expect(page.locator('text=Task with past date')).not.toBeVisible();
-
-    // Show completed tasks
-    const showCompletedButton = page.locator('button:has-text("Show Completed")');
-    await showCompletedButton.click();
+    // Task should be in Closed Tasks tab (completed in past)
+    // Click on Closed Tasks tab from sidebar
+    const closedTasksTab = page.locator('button:has-text("Closed Tasks")');
+    await closedTasksTab.click();
 
     // Expand to see completion date
     const expandCompletedButton = page.locator('div[role="button"]').first();

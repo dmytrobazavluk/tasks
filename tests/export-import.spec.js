@@ -37,6 +37,8 @@ test.describe('Export/Import Functionality', () => {
     await titleInput.fill('Original Task');
     await addButton.click();
 
+    await expect(page.locator('text=Original Task')).toBeVisible();
+
     // Prepare import data
     const importData = [
       {
@@ -44,6 +46,8 @@ test.describe('Export/Import Functionality', () => {
         title: 'Imported Task 1',
         completed: false,
         details: 'Details for imported task',
+        scheduledDate: null,
+        categories: [],
         addedDate: new Date().toISOString(),
         completionDate: null
       },
@@ -52,6 +56,8 @@ test.describe('Export/Import Functionality', () => {
         title: 'Imported Task 2',
         completed: true,
         details: '',
+        scheduledDate: null,
+        categories: [],
         addedDate: new Date().toISOString(),
         completionDate: new Date().toISOString()
       }
@@ -82,23 +88,20 @@ test.describe('Export/Import Functionality', () => {
     const importButton = page.locator('button:has-text("Import")').last();
     await importButton.click();
 
-    // Wait for import to complete and modal to close
-    await page.waitForTimeout(500);
+    // Wait for import to complete
+    await page.waitForTimeout(1000);
 
-    // Verify modal is closed
-    await expect(page.locator('h2:has-text("Import Tasks")')).not.toBeVisible();
-
-    // Verify original task is gone
+    // Verify original task is gone (replaced by imported tasks)
     await expect(page.locator('text=Original Task')).not.toBeVisible();
 
     // Verify imported incomplete task is visible
     await expect(page.locator('text=Imported Task 1')).toBeVisible();
 
-    // Show completed to see Task 2
-    const showCompletedButton = page.locator('button:has-text("Show Completed")');
-    await showCompletedButton.click();
+    // Click on Closed Tasks tab to see completed Task 2
+    const closedTasksTab = page.locator('button:has-text("Closed Tasks")');
+    await closedTasksTab.click();
 
-    // Now Imported Task 2 (completed) should be visible
+    // Now Imported Task 2 (completed) should be visible in Closed Tasks
     await expect(page.locator('text=Imported Task 2')).toBeVisible();
   });
 

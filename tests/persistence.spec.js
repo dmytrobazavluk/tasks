@@ -49,16 +49,8 @@ test.describe('Task Persistence', () => {
 
     await markTaskDone(page);
 
-    // Task A is visible with countdown, Task B is incomplete
+    // Both tasks are visible (Task A with strikethrough)
     await expect(page.locator('text=Task A')).toBeVisible();
-    await expect(page.locator('text=Task B')).toBeVisible();
-
-    // Wait for countdown to complete
-    await page.waitForTimeout(1000);
-
-    // Task A should now be hidden (toggle is off)
-    await expect(page.locator('text=Task A')).not.toBeVisible();
-    // Task B should still be visible
     await expect(page.locator('text=Task B')).toBeVisible();
 
     // Reload the page
@@ -67,19 +59,18 @@ test.describe('Task Persistence', () => {
     // Task B should be visible (incomplete)
     await expect(page.locator('text=Task B')).toBeVisible();
 
-    // Task A should be hidden (completed, hidden by default)
-    await expect(page.locator('text=Task A')).not.toBeVisible();
-
-    // Show completed tasks
-    const showCompletedButton = page.locator('button:has-text("Show Completed")');
-    await showCompletedButton.click();
-
-    // Both tasks should now be visible
+    // Task A should still be visible in Today tab (completed today)
     await expect(page.locator('text=Task A')).toBeVisible();
-    await expect(page.locator('text=Task B')).toBeVisible();
 
     // Task A should still be marked as complete
     const reloadedTaskA = page.locator('span').filter({ hasText: 'Task A' }).first();
     await expect(reloadedTaskA).toHaveClass(/line-through/);
+
+    // Click on Closed Tasks tab to verify Task A is there too
+    const closedTasksTab = page.locator('button:has-text("Closed Tasks")');
+    await closedTasksTab.click();
+
+    // Task A should be visible in Closed Tasks
+    await expect(page.locator('text=Task A')).toBeVisible();
   });
 });
