@@ -233,13 +233,23 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
                 }
               }}
             >
-              <span
-                className={`block ${
-                  task.completed ? 'line-through text-gray-400' : 'text-gray-800'
-                }`}
-              >
-                {task.title}
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {getProjectNamesFromIds(task.projectIds || []).map((projectName) => (
+                  <span
+                    key={projectName}
+                    className="inline-block px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-full flex-shrink-0"
+                  >
+                    {projectName}
+                  </span>
+                ))}
+                <span
+                  className={`block ${
+                    task.completed ? 'line-through text-gray-400' : 'text-gray-800'
+                  }`}
+                >
+                  {task.title}
+                </span>
+              </div>
             </div>
             <span className="text-blue-500 font-medium text-sm flex-shrink-0 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
               {isExpanded ? '▼' : '▶'}
