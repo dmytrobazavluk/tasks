@@ -211,4 +211,52 @@ test.describe('Task Removal Countdown', () => {
     await expect(page.locator('text=Concurrent task 1')).toBeVisible();
     await expect(page.locator('text=Concurrent task 2')).toBeVisible();
   });
+
+  test('should keep completion date modal open after selecting date from picker', async ({ page }) => {
+    await openAddForm(page);
+
+    const titleInput = page.locator('input[placeholder="Task title..."]');
+    const addButton = page.locator('button:has-text("Add Task")');
+
+    // Add a task
+    await titleInput.fill('Date picker test');
+    await addButton.click();
+
+    // Expand the task
+    const expandButton = page.locator('div[role="button"]').first();
+    await expandButton.click();
+
+    // Click Mark Done to open the completion date modal
+    const markDoneButton = page.locator('button:has-text("Mark Done")').first();
+    await markDoneButton.click();
+
+    // Wait for the modal to appear
+    const modal = page.locator('text=When was this completed?');
+    await expect(modal).toBeVisible();
+
+    // Get the datetime input
+    const datetimeInput = page.locator('input[type="datetime-local"]');
+    await expect(datetimeInput).toBeVisible();
+
+    // Simulate selecting a date from the picker by changing the input value
+    // (In reality, the native picker would update this value when user selects a date)
+    const pastDateTime = '2026-04-08T14:30';
+    await datetimeInput.fill(pastDateTime);
+
+    // Modal should still be visible after "selecting" the date
+    // (simulating the calendar closing but the modal staying open)
+    await expect(modal).toBeVisible();
+    await expect(datetimeInput).toHaveValue(pastDateTime);
+
+    // Should be able to click Confirm button to complete the action
+    const confirmButton = page.locator('button.bg-green-600').last();
+    await expect(confirmButton).toBeVisible();
+    await confirmButton.click();
+
+    // Task should now be marked as done
+    await expect(page.locator('text=Date picker test')).toBeVisible();
+    // Countdown should be showing on Unmark Done button
+    const unmarkButton = page.locator('button:has-text("Unmark Done (0.")');
+    await expect(unmarkButton).toBeVisible();
+  });
 });

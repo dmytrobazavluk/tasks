@@ -615,7 +615,11 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
             <input
               type="datetime-local"
               value={selectedCompletionDateTime}
-              onChange={(e) => setSelectedCompletionDateTime(e.target.value)}
+              onChange={(e) => {
+                setSelectedCompletionDateTime(e.target.value);
+                // Blur to close the native calendar picker, but keep modal open
+                setTimeout(() => e.target.blur(), 0);
+              }}
               max={getLocalDateTimeString(new Date())}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
