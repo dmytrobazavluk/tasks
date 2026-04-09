@@ -95,15 +95,23 @@ const groupByCompletionDate = (taskList) => {
 };
 
 /**
- * Filter tasks that belong on the Today tab (shared logic)
+ * Get tasks for "Today" tab
+ * (Incomplete + today's completed + any completed with active countdown, excluding scheduled tasks)
  * @param {Array} tasks - All tasks
- * @returns {Array} Flat list of today's tasks
+ * @returns {Array} Groups: [{ dateKey, tasks }]
  */
-const filterTodayTasks = (tasks) => {
+export const getTasksForToday = (tasks) => {
   const todayDate = getTodayDateKey();
-  return tasks.filter(task => {
+  const todayTasks = tasks.filter(task => {
+    // Exclude any task with future scheduling (soon or specific date)
     if (hasAnyFutureScheduling(task)) return false;
+
+    // Incomplete tasks
     if (!task.completed) return true;
+
+    // Completed tasks - include if:
+    // 1. Completed today, OR
+    // 2. Has active countdown (grace period - keep visible)
     if (task.completionDate) {
       const completedToday = getDateKey(task.completionDate) === todayDate;
       const hasCountdown = task.removalCountdown && task.removalCountdown > 0;
@@ -111,71 +119,9 @@ const filterTodayTasks = (tasks) => {
     }
     return false;
   });
-};
 
-/**
- * Get tasks for "Today" tab
- * (Incomplete + today's completed + any completed with active countdown, excluding scheduled tasks)
- * @param {Array} tasks - All tasks
- * @returns {Array} Groups: [{ dateKey, tasks }]
- */
-export const getTasksForToday = (tasks) => {
-  return [{ dateKey: getTodayDateKey(), tasks: filterTodayTasks(tasks) }];
-};
-
-/**
- * Get tasks for "Today" tab grouped by project
- * Tasks in multiple projects appear in each project's group.
- * Tasks with no project go into a "No project assigned" group at the end.
- * @param {Array} tasks - All tasks
- * @param {Array} projects - All project objects (determines group order)
- * @returns {Array} Groups: [{ groupKey, label, projectId, tasks }]
- */
-export const getTasksForTodayByProject = (tasks, projects) => {
-  const todayTasks = filterTodayTasks(tasks);
-
-  const projectTasksMap = new Map(); // projectId -> Task[]
-  const noProjectTasks = [];
-
-  todayTasks.forEach(task => {
-    const projectIds = task.projectIds || [];
-    if (projectIds.length === 0) {
-      noProjectTasks.push(task);
-    } else {
-      projectIds.forEach(projectId => {
-        if (!projectTasksMap.has(projectId)) {
-          projectTasksMap.set(projectId, []);
-        }
-        projectTasksMap.get(projectId).push(task);
-      });
-    }
-  });
-
-  const groups = [];
-
-  // Add groups in the order defined by the projects array
-  projects.forEach(project => {
-    if (projectTasksMap.has(project.id)) {
-      groups.push({
-        groupKey: `project:${project.id}`,
-        label: project.name,
-        projectId: project.id,
-        tasks: projectTasksMap.get(project.id)
-      });
-    }
-  });
-
-  // "No project assigned" at the end
-  if (noProjectTasks.length > 0) {
-    groups.push({
-      groupKey: 'no-project',
-      label: 'No project assigned',
-      projectId: null,
-      tasks: noProjectTasks
-    });
-  }
-
-  return groups;
+  // Group by date (Today only)
+  return [{ dateKey: todayDate, tasks: todayTasks }];
 };
 
 /**
