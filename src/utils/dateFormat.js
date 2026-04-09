@@ -1,7 +1,7 @@
 /**
- * Format an ISO date string to a human-readable format
+ * Format an ISO date string to a human-readable format with time
  * @param {string} isoString - ISO date string (e.g., "2026-04-06T15:23:45.123Z")
- * @returns {string} Formatted date (e.g., "Apr 6, 3:23 PM")
+ * @returns {string} Formatted date with time (e.g., "Apr 6, 3:23 PM")
  */
 export const formatDate = (isoString) => {
   if (!isoString) return '';
@@ -14,6 +14,22 @@ export const formatDate = (isoString) => {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
+  }).format(date);
+};
+
+/**
+ * Format an ISO date string to date only (no time)
+ * @param {string} isoString - ISO date string (e.g., "2026-04-06T15:23:45.123Z")
+ * @returns {string} Formatted date only (e.g., "Apr 6")
+ */
+export const formatDateOnly = (isoString) => {
+  if (!isoString) return '';
+
+  const date = new Date(isoString);
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
   }).format(date);
 };
 

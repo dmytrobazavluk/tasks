@@ -120,19 +120,19 @@ test.describe('Date Display', () => {
     await markDoneButton.click();
 
     // Wait for modal to appear
-    const dateInput = page.locator('input[type="datetime-local"]');
+    const dateInput = page.locator('input[type="date"]');
     await dateInput.waitFor({ state: 'visible' });
 
-    // Calculate yesterday's date at noon
+    // Calculate yesterday's date
     const now = new Date();
-    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12, 0);
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
     const year = yesterday.getFullYear();
     const month = String(yesterday.getMonth() + 1).padStart(2, '0');
     const day = String(yesterday.getDate()).padStart(2, '0');
-    const pastDateTime = `${year}-${month}-${day}T12:00`;
+    const pastDate = `${year}-${month}-${day}`;
 
-    // Set the datetime input to yesterday at noon
-    await dateInput.fill(pastDateTime);
+    // Set the date input to yesterday
+    await dateInput.fill(pastDate);
 
     // Click Confirm button
     const confirmButton = page.locator('button.bg-green-600').last();

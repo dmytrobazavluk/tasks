@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { formatDate } from '../utils/dateFormat';
+import { formatDate, formatDateOnly } from '../utils/dateFormat';
 import { COUNTDOWN_CONFIG } from '../config';
 
 export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete, onUpdateDetails, onUpdateTask, onDragStart, onDragEnd, allCategories = [], categoryObjects = [], allProjects = [], projectObjects = [] }) {
@@ -157,28 +157,34 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
     setIsConfirmingDelete(false);
   };
 
-  const getLocalDateTimeString = (date) => {
+  const getLocalDateString = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    return `${year}-${month}-${day}`;
   };
 
   const handleMarkDoneClick = () => {
     const now = new Date();
-    const defaultDateTime = getLocalDateTimeString(now);
-    setSelectedCompletionDateTime(defaultDateTime);
+    const defaultDate = getLocalDateString(now);
+    setSelectedCompletionDateTime(defaultDate);
     setValidationError('');
     setIsSelectingCompletionDate(true);
   };
 
   const handleConfirmCompletion = () => {
-    const selectedDate = new Date(selectedCompletionDateTime);
+    if (!selectedCompletionDateTime) return;
+
+    // Parse date string (YYYY-MM-DD)
+    const [year, month, day] = selectedCompletionDateTime.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, day, 12, 0, 0); // noon to avoid timezone issues
     const now = new Date();
 
-    if (selectedDate > now) {
+    // Compare just the dates, not times
+    const today = new Date();
+    today.setHours(23, 59, 59);
+
+    if (selectedDate > today) {
       setValidationError('Task completion date cannot be in the future');
       return;
     }
@@ -261,12 +267,12 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
               <div className="pt-3 space-y-3">
                 <div className="text-xs text-gray-500 space-y-1">
                   <div>
-                    <span className="font-medium">Added:</span> {formatDate(task.addedDate)}
+                    <span className="font-medium">Added:</span> {formatDateOnly(task.addedDate)}
                   </div>
                   {task.completionDate && (
                     <div>
                       <span className="font-medium">Completed:</span>{' '}
-                      {formatDate(task.completionDate)}
+                      {formatDateOnly(task.completionDate)}
                     </div>
                   )}
                 </div>
@@ -613,14 +619,14 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
             <h2 className="text-lg font-bold text-gray-800 mb-4">When was this completed?</h2>
 
             <input
-              type="datetime-local"
+              type="date"
               value={selectedCompletionDateTime}
               onChange={(e) => {
                 setSelectedCompletionDateTime(e.target.value);
                 // Blur to close the native calendar picker, but keep modal open
                 setTimeout(() => e.target.blur(), 0);
               }}
-              max={getLocalDateTimeString(new Date())}
+              max={getLocalDateString(new Date())}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
 

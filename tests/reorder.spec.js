@@ -40,7 +40,7 @@ test.describe('Task Reordering - Structure Verification', () => {
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
-    await page.locator('input[type="datetime-local"]').waitFor({ state: 'visible' });
+    await page.locator('input[type="date"]').waitFor({ state: 'visible' });
     await page.locator('button.bg-green-600').last().click();
 
     await page.waitForTimeout(200);
@@ -97,7 +97,7 @@ test.describe('Task Reordering - Structure Verification', () => {
 
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
-    await page.locator('input[type="datetime-local"]').waitFor({ state: 'visible' });
+    await page.locator('input[type="date"]').waitFor({ state: 'visible' });
     await page.locator('button.bg-green-600').last().click();
 
     await page.waitForTimeout(200);

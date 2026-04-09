@@ -121,7 +121,7 @@ test.describe('Task Scheduling & Categories', () => {
     await expandButton.click();
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
-    await page.locator('input[type="datetime-local"]').waitFor({ state: 'visible' });
+    await page.locator('input[type="date"]').waitFor({ state: 'visible' });
     await page.locator('button.bg-green-600').last().click();
 
     // Click Closed Tasks tab (sidebar)
@@ -210,7 +210,7 @@ test.describe('Task Scheduling & Categories', () => {
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
 
-    await page.locator('input[type="datetime-local"]').waitFor({ state: 'visible' });
+    await page.locator('input[type="date"]').waitFor({ state: 'visible' });
     await page.locator('button.bg-green-600').last().click();
 
     // Wait for update and countdown to complete
@@ -251,7 +251,7 @@ test.describe('Task Scheduling & Categories', () => {
     await expandButton.click();
     const markDoneButton = page.locator('button:has-text("Mark Done")').first();
     await markDoneButton.click();
-    await page.locator('input[type="datetime-local"]').waitFor({ state: 'visible' });
+    await page.locator('input[type="date"]').waitFor({ state: 'visible' });
     await page.locator('button.bg-green-600').last().click();
 
     // Wait a bit (but not full countdown)
@@ -293,17 +293,17 @@ test.describe('Task Scheduling & Categories', () => {
     await markDoneButton.click();
 
     // Wait for modal and set to yesterday
-    await page.locator('input[type="datetime-local"]').waitFor({ state: 'visible' });
-    const dateInput = page.locator('input[type="datetime-local"]');
+    await page.locator('input[type="date"]').waitFor({ state: 'visible' });
+    const dateInput = page.locator('input[type="date"]');
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const year = yesterday.getFullYear();
     const month = String(yesterday.getMonth() + 1).padStart(2, '0');
     const day = String(yesterday.getDate()).padStart(2, '0');
-    const pastDateTime = `${year}-${month}-${day}T12:00`;
+    const pastDate = `${year}-${month}-${day}`;
 
-    await dateInput.fill(pastDateTime);
+    await dateInput.fill(pastDate);
     await page.locator('button.bg-green-600').last().click();
 
     // Wait a bit (but not full countdown)

@@ -45,8 +45,8 @@ export const markTaskDone = async (page) => {
       // Wait a moment for modal to render
       await page.waitForTimeout(200);
 
-      // Check if modal appeared (look for the datetime input)
-      const modalInput = page.locator('input[type="datetime-local"]');
+      // Check if modal appeared (look for the date input)
+      const modalInput = page.locator('input[type="date"]');
       await modalInput.waitFor({ state: 'visible', timeout: 3000 });
 
       // Modal is here, now click Confirm
