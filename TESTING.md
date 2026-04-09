@@ -30,11 +30,11 @@ npm run build        # Build for production
 ## Test Suite
 
 **Framework:** Playwright (headless browser automation)
-- **51 tests total** organized by feature
+- **56 tests total** organized by feature
 - Runs headless by default (no visible browser window)
 - Auto-starts dev server before tests
 - Reuses existing server if already running (speeds up iterations)
-- Average execution time: ~13-15 seconds
+- Average execution time: ~12 seconds
 
 **Test Coverage by Category:**
 
@@ -75,7 +75,7 @@ npm run build        # Build for production
 - Multiple tasks with concurrent countdowns
 - Countdown behavior during tab switching
 
-**Task Scheduling & Categories (8 tests)** — `tests/scheduling-categories.spec.js`
+**Task Scheduling & Categories & Projects (13 tests)** — `tests/scheduling-categories.spec.js`
 - Add task with single category
 - Filter tasks by category tab
 - Display correct task counts in sidebar
@@ -84,6 +84,11 @@ npm run build        # Build for production
 - Keep task in category tab during countdown, move to closed after
 - Show closed tasks in closed tasks tab
 - Keep past-completed task in today tab during countdown
+- Add task with "Some time in the future" scheduling
+- Display future tasks in correct order (soon first, then dates descending)
+- Hide Future tab when no scheduled tasks exist
+- Switch between scheduling modes in edit modal
+- Count future tasks correctly in sidebar
 
 **Export/Import Functionality (7 tests)** — `tests/export-import.spec.js`
 - Have export and import buttons
@@ -114,7 +119,7 @@ After making code changes:
 npm test
 ```
 
-All 43 tests should pass in ~8 seconds. If any fail:
+All 56 tests should pass in ~12 seconds. If any fail:
 - Check test output for specific failure message
 - Common issues:
   - Form not found: Use `openAddForm(page)` before accessing form inputs
@@ -214,8 +219,10 @@ test('should add a task', async ({ page }) => {
 | `src/components/ImportModal.jsx` | Import modal dialog |
 | `src/models/Task.js` | Task model, factory, and utilities |
 | `src/models/Category.js` | Category model, factory, and utilities |
+| `src/models/Project.js` | Project model, factory, and utilities |
 | `src/utils/taskGrouping.js` | Task grouping by tab/category/status |
 | `src/utils/categoryUtils.js` | Category filtering and aggregation |
+| `src/utils/projectUtils.js` | Project filtering and aggregation |
 | `src/utils/taskExportImport.js` | Export/import functionality |
 | `src/utils/dateFormat.js` | Date formatting utilities |
 | `src/persistence/index.js` | Persistence factory |
@@ -250,11 +257,12 @@ The app has an abstraction layer for data persistence, making it easy to swap im
 - `localStorage` (default) — Persists tasks AND categories to browser storage, survives page reload
 - `memory` — In-memory only, lost on reload (used in tests)
 
-**Storage Format (v2.0.0):**
+**Storage Format (v2.1.0):**
 ```javascript
 // localStorage keys:
-localStorage['taskplanner_tasks']      // Array of Task objects with categoryIds
+localStorage['taskplanner_tasks']      // Array of Task objects with categoryIds and projectIds
 localStorage['taskplanner_categories'] // Array of Category objects
+localStorage['taskplanner_projects']   // Array of Project objects
 
 // Each Task object:
 {
@@ -262,14 +270,22 @@ localStorage['taskplanner_categories'] // Array of Category objects
   title: string,
   completed: boolean,
   details: string,
-  scheduledDate: string|null,  // ISO date (YYYY-MM-DD)
+  scheduleType: string,         // 'none', 'soon', or 'specific'
+  scheduledDate: string|null,   // ISO date (YYYY-MM-DD) for 'specific' only
   categoryIds: string[],        // Array of UUID strings
+  projectIds: string[],         // Array of UUID strings
   addedDate: string,            // ISO timestamp
   completionDate: string|null,  // ISO timestamp
   removalCountdown: number|null // Not persisted, runtime only
 }
 
 // Each Category object:
+{
+  id: string,      // UUID
+  name: string
+}
+
+// Each Project object:
 {
   id: string,      // UUID
   name: string
@@ -300,8 +316,8 @@ When loading old data with `task.categories: string[]`, automatically:
 Create `src/persistence/server.js` with API calls:
 ```javascript
 export const serverPersistence = {
-  load: async () => { /* GET /api/tasks */ },
-  save: async (tasks, categories) => { /* POST /api/tasks */ },
+  load: async () => { /* GET /api/tasks, returns { tasks, categories, projects } */ },
+  save: async (tasks, categories, projects) => { /* POST /api/tasks */ },
   clear: async () => { /* DELETE /api/tasks */ },
 };
 ```

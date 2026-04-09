@@ -19,15 +19,26 @@ A simple task management app built with React and Tailwind CSS.
   - Filter tasks by category
   - Categories persist in export/import
 
-- 📅 **Task Scheduling**
+- 📦 **Projects** (NEW)
+  - Assign multiple projects to each task
+  - Projects auto-created on-the-fly
+  - Sidebar tabs show all projects with task counts
+  - Filter tasks by project
+  - Projects persist in export/import
+
+- 📅 **Enhanced Task Scheduling**
+  - Schedule tasks "some time in the future" (no specific date)
   - Schedule tasks for specific future dates
-  - Scheduled tasks only appear on their assigned date (not in Today)
+  - Future tab shows all scheduled tasks (sorted: soon first, then dates descending)
   - When scheduled date arrives, task moves to Today tab
   - Validate against past dates
+  - Future tab hides when no scheduled tasks exist
 
 - 📂 **Sidebar Navigation** (replaces old "Show Completed" toggle)
   - **Today** tab: All incomplete tasks + tasks completed today
   - **Category tabs**: All tasks with that category (sorted alphabetically)
+  - **Project tabs**: All tasks with that project (sorted alphabetically)
+  - **Future** tab: All scheduled tasks (both "soon" and specific dates)
   - **Closed Tasks** tab: Completed tasks without active countdown
   - Task counts next to each tab
   - Active tab highlighted in blue
@@ -109,7 +120,7 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes **51 tests** organized by functionality:
+The test suite includes **56 tests** organized by functionality:
 
 **Core Functionality (12 tests)** — `core.spec.js`
 - Load app with title, empty state display
@@ -148,8 +159,9 @@ The test suite includes **51 tests** organized by functionality:
 - Multiple tasks with concurrent countdowns
 - Countdown behavior during tab switching
 
-**Task Scheduling & Categories (8 tests)** — `scheduling-categories.spec.js`
+**Task Scheduling & Categories & Projects (13 tests)** — `scheduling-categories.spec.js`
 - Add task with single category
+- Add task with "Some time in the future" scheduling
 - Filter tasks by category tab
 - Display correct task counts in sidebar
 - Display current tab name in header
@@ -157,6 +169,10 @@ The test suite includes **51 tests** organized by functionality:
 - Keep task in category tab during countdown, move to closed after
 - Show closed tasks in closed tasks tab
 - Keep past-completed task in today tab during countdown
+- Display future tasks in correct order (soon first, then dates descending)
+- Hide Future tab when no scheduled tasks exist
+- Switch between scheduling modes in edit modal
+- Count future tasks correctly in sidebar
 
 **Export/Import Functionality (7 tests)** — `export-import.spec.js`
 - Have export and import buttons
@@ -208,6 +224,7 @@ frontend/
 │   │   ├── dateFormat.js        # Date formatting utilities
 │   │   ├── taskGrouping.js      # Task grouping by tab/category
 │   │   ├── categoryUtils.js     # Category filtering and aggregation
+│   │   ├── projectUtils.js      # Project filtering and aggregation (NEW)
 │   │   └── taskExportImport.js  # Export/import functionality
 │   └── persistence/
 │       ├── index.js           # Persistence factory
@@ -260,6 +277,14 @@ frontend/
 }
 ```
 
+### Project
+```javascript
+{
+  id: string,    // UUID
+  name: string   // User-provided project name
+}
+```
+
 ## Contributing
 
 Want to add a feature or fix a bug? Start here:
@@ -278,6 +303,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Troubleshooting common issues
 
 ## Release History
+
+### v2.1.0 (2026-04-09)
+- **NEW:** Projects as explicit entities with IDs and separate storage
+- **ENHANCED:** Task scheduling now supports "soon" in addition to specific dates
+- **NEW:** Future tab shows all scheduled tasks
+- **IMPROVED:** Future tab hides when no scheduled tasks exist
+- **IMPROVED:** Tasks in Future tab sorted (soon first, then dates descending)
+- **IMPROVED:** Export/import now includes projects
+- All 56 tests passing
 
 ### v2.0.0 (2026-04-08)
 - **NEW:** Categories as explicit entities with IDs

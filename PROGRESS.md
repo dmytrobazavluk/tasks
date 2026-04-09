@@ -1,9 +1,9 @@
 # Task Planner - Project Progress
 
-## Current Status: ✅ Feature Complete (All 51 Tests Passing)
+## Current Status: ✅ Feature Complete (All 56 Tests Passing)
 
 **Location:** Frontend repository  
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 
 ---
 
@@ -34,16 +34,21 @@
 ### ✅ Sidebar Navigation with Tabs
 - **Today tab**: All incomplete tasks + tasks completed today
 - **Category tabs**: All tasks with that category (one tab per unique category)
+- **Project tabs**: All tasks with that project (one tab per unique project)
+- **Future tab**: All tasks scheduled for future (both "soon" and specific dates)
 - **Closed Tasks tab**: Completed tasks without active countdown (ready for archival)
 - Task counts displayed next to each tab
 - Active tab highlighted in blue
-- One-click filtering by category or status
+- One-click filtering by category, project, or status
+- Future tab hidden when no scheduled tasks exist
 
-### ✅ Task Scheduling
+### ✅ Task Scheduling (Enhanced)
+- Schedule tasks "some time in the future" (no specific date)
 - Schedule tasks for specific future dates
-- Scheduled tasks only appear on their assigned date (not in Today tab)
+- Scheduled tasks only appear on Future tab or their assigned date (not in Today tab initially)
 - When scheduled date arrives, task automatically moves to Today tab
 - Validation prevents scheduling for past/current dates
+- Future tab shows both "soon" tasks first, then date-specific tasks in descending order
 
 ### ✅ Drag-and-Drop Reordering
 - Draggable handle (⋮⋮) on left side of each incomplete task in Today tab
@@ -58,9 +63,16 @@
 - Countdown displays as decimal seconds (2.9s format)
 - Countdown decrements at 0.1s intervals
 - Click "Unmark Done" to cancel countdown and revert to incomplete
-- Task stays visible during countdown (grace period for accidental completions)
+- Task stays visible during countdown in its original location (Today, category, or project tab)
 - After countdown: tasks completed today stay in Today tab, older completions move to Closed Tasks
 - Task persists in storage after countdown
+
+### ✅ Projects (NEW)
+- Each task can belong to zero or more projects
+- Projects auto-created when user types new ones in TaskForm
+- Projects shown as multi-select in form
+- Projects auto-deleted when no longer used (orphan cleanup)
+- Sidebar tabs show project names with task counts
 
 ### ✅ UI/UX Features
 - Form positioned at bottom of page (collapsible)
@@ -73,18 +85,19 @@
 ### ✅ Data Persistence
 - Tasks persist to browser localStorage
 - Categories persist separately with auto-migration from old format
+- Projects persist separately
 - Completion state persists
 - Task details/notes persist
 - Completion date/time persists
-- Scheduled dates persist
-- Category assignments persist
+- Scheduled dates and scheduleType persist
+- Category and project assignments persist
 - Survive page reload
 - Pluggable persistence layer (easy to add server backend)
 
 ### ✅ Testing & Automation
-- 51 comprehensive automated tests (Playwright)
+- 56 comprehensive automated tests (Playwright)
 - 8 test files organized by feature
-- ~13-15 second test execution
+- ~12 second test execution
 - Test helpers for common operations
 - 100% test pass rate
 
@@ -96,7 +109,7 @@
 
 ---
 
-## Test Coverage (51 Tests Total)
+## Test Coverage (56 Tests Total)
 
 | Category | Count | Status |
 |----------|-------|--------|
@@ -105,7 +118,7 @@
 | Persistence | 2 | ✅ Passing |
 | Date Display | 5 | ✅ Passing |
 | Task Removal Countdown | 11 | ✅ Passing |
-| Task Scheduling & Categories | 8 | ✅ Passing |
+| Task Scheduling & Categories & Projects | 13 | ✅ Passing |
 | Export/Import Functionality | 7 | ✅ Passing |
 | Task Reordering | 5 | ✅ Passing |
 
@@ -122,7 +135,7 @@ npm run dev
 
 ### Testing
 ```bash
-npm test              # Run all 51 tests (headless)
+npm test              # Run all 56 tests (headless)
 npm test:ui          # Interactive test UI
 npm test:headed      # See browser during tests
 ```
@@ -159,11 +172,13 @@ frontend/
 │   │   └── ImportModal.jsx # Import modal dialog
 │   ├── models/
 │   │   ├── Task.js        # Task model and utilities
-│   │   └── Category.js    # Category model (NEW)
+│   │   ├── Category.js    # Category model (NEW)
+│   │   └── Project.js     # Project model (NEW)
 │   ├── utils/
 │   │   ├── dateFormat.js        # Date formatting utilities
 │   │   ├── taskGrouping.js      # Task grouping by tab/category
 │   │   ├── categoryUtils.js     # Category filtering and aggregation
+│   │   ├── projectUtils.js      # Project filtering and aggregation (NEW)
 │   │   └── taskExportImport.js  # Export/import functionality
 │   └── persistence/
 │       ├── index.js       # Persistence factory
@@ -241,26 +256,36 @@ frontend/
 
 ---
 
-## Recent Changes (v2.0.0 - Session of 2026-04-08)
+## Recent Changes (v2.1.0 - Session of 2026-04-09)
 
-### Major Features Added
-1. **Categories as Explicit Entities** — Refactored from string arrays to UUID-based Category objects with separate storage
-2. **Task Scheduling** — Schedule tasks for future dates; scheduled tasks appear only on their assigned date
-3. **Sidebar Navigation** — Replaced "Show Completed" toggle with tab-based navigation (Today, Categories, Closed Tasks)
-4. **Category Auto-Cleanup** — Categories automatically deleted when no longer assigned to any task
-5. **Export/Import Categories** — Fixed long-standing bug where categories were not exported; now included in JSON
+### New Features Added
+1. **Projects as Explicit Entities** — Similar to categories, projects are UUID-based objects with separate storage
+2. **Enhanced Task Scheduling** — "Soon" scheduling option plus specific date scheduling
+3. **Future Tab** — Shows all tasks scheduled for future (both "soon" and specific dates)
+4. **Project Auto-Cleanup** — Projects automatically deleted when no longer assigned to any task
+5. **Export/Import Projects** — Projects now included in export/import alongside tasks and categories
+
+### Previous Release (v2.0.0 - 2026-04-08)
+1. **Categories as Explicit Entities** — Refactored from string arrays to UUID-based Category objects
+2. **Task Scheduling** — Schedule tasks for specific future dates
+3. **Sidebar Navigation** — Replaced "Show Completed" toggle with tab-based navigation
+4. **Category Auto-Cleanup** — Categories automatically deleted when no longer used
+5. **Export/Import Categories** — Fixed bug where categories were not exported
 
 ### Data Model Changes
 1. **Task.categoryIds** — Changed from `categories: string[]` to `categoryIds: string[]` (UUID references)
-2. **Category Model** — Created new `src/models/Category.js` with factory and validation
-3. **Persistence** — Categories stored separately with auto-migration from old format
-4. **Data Flow** — Category IDs resolved to names at display time
+2. **Task.projectIds** — NEW: Array of project UUIDs
+3. **Task.scheduleType** — NEW: 'none', 'soon', or 'specific' (was just scheduledDate)
+4. **Category & Project Models** — Created `src/models/Category.js` and `src/models/Project.js` with factories
+5. **Persistence** — Categories and projects stored separately with auto-migration from old format
+6. **Data Flow** — IDs resolved to names at display time
 
 ### UI/UX Changes
-1. **Sidebar Tabs** — One-click filtering by category or status
-2. **Task Counts** — Real-time counts next to each tab
-3. **Countdown Preservation** — Tasks stay in working location during countdown grace period
-4. **Active Tab Highlighting** — Blue indicator shows current view
+1. **Sidebar Tabs** — One-click filtering by category, project, or status
+2. **Future Tab** — Shows scheduled tasks separately with clear visibility
+3. **Task Counts** — Real-time counts next to each tab
+4. **Countdown Preservation** — Tasks stay in working location during countdown grace period
+5. **Active Tab Highlighting** — Blue indicator shows current view
 
 ### Bug Fixes
 1. **Export/Import Categories** — Categories now properly exported and reimported
@@ -269,10 +294,11 @@ frontend/
 4. **Backward Compatibility** — Auto-migration handles old string-based format seamlessly
 
 ### Test Coverage Improvements
-- Added 11 new tests for countdown/scheduling behavior
-- Added 8 new tests for category features
-- Added 7 new tests for export/import functionality
-- Total: 51 tests (up from 49), all passing
+- Added 5 new tests for projects feature
+- Added 2 new tests for "soon" scheduling and Future tab visibility
+- Added 1 new test for correct future task ordering
+- Updated export/import tests to verify projects are included
+- Total: 56 tests (up from 51), all passing
 
 ---
 
@@ -327,10 +353,10 @@ frontend/
 9. **Current (v2.0.0)** — All features complete, 51 tests passing, full documentation
 
 ### For Next Session
-1. Check memory files: `./.claude/projects/.../memory/session_summary.md`
-2. Verify tests: `npm test` (should show 51 passed)
+1. Check memory files: `./.claude/projects/.../memory/MEMORY.md`
+2. Verify tests: `npm test` (should show 56 passed)
 3. Start dev server: `npm run dev`
-4. Check memory for context: categories refactoring, persistence layer changes, data model updates
+4. Check memory for context: projects feature, enhanced scheduling, Future tab
 5. Make changes, test, commit
 
 ### Code Quality

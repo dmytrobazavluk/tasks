@@ -4,6 +4,45 @@ Developer-focused guide to understand code patterns, architecture decisions, and
 
 ---
 
+## Version 2.1.0 Changes (2026-04-09)
+
+### Major Addition: Projects as Explicit Entities
+
+**What Changed:**
+- Similar to categories, projects are now explicit UUID-based entities stored separately
+- Tasks reference projects by ID: `task.projectIds: string[]`
+- New persistence model stores projects alongside categories and tasks
+- Auto-cleanup: projects deleted when no longer assigned to any task
+
+**Why This Matters:**
+- Consistent architecture: categories and projects follow same pattern
+- Sidebar shows project tabs like category tabs
+- Filter tasks by project
+- Export/import includes projects
+
+**Key Files:**
+- `src/models/Project.js` — NEW: Project factory and validation
+- `src/utils/projectUtils.js` — NEW: Project filtering and aggregation
+- `src/App.jsx` — UPDATED: Manages projects state, auto-creates/cleanup
+- `src/components/Sidebar.jsx` — UPDATED: Shows project tabs alongside categories
+- `src/utils/taskExportImport.js` — UPDATED: Exports/imports projects
+
+### Enhanced Scheduling: "Soon" vs Specific Dates
+
+**What Changed:**
+- Added `scheduleType` field: 'none', 'soon', or 'specific'
+- Tasks can be scheduled "soon" (indefinite future) or for specific dates
+- Future tab shows both types, sorted: soon first, then dates descending
+- Future tab hides when no scheduled tasks exist
+
+**Key Files:**
+- `src/models/Task.js` — UPDATED: Added scheduleType field, new utilities
+- `src/components/TaskForm.jsx` — UPDATED: Radio buttons for scheduling mode
+- `src/utils/taskGrouping.js` — UPDATED: Future tab grouping logic
+- Tests in `scheduling-categories.spec.js` — 5 new tests for this feature
+
+---
+
 ## Version 2.0.0 Changes (2026-04-08)
 
 ### Major Refactoring: Categories as Explicit Entities
@@ -37,11 +76,21 @@ Developer-focused guide to understand code patterns, architecture decisions, and
 - `isValidCategory(category)` — Validates Category object structure
 - Uses `crypto.randomUUID()` with fallback for older browsers
 
+**src/models/Project.js** (NEW - v2.1.0)
+- `createProject(name)` — Factory: generates UUID, returns `{ id, name }`
+- `isValidProject(project)` — Validates Project object structure
+- Uses `crypto.randomUUID()` with fallback for older browsers
+- Follows same pattern as Category model
+
 **src/models/Task.js** (UPDATED)
 - Changed: `categories: string[]` → `categoryIds: string[]`
-- Updated: `createTask(title, details, scheduledDate, categoryIds)`
+- Added: `projectIds: string[]` (v2.1.0)
+- Added: `scheduleType: string` ('none'|'soon'|'specific') (v2.1.0)
+- Updated: `createTask(title, details, scheduleType, scheduledDate, categoryIds, projectIds)`
 - Added: `normalizeScheduledDate(dateStr)` — validates future dates only
-- Added: `isScheduledForFuture(task)` — checks if task has future date
+- Added: `isScheduledForFuture(task)` — checks if task has specific future date
+- Added: `isScheduledSoon(task)` — checks if task has "soon" scheduling (v2.1.0)
+- Added: `hasAnyFutureScheduling(task)` — checks either soon or specific date (v2.1.0)
 - Updated: `isValidTask()` — backward compatible with old string-based format
 
 ### Persistence Layer Changes
@@ -53,55 +102,59 @@ Developer-focused guide to understand code patterns, architecture decisions, and
 - Called automatically on load (transparent to caller)
 
 **src/persistence/localStorage.js** (UPDATED)
-- Changed: Single key → Two keys
-  - `taskplanner_tasks` — Task array with categoryIds
+- Changed: Single key → Three keys (v2.1.0)
+  - `taskplanner_tasks` — Task array with categoryIds and projectIds
   - `taskplanner_categories` — Category array
-- Updated: `load()` returns `{ tasks, categories }`
-- Updated: `save(tasks, categories)` — stores both
+  - `taskplanner_projects` — Project array (v2.1.0)
+- Updated: `load()` returns `{ tasks, categories, projects }`
+- Updated: `save(tasks, categories, projects)` — stores all three
 
 **src/persistence/memory.js** (UPDATED)
 - Matches localStorage interface
-- Stores tasks and categories separately
+- Stores tasks, categories, and projects separately (v2.1.0)
 - Used in tests with auto-migration
 
 ### Component Changes
 
 **src/App.jsx** (SIGNIFICANT UPDATES)
 - Added: `const [categories, setCategories] = useState([])`
-- Updated: Load and save both tasks and categories
-- Updated: `addTask()` — auto-creates Category entities for new names
-- Updated: `updateTask()` — handles categoryNames parameter, converts to IDs
-- Updated: `deleteTask()` — calls `cleanupOrphanedCategories()`
-- Added: `getTabDisplayName()` — resolves category ID to name
-- Updated: Export/import handlers pass categories
+- Added: `const [projects, setProjects] = useState([])` (v2.1.0)
+- Updated: Load and save tasks, categories, and projects (v2.1.0)
+- Updated: `addTask()` — auto-creates Category and Project entities for new names (v2.1.0)
+- Updated: `updateTask()` — handles categoryNames and projectNames (v2.1.0)
+- Updated: `deleteTask()` — calls cleanup functions for both entities (v2.1.0)
+- Added: `getTabDisplayName()` — resolves category/project ID to name
+- Updated: Export/import handlers pass categories and projects (v2.1.0)
 
 **src/components/Sidebar.jsx** (NEW)
-- Displays category tabs with task counts
-- Shows Today, Closed Tasks, and dynamic category tabs
+- Displays category and project tabs with task counts
+- Shows Today, Future (v2.1.0), Closed Tasks, and dynamic category/project tabs
 - Active tab highlighted in blue
-- Click to filter tasks by category
+- Click to filter tasks by category, project, or status
+- Future tab hides when no scheduled tasks (v2.1.0)
 
 **src/components/TaskForm.jsx** (UPDATED)
 - Added: Category input field (text, comma-separated)
-- Added: Scheduled date input (date picker)
-- Extracts categories and scheduling from form
+- Added: Project input field (text, comma-separated) (v2.1.0)
+- Added: Scheduling mode selector (None/Soon/Specific) (v2.1.0)
+- Added: Scheduled date input (date picker, only for "Specific" mode) (v2.1.0)
+- Extracts categories, projects, and scheduling from form
 - Passes to App for processing
 
 **src/components/TaskList.jsx** (UPDATED)
-- Added: `categories` prop
-- Updated: `getUniqueCategoriesFromTasks()` call includes categories parameter
-- Updated: Task grouping for sidebar navigation (Today, categories, Closed Tasks)
-- Passes: Category objects to TaskItem
+- Added: `categories` and `projects` props (v2.1.0)
+- Updated: Task grouping for sidebar navigation (Today, categories, projects, Future, Closed Tasks) (v2.1.0)
+- Passes: Category and Project objects to TaskItem (v2.1.0)
 
 **src/components/TaskItem.jsx** (UPDATED)
-- Added: `categoryObjects` prop
-- Added: Helper `getCategoryNamesFromIds()` for edit form display
-- Updated: Edit modal initializes with category names (from IDs)
-- Updated: `handleSaveEdit()` passes `categoryNames` back to App
+- Added: `categoryObjects` and `projectObjects` props (v2.1.0)
+- Added: Helpers for resolving IDs to names for edit form (v2.1.0)
+- Updated: Edit modal initializes with category and project names (v2.1.0)
+- Updated: `handleSaveEdit()` passes both back to App (v2.1.0)
 
 **src/components/ImportModal.jsx** (UPDATED)
-- Updated: `importTasks()` destructures `{ tasks, categories }`
-- Updated: `onImport()` callback passes both parameters
+- Updated: `importTasks()` destructures `{ tasks, categories, projects }` (v2.1.0)
+- Updated: `onImport()` callback passes all three parameters (v2.1.0)
 
 ### Utility Changes
 
@@ -112,18 +165,29 @@ Developer-focused guide to understand code patterns, architecture decisions, and
 - `countTasksInCategoryId(tasks, categoryId)` — Count in category
 - `countClosedTasksWithoutCountdown(tasks)` — Count closed (no countdown)
 - `cleanupOrphanedCategories(tasks, categories)` — Remove unused
-- All operations now ID-based instead of string-based
+- All operations ID-based
+
+**src/utils/projectUtils.js** (NEW - v2.1.0)
+- `getProjectById(projects, projectId)` — ID lookup
+- `getUniqueProjectsFromTasks(tasks, projects)` — Resolve IDs to Project objects
+- `getTasksByProjectId(tasks, projectId)` — Filter by project
+- `countTasksInProjectId(tasks, projectId)` — Count in project
+- `cleanupOrphanedProjects(tasks, projects)` — Remove unused
+- Follows same pattern as categoryUtils
 
 **src/utils/taskGrouping.js** (UPDATED)
 - Updated: `getTasksForCategory(tasks, categoryId)` — uses ID instead of name
-- Added: Support for `category` as either string ID or object with id property
+- Added: `getTasksForProject(tasks, projectId)` — Filter by project (v2.1.0)
+- Added: `getTasksForFutureTab(tasks)` — All scheduled tasks (v2.1.0)
+- Added: Support for multiple tab types in grouping logic
 
 **src/utils/taskExportImport.js** (UPDATED)
-- Fixed BUG: Categories now included in export
-- Updated: `exportTasks(tasks, categories)` returns `{ version, tasks, categories }`
-- Updated: `importTasks(jsonString)` returns `{ tasks, categories }`
+- Fixed BUG: Categories now included in export (v2.0.0)
+- Updated: `exportTasks(tasks, categories, projects)` returns `{ version, tasks, categories, projects }` (v2.1.0)
+- Updated: `importTasks(jsonString)` returns `{ tasks, categories, projects }` (v2.1.0)
 - Added: Backward compatibility for old array format
 - Added: Auto-migration detection and conversion
+- Added: Projects validation and import (v2.1.0)
 
 ### Test Infrastructure Changes
 

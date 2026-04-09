@@ -304,6 +304,7 @@ export default function ComponentName({ prop1, prop2 }) {
 - Use `page.waitForTimeout(400)` to wait for countdown
 - Use `div[role="button"]` for expand/collapse
 - Check both presence (`toBeVisible()`) and absence (`not.toBeVisible()`)
+- For scheduling tests, note that tasks with future scheduling don't appear in Today tab
 
 ### Commands
 ```bash
@@ -388,11 +389,20 @@ const normalizedDate = new Date(dateStr) > new Date() ? dateStr : null;
 - When editing tasks, convert category names back to IDs before saving
 - See `src/utils/categoryUtils.js` for helpers like `getUniqueCategoriesFromTasks()`
 
+### Project-Related Changes
+- Projects follow the same pattern as categories (IDs, auto-creation, auto-cleanup)
+- Always work with project IDs (`projectIds`) internally, resolve to names for display
+- When editing tasks, convert project names back to IDs before saving
+- See `src/utils/projectUtils.js` for helpers like `getUniqueProjectsFromTasks()`
+- Projects are displayed as sidebar tabs like categories
+
 ### Scheduling-Related Changes
-- Validate that scheduled dates are in the future (use `normalizeScheduledDate()`)
-- Scheduled tasks don't appear in Today tab, only on their assigned date
+- Tasks can have `scheduleType: 'none'`, `'soon'`, or `'specific'`
+- For 'specific': validate scheduled date is in future using `normalizeScheduledDate()`
+- Scheduled tasks don't appear in Today tab initially, only in Future tab
 - When scheduled date arrives, task automatically moves to Today tab
-- See `src/models/Task.js` for `normalizeScheduledDate()` and `isScheduledForFuture()` helpers
+- Future tab hides when no tasks are scheduled
+- See `src/models/Task.js` for scheduling utilities: `normalizeScheduledDate()`, `isScheduledForFuture()`, `isScheduledSoon()`, `hasAnyFutureScheduling()`
 
 ### Countdown-Related Changes
 - Countdown initializes when a task is marked done
