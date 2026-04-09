@@ -1,4 +1,12 @@
 import { isValidTask } from '../models/Task';
+import {
+  migrateFromStringCategories,
+  needsMigration,
+  migrateScheduleType,
+  needsScheduleTypeMigration,
+  migrateProjectIds,
+  needsProjectIdsMigration
+} from '../persistence/migrations';
 
 /**
  * Export tasks, categories, and projects to JSON
@@ -88,30 +96,40 @@ export const importTasks = (jsonString) => {
       throw new Error('Import file contains no tasks');
     }
 
-    // Validate each task and handle backward compatibility
+    // Apply the same migrations that persistence.load() runs, so imported data
+    // is always fully up-to-date regardless of the file's original format.
+    if (needsMigration(tasks)) {
+      const migrated = migrateFromStringCategories(tasks);
+      tasks = migrated.tasks;
+      // Merge any categories created during migration (old string-category format)
+      const existingIds = new Set(categories.map(c => c.id));
+      migrated.categories.forEach(c => { if (!existingIds.has(c.id)) categories.push(c); });
+    }
+
+    if (needsScheduleTypeMigration(tasks)) {
+      tasks = migrateScheduleType(tasks);
+    }
+
+    if (needsProjectIdsMigration(tasks)) {
+      tasks = migrateProjectIds(tasks);
+    }
+
+    // Validate each task
     const invalidTasks = [];
     const validTasks = tasks.map((task, index) => {
       if (!isValidTask(task)) {
         invalidTasks.push(index);
         return null;
       }
-
-      // Handle backward compatibility: convert old 'categories' property to 'categoryIds'
-      let categoryIds = task.categoryIds || [];
-      if (task.categories && Array.isArray(task.categories) && task.categories.length > 0) {
-        // Old format had string array of category names
-        // For import, we'll keep them as empty since we can't map old names to new IDs
-        // The migration should happen in persistence layer
-        categoryIds = [];
-      }
-
-      // Ensure removalCountdown is cleared (runtime state, not persisted)
+      // Strip runtime-only state; ensure all fields have safe defaults
       return {
         ...task,
         removalCountdown: null,
-        categoryIds: categoryIds,
-        projectIds: task.projectIds || [],
-        scheduledDate: task.scheduledDate || null
+        scheduleType: task.scheduleType || 'none',
+        scheduledDate: task.scheduledDate || null,
+        categoryIds: Array.isArray(task.categoryIds) ? task.categoryIds : [],
+        projectIds: Array.isArray(task.projectIds) ? task.projectIds : [],
+        details: task.details || '',
       };
     }).filter(task => task !== null);
 
@@ -123,15 +141,13 @@ export const importTasks = (jsonString) => {
       console.warn(`Skipped ${invalidTasks.length} invalid task(s) at index: ${invalidTasks.join(', ')}`);
     }
 
-    // Validate categories if present
-    const validCategories = (Array.isArray(categories) ? categories : []).filter(cat => {
-      return cat && typeof cat.id === 'string' && typeof cat.name === 'string';
-    });
-
-    // Validate projects if present
-    const validProjects = (Array.isArray(projects) ? projects : []).filter(proj => {
-      return proj && typeof proj.id === 'string' && typeof proj.name === 'string';
-    });
+    // Validate categories and projects
+    const validCategories = (Array.isArray(categories) ? categories : []).filter(
+      cat => cat && typeof cat.id === 'string' && typeof cat.name === 'string'
+    );
+    const validProjects = (Array.isArray(projects) ? projects : []).filter(
+      proj => proj && typeof proj.id === 'string' && typeof proj.name === 'string'
+    );
 
     return { tasks: validTasks, categories: validCategories, projects: validProjects };
   } catch (error) {

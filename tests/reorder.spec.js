@@ -49,8 +49,8 @@ test.describe('Task Reordering - Structure Verification', () => {
     const task = page.locator('text=Task to Complete').first();
     await expect(task).toBeVisible();
 
-    // Should not have a draggable handle element (completed tasks can't be dragged)
-    const handle = task.locator('xpath=ancestor::div').locator('[draggable="true"]');
+    // Should not have a task-level drag handle (completed tasks can't be dragged)
+    const handle = page.locator('[draggable="true"][title="Drag to reorder"]');
     const handleCount = await handle.count();
 
     expect(handleCount).toBe(0);
