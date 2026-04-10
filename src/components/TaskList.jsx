@@ -5,6 +5,7 @@ import {
   getTasksForFutureTab,
   getTasksForCategory,
   getTasksForProjectTab,
+  getTasksWithoutProject,
   getTasksForClosedTab,
   getTodayDateKey,
   getDateKey,
@@ -48,6 +49,8 @@ export default function TaskList({
   } else if (selectedTab === 'closed') {
     groups = getTasksForClosedTab(tasks);
     isClosedTab = true;
+  } else if (selectedTab === 'no-project') {
+    groups = getTasksWithoutProject(tasks);
   } else if (selectedTab.startsWith('project:')) {
     const projectId = selectedTab.substring('project:'.length);
     groups = getTasksForProjectTab(tasks, projectId);

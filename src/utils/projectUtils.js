@@ -100,3 +100,24 @@ export const cleanupOrphanedProjects = (tasks, projects) => {
   const usedProjectIds = getUsedProjectIds(tasks);
   return projects.filter(project => usedProjectIds.has(project.id));
 };
+
+/**
+ * Get tasks that have no project assigned
+ * @param {Array} tasks - Array of task objects
+ * @returns {Array} Tasks without any project
+ */
+export const getTasksWithoutProject = (tasks) => {
+  return tasks.filter(task => {
+    const projectIds = task.projectIds || [];
+    return !Array.isArray(projectIds) || projectIds.length === 0;
+  });
+};
+
+/**
+ * Count tasks without any project assigned
+ * @param {Array} tasks - Array of task objects
+ * @returns {number} Count of tasks without projects
+ */
+export const countTasksWithoutProject = (tasks) => {
+  return getTasksWithoutProject(tasks).length;
+};

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupPage, openAddForm } from './setup';
+import { setupPage, openAddForm, markTaskDone } from './setup';
 
 test.describe('Task Scheduling & Categories', () => {
   test.beforeEach(async ({ page }) => {
@@ -508,5 +508,198 @@ test.describe('Task Scheduling & Categories', () => {
     const todayTab = page.locator('button:has-text("Today")').nth(0);
     const todayTabText = await todayTab.textContent();
     expect(todayTabText).toContain('(1)');
+  });
+
+  test('should exclude past and today dates from Future tab', async ({ page }) => {
+    await openAddForm(page);
+    const titleInput = page.locator('input[placeholder="Task title..."]');
+    const addButton = page.locator('button:has-text("Add Task")').first();
+
+    // Add task scheduled for today with specific date
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayDate = `${year}-${month}-${day}`;
+
+    await titleInput.fill('Task for today');
+    await page.locator('input[name="scheduleType"][value="specific"]').check();
+    const dateInput = page.locator('input[type="date"]');
+    await dateInput.fill(todayDate);
+    await addButton.click();
+
+    // Add task scheduled for tomorrow
+    await openAddForm(page);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowYear = tomorrow.getFullYear();
+    const tomorrowMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const tomorrowDay = String(tomorrow.getDate()).padStart(2, '0');
+    const tomorrowDate = `${tomorrowYear}-${tomorrowMonth}-${tomorrowDay}`;
+
+    const titleInput2 = page.locator('input[placeholder="Task title..."]');
+    const addButton2 = page.locator('button:has-text("Add Task")').first();
+    await titleInput2.fill('Task for tomorrow');
+    await page.locator('input[name="scheduleType"][value="specific"]').check();
+    const dateInput2 = page.locator('input[type="date"]');
+    await dateInput2.fill(tomorrowDate);
+    await addButton2.click();
+
+    // Click Future tab
+    const futureTab = page.locator('button:has-text("Future")').nth(0);
+    await futureTab.click();
+
+    // Tomorrow's task should be visible
+    await expect(page.locator('text=Task for tomorrow')).toBeVisible();
+
+    // Today's task should NOT be visible in Future tab
+    await expect(page.locator('text=Task for today')).not.toBeVisible();
+
+    // Future count should be 1
+    const futureTabText = await futureTab.textContent();
+    expect(futureTabText).toContain('(1)');
+  });
+
+  test('should display completed tasks in category tab grouped by completion date', async ({ page }) => {
+    // Add task with category
+    await openAddForm(page);
+    let titleInput = page.locator('input[placeholder="Task title..."]');
+    let addButton = page.locator('button:has-text("Add Task")').first();
+    const newCategoryInput = page.locator('input[placeholder="Type new category name..."]');
+    const addCategoryButton = newCategoryInput.locator('xpath=following-sibling::button[1]');
+
+    await titleInput.fill('Task in Important');
+    await newCategoryInput.fill('Important');
+    await addCategoryButton.click();
+    await addButton.click();
+
+    // Mark task as done
+    let expandButton = page.locator('div[role="button"]').first();
+    await expandButton.click();
+    await markTaskDone(page);
+
+    // Verify task is marked done
+    await expect(page.locator('span').filter({ hasText: 'Task in Important' }).first()).toHaveClass(/line-through/);
+
+    // Click Important category tab
+    const importantTab = page.locator('button:has-text("Important")').nth(0);
+    await importantTab.click();
+
+    // Task should still be visible in category tab (grouped under completion date)
+    await expect(page.locator('text=Task in Important')).toBeVisible();
+
+    // Task should be marked as done (strikethrough)
+    await expect(page.locator('span').filter({ hasText: 'Task in Important' }).first()).toHaveClass(/line-through/);
+
+    // Should show completion date
+    const completedText = page.locator('text=Completed:');
+    await expect(completedText).toBeVisible();
+
+    // Sidebar should show count of 1 (includes completed)
+    const importantTabCount = importantTab.textContent();
+    await expect(importantTab).toContainText('(1)');
+  });
+
+  test('should display completed tasks in project tab grouped by completion date', async ({ page }) => {
+    // Add task with project
+    await openAddForm(page);
+    let titleInput = page.locator('input[placeholder="Task title..."]');
+    let addButton = page.locator('button:has-text("Add Task")').first();
+    const newProjectInput = page.locator('input[placeholder="Type new project name..."]');
+    const addProjectButton = newProjectInput.locator('xpath=following-sibling::button[1]');
+
+    await titleInput.fill('Task in MyProject');
+    await newProjectInput.fill('MyProject');
+    await addProjectButton.click();
+    await addButton.click();
+
+    // Mark task as done
+    let expandButton = page.locator('div[role="button"]').first();
+    await expandButton.click();
+    await markTaskDone(page);
+
+    // Verify task is marked done
+    await expect(page.locator('span').filter({ hasText: 'Task in MyProject' }).first()).toHaveClass(/line-through/);
+
+    // Click MyProject tab
+    const projectTab = page.locator('button:has-text("MyProject")').nth(0);
+    await projectTab.click();
+
+    // Task should still be visible in project tab (grouped under completion date)
+    await expect(page.locator('text=Task in MyProject')).toBeVisible();
+
+    // Task should be marked as done (strikethrough)
+    await expect(page.locator('span').filter({ hasText: 'Task in MyProject' }).first()).toHaveClass(/line-through/);
+
+    // Should show completion date
+    const completedText = page.locator('text=Completed:');
+    await expect(completedText).toBeVisible();
+
+    // Sidebar should show count of 1 (includes completed)
+    await expect(projectTab).toContainText('(1)');
+  });
+
+  test('should display no project tab for tasks without projects', async ({ page }) => {
+    // Add task without project
+    await openAddForm(page);
+    let titleInput = page.locator('input[placeholder="Task title..."]');
+    let addButton = page.locator('button:has-text("Add Task")').first();
+    await titleInput.fill('Task without project');
+    await addButton.click();
+
+    // Add task with project
+    await openAddForm(page);
+    titleInput = page.locator('input[placeholder="Task title..."]');
+    addButton = page.locator('button:has-text("Add Task")').first();
+    const newProjectInput = page.locator('input[placeholder="Type new project name..."]');
+    const addProjectButton = newProjectInput.locator('xpath=following-sibling::button[1]');
+    await titleInput.fill('Task with project');
+    await newProjectInput.fill('MyProject');
+    await addProjectButton.click();
+    await addButton.click();
+
+    // Verify "No Project" tab appears in sidebar
+    const noProjectTab = page.locator('button:has-text("No Project")').nth(0);
+    await expect(noProjectTab).toBeVisible();
+    await expect(noProjectTab).toContainText('(1)');
+
+    // Click No Project tab
+    await noProjectTab.click();
+
+    // Only task without project should be visible
+    await expect(page.locator('text=Task without project')).toBeVisible();
+    await expect(page.locator('text=Task with project')).not.toBeVisible();
+
+    // Header should show "No Project"
+    const header = page.locator('h1');
+    await expect(header).toContainText('No Project');
+  });
+
+  test('should group completed tasks by completion date in no project tab', async ({ page }) => {
+    // Add task without project
+    await openAddForm(page);
+    let titleInput = page.locator('input[placeholder="Task title..."]');
+    let addButton = page.locator('button:has-text("Add Task")').first();
+    await titleInput.fill('No project task');
+    await addButton.click();
+
+    // Mark it done
+    let expandButton = page.locator('div[role="button"]').first();
+    await expandButton.click();
+    await markTaskDone(page);
+
+    // Verify task is marked done
+    await expect(page.locator('span').filter({ hasText: 'No project task' }).first()).toHaveClass(/line-through/);
+
+    // Click No Project tab
+    const noProjectTab = page.locator('button:has-text("No Project")').nth(0);
+    await noProjectTab.click();
+
+    // Task should still be visible (grouped under completion date)
+    await expect(page.locator('text=No project task')).toBeVisible();
+
+    // Should show completion date
+    const completedText = page.locator('text=Completed:');
+    await expect(completedText).toBeVisible();
   });
 });

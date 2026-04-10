@@ -8,7 +8,8 @@ import {
 } from '../utils/categoryUtils';
 import {
   getUniqueProjectsFromTasks,
-  countTasksInProjectId
+  countTasksInProjectId,
+  countTasksWithoutProject
 } from '../utils/projectUtils';
 
 export default function Sidebar({ tasks, categories, projects, selectedTab, onSelectTab }) {
@@ -16,6 +17,7 @@ export default function Sidebar({ tasks, categories, projects, selectedTab, onSe
   const uniqueProjects = getUniqueProjectsFromTasks(tasks, projects);
   const todayCount = countTodayTasks(tasks);
   const futureCount = countFutureTasks(tasks);
+  const noProjectCount = countTasksWithoutProject(tasks);
   const closedCount = countClosedTasksWithoutCountdown(tasks);
 
   return (
@@ -71,6 +73,18 @@ export default function Sidebar({ tasks, categories, projects, selectedTab, onSe
             ))}
           </>
         )}
+
+        {/* No Project Tab */}
+        <button
+          onClick={() => onSelectTab('no-project')}
+          className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+            selectedTab === 'no-project'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          No Project <span className="float-right">({noProjectCount})</span>
+        </button>
 
         {/* Divider before categories */}
         {categoryNames.length > 0 && (

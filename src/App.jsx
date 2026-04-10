@@ -192,6 +192,8 @@ export default function App() {
       return 'Future';
     } else if (selectedTab === 'closed') {
       return 'Closed Tasks';
+    } else if (selectedTab === 'no-project') {
+      return 'No Project';
     } else if (selectedTab.startsWith('project:')) {
       const projectId = selectedTab.substring('project:'.length);
       const project = projects.find(proj => proj.id === projectId);

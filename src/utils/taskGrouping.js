@@ -230,6 +230,29 @@ export const getTasksForProjectTab = (tasks, projectId) => {
 };
 
 /**
+ * Get tasks without any project assignment
+ * (Incomplete tasks grouped by scheduledDate, completed tasks grouped by completionDate)
+ * @param {Array} tasks - All tasks
+ * @returns {Array} Groups: [{ dateKey, tasks }] sorted chronologically
+ */
+export const getTasksWithoutProject = (tasks) => {
+  const tasksWithoutProject = tasks.filter(task => {
+    const projectIds = task.projectIds || [];
+    return !Array.isArray(projectIds) || projectIds.length === 0;
+  });
+
+  // Separate incomplete and completed tasks
+  const incompleteTasks = tasksWithoutProject.filter(task => !task.completed);
+  const completedTasks = tasksWithoutProject.filter(task => task.completed);
+
+  // Group incomplete by scheduled date, completed by completion date
+  const incompleteGroups = groupByScheduledDate(incompleteTasks);
+  const completedGroups = groupByCompletionDate(completedTasks);
+
+  return [...incompleteGroups, ...completedGroups];
+};
+
+/**
  * Get tasks for "Closed Tasks" tab
  * (Completed tasks without active countdown)
  * @param {Array} tasks - All tasks
