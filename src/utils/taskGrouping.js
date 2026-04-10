@@ -132,11 +132,13 @@ export const getTasksForToday = (tasks) => {
  * @returns {Array} Groups: [{ dateKey, label, tasks }]
  */
 export const getTasksForFutureTab = (tasks) => {
+  const todayKey = getTodayDateKey();
+
   // Separate soon and specific tasks
   const soonTasks = tasks.filter(task => task.scheduleType === 'soon' && !task.completed);
 
   const specificTasks = tasks.filter(
-    task => task.scheduleType === 'specific' && task.scheduledDate && !task.completed
+    task => task.scheduleType === 'specific' && task.scheduledDate && !task.completed && task.scheduledDate > todayKey
   );
 
   // Group specific date tasks by date
