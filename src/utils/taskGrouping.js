@@ -177,7 +177,7 @@ export const getTasksForFutureTab = (tasks) => {
 
 /**
  * Get tasks for a specific category tab
- * (Grouped by scheduledDate chronologically)
+ * (Incomplete tasks grouped by scheduledDate, completed tasks grouped by completionDate)
  * @param {Array} tasks - All tasks
  * @param {string|Object} categoryId - Category ID (string) or Category object with id property
  * @returns {Array} Groups: [{ dateKey, tasks }] sorted chronologically
@@ -191,12 +191,20 @@ export const getTasksForCategory = (tasks, categoryId) => {
     return Array.isArray(categoryIds) && categoryIds.includes(id);
   });
 
-  return groupByScheduledDate(categoryTasks);
+  // Separate incomplete and completed tasks
+  const incompleteTasks = categoryTasks.filter(task => !task.completed);
+  const completedTasks = categoryTasks.filter(task => task.completed);
+
+  // Group incomplete by scheduled date, completed by completion date
+  const incompleteGroups = groupByScheduledDate(incompleteTasks);
+  const completedGroups = groupByCompletionDate(completedTasks);
+
+  return [...incompleteGroups, ...completedGroups];
 };
 
 /**
  * Get tasks for a specific project tab
- * (Grouped by scheduledDate chronologically)
+ * (Incomplete tasks grouped by scheduledDate, completed tasks grouped by completionDate)
  * @param {Array} tasks - All tasks
  * @param {string|Object} projectId - Project ID (string) or Project object with id property
  * @returns {Array} Groups: [{ dateKey, tasks }] sorted chronologically
@@ -210,7 +218,15 @@ export const getTasksForProjectTab = (tasks, projectId) => {
     return Array.isArray(projectIds) && projectIds.includes(id);
   });
 
-  return groupByScheduledDate(projectTasks);
+  // Separate incomplete and completed tasks
+  const incompleteTasks = projectTasks.filter(task => !task.completed);
+  const completedTasks = projectTasks.filter(task => task.completed);
+
+  // Group incomplete by scheduled date, completed by completion date
+  const incompleteGroups = groupByScheduledDate(incompleteTasks);
+  const completedGroups = groupByCompletionDate(completedTasks);
+
+  return [...incompleteGroups, ...completedGroups];
 };
 
 /**

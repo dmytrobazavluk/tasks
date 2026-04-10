@@ -55,13 +55,13 @@ export const getTasksByProjectId = (tasks, projectId) => {
 };
 
 /**
- * Count incomplete tasks in a project by ID
+ * Count all tasks in a project by ID (both incomplete and complete)
  * @param {Array} tasks - Array of task objects
  * @param {string} projectId - Project ID
- * @returns {number} Count of incomplete tasks in project
+ * @returns {number} Count of all tasks in project
  */
 export const countTasksInProjectId = (tasks, projectId) => {
-  return getTasksByProjectId(tasks, projectId).filter(task => !task.completed).length;
+  return getTasksByProjectId(tasks, projectId).length;
 };
 
 /**

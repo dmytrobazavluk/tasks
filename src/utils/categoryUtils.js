@@ -139,13 +139,13 @@ export const getTodayTasks = (tasks) => {
 };
 
 /**
- * Count incomplete tasks in a category by ID
+ * Count all tasks in a category by ID (both incomplete and complete)
  * @param {Array} tasks - Array of task objects
  * @param {string} categoryId - Category ID
- * @returns {number} Count of incomplete tasks in category
+ * @returns {number} Count of all tasks in category
  */
 export const countTasksInCategoryId = (tasks, categoryId) => {
-  return getTasksByCategoryId(tasks, categoryId).filter(task => !task.completed).length;
+  return getTasksByCategoryId(tasks, categoryId).length;
 };
 
 /**
