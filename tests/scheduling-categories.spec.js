@@ -595,9 +595,8 @@ test.describe('Task Scheduling & Categories', () => {
     const completedText = page.locator('text=Completed:');
     await expect(completedText).toBeVisible();
 
-    // Sidebar should show count of 1 (includes completed)
-    const importantTabCount = importantTab.textContent();
-    await expect(importantTab).toContainText('(1)');
+    // Sidebar should show count of 0 (task is completed, so not counted as open)
+    await expect(importantTab).toContainText('(0)');
   });
 
   test('should display completed tasks in project tab grouped by completion date', async ({ page }) => {
@@ -635,8 +634,8 @@ test.describe('Task Scheduling & Categories', () => {
     const completedText = page.locator('text=Completed:');
     await expect(completedText).toBeVisible();
 
-    // Sidebar should show count of 1 (includes completed)
-    await expect(projectTab).toContainText('(1)');
+    // Sidebar should show count of 0 (task is completed, so not counted as open)
+    await expect(projectTab).toContainText('(0)');
   });
 
   test('should display no project tab for tasks without projects', async ({ page }) => {

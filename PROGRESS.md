@@ -1,9 +1,9 @@
 # Task Planner - Project Progress
 
-## Current Status: ✅ Feature Complete (All 56 Tests Passing)
+## Current Status: ✅ Feature Complete (All 69 Tests Passing)
 
 **Location:** Frontend repository  
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-14
 
 ---
 
@@ -95,9 +95,9 @@
 - Pluggable persistence layer (easy to add server backend)
 
 ### ✅ Testing & Automation
-- 56 comprehensive automated tests (Playwright)
-- 8 test files organized by feature
-- ~12 second test execution
+- 69 comprehensive automated tests (Playwright)
+- 9 test files organized by feature
+- ~16 second test execution
 - Test helpers for common operations
 - 100% test pass rate
 
@@ -109,7 +109,7 @@
 
 ---
 
-## Test Coverage (56 Tests Total)
+## Test Coverage (69 Tests Total)
 
 | Category | Count | Status |
 |----------|-------|--------|
@@ -118,9 +118,10 @@
 | Persistence | 2 | ✅ Passing |
 | Date Display | 5 | ✅ Passing |
 | Task Removal Countdown | 11 | ✅ Passing |
-| Task Scheduling & Categories & Projects | 13 | ✅ Passing |
+| Task Scheduling & Categories & Projects | 18 | ✅ Passing |
 | Export/Import Functionality | 7 | ✅ Passing |
 | Task Reordering | 5 | ✅ Passing |
+| Task Ordering & Auto-Collapse | 8 | ✅ Passing |
 
 ---
 
@@ -192,9 +193,10 @@ frontend/
     ├── persistence.spec.js         # 2 tests
     ├── dates.spec.js               # 5 tests
     ├── countdown.spec.js           # 11 tests
-    ├── scheduling-categories.spec.js # 8 tests
+    ├── scheduling-categories.spec.js # 18 tests
     ├── export-import.spec.js       # 7 tests
-    └── reorder.spec.js             # 5 tests
+    ├── reorder.spec.js             # 5 tests
+    └── ordering-and-collapse.spec.js # 8 tests
 ```
 
 ---
@@ -256,7 +258,35 @@ frontend/
 
 ---
 
-## Recent Changes (v2.1.0 - Session of 2026-04-09)
+## Recent Changes (v2.3.0 - Session of 2026-04-14)
+
+### Auto-Collapse on Countdown Complete
+1. **Distinguish collapse triggers** — Using `useRef` to track manual vs natural completion
+2. **Natural completion** — When countdown naturally finishes, task auto-collapses
+3. **Manual cancellation** — When user clicks "Unmark Done", task stays expanded (not auto-collapsed)
+4. **Clean separation** — Flag reset after each manual cancellation, no side effects
+5. **Implementation:** Added `isManuallyUncompleting` ref to TaskItem.jsx to distinguish between natural completion and user cancellation
+
+### Completed Task Ordering
+1. **Completed tasks move to end** — When a task is marked done, it moves to the end of the task list
+2. **Countdown grace period** — Completed tasks with active countdown remain visible (3-second grace period)
+3. **Tasks stay visible** — Users can click "Unmark Done" within the 3-second window to revert the completion
+4. **Proper sequencing** — After countdown: tasks completed today stay in Today tab, older completions move to Closed Tasks
+
+### Test Coverage Expansion
+1. **8 new tests** — Comprehensive countdown behavior and auto-collapse testing
+2. **Test total: 69** — Up from 61, all passing
+3. **Test files: 9** — Added `ordering-and-collapse.spec.js`
+4. **Test scenarios:** Auto-collapse on natural countdown completion, manual expand/collapse preservation, countdown visibility grace period, task auto-collapse behavior
+
+### Code Changes
+- **src/components/TaskItem.jsx** — Added `useRef isManuallyUncompleting` for tracking manual vs natural completion in countdowns
+- **src/utils/taskGrouping.js** — Updated sorting logic to organize tasks properly (incomplete → completed)
+- **tests/ordering-and-collapse.spec.js** — NEW comprehensive test file with 8 tests covering countdown and collapse behavior
+
+---
+
+## Previous Changes (v2.2.0 - Session of 2026-04-13)
 
 ### New Features Added
 1. **Projects as Explicit Entities** — Similar to categories, projects are UUID-based objects with separate storage
@@ -350,21 +380,26 @@ frontend/
 6. **Categories Refactoring** — Explicit Category entities with UUID-based references
 7. **Task Scheduling** — Schedule tasks for future dates with auto-appearance
 8. **Sidebar Navigation** — Tab-based filtering by category/status
-9. **Current (v2.0.0)** — All features complete, 51 tests passing, full documentation
+9. **v2.0.0** — All features complete, 51 tests passing
+10. **v2.1.0** — Projects, enhanced scheduling, Future tab, 56 tests passing
+11. **v2.2.0** — Sidebar improvements, task grouping refinements, 61 tests passing
+12. **v2.3.0** — Task ordering, auto-collapse behavior, comprehensive testing, 69 tests passing
 
 ### For Next Session
 1. Check memory files: `./.claude/projects/.../memory/MEMORY.md`
-2. Verify tests: `npm test` (should show 56 passed)
+2. Verify tests: `npm test` (should show 69 passed)
 3. Start dev server: `npm run dev`
-4. Check memory for context: projects feature, enhanced scheduling, Future tab
+4. Check memory for context on completed features and architecture
 5. Make changes, test, commit
 
 ### Code Quality
 - Clear separation of concerns (components, models, utils, persistence)
 - No unnecessary dependencies
-- Comprehensive test coverage (51 tests, 100% pass rate)
+- Comprehensive test coverage (69 tests, 100% pass rate)
 - Self-documenting code
 - Follows React best practices
 - Proper error handling and edge case coverage
 - Auto-migration for backward compatibility
 - Pluggable persistence layer for extensibility
+- Proper use of useRef for distinguishing state change triggers
+- Clean state management with React Hooks

@@ -36,11 +36,12 @@ A simple task management app built with React and Tailwind CSS.
 
 - 📂 **Sidebar Navigation** (replaces old "Show Completed" toggle)
   - **Today** tab: All incomplete tasks + tasks completed today
-  - **Category tabs**: All tasks with that category (sorted alphabetically)
-  - **Project tabs**: All tasks with that project (sorted alphabetically)
-  - **Future** tab: All scheduled tasks (both "soon" and specific dates)
+  - **Category tabs**: All tasks with that category (incomplete grouped by scheduled date, completed by completion date)
+  - **Project tabs**: All tasks with that project (incomplete grouped by scheduled date, completed by completion date)
+  - **No Project** tab: All tasks without project assignment
+  - **Future** tab: All scheduled tasks (both "soon" and specific dates, excluding today and past)
   - **Closed Tasks** tab: Completed tasks without active countdown
-  - Task counts next to each tab
+  - Task counts show incomplete tasks only (completed tasks not counted in sidebar)
   - Active tab highlighted in blue
   - One-click filtering
 
@@ -50,7 +51,8 @@ A simple task management app built with React and Tailwind CSS.
   - Countdown timer after marking done (3 seconds by default)
   - Countdown displayed as "Unmark Done (2.9)" → "(1.8)" → "(0.7)"
   - Click "Unmark Done" during countdown to revert to incomplete
-  - Tasks stay visible during countdown grace period
+  - Task moves to end of list when marked done (completed section)
+  - Tasks stay visible during countdown grace period (can be unmarked within 3 seconds)
   - After countdown: tasks completed today stay in Today tab, older completions move to Closed Tasks
 
 - 🎯 **Drag-and-drop reordering**
@@ -120,7 +122,7 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes **56 tests** organized by functionality:
+The test suite includes **69 tests** organized by functionality:
 
 **Core Functionality (12 tests)** — `core.spec.js`
 - Load app with title, empty state display
@@ -159,7 +161,7 @@ The test suite includes **56 tests** organized by functionality:
 - Multiple tasks with concurrent countdowns
 - Countdown behavior during tab switching
 
-**Task Scheduling & Categories & Projects (13 tests)** — `scheduling-categories.spec.js`
+**Task Scheduling & Categories & Projects (18 tests)** — `scheduling-categories.spec.js`
 - Add task with single category
 - Add task with "Some time in the future" scheduling
 - Filter tasks by category tab
@@ -173,6 +175,11 @@ The test suite includes **56 tests** organized by functionality:
 - Hide Future tab when no scheduled tasks exist
 - Switch between scheduling modes in edit modal
 - Count future tasks correctly in sidebar
+- Exclude past and today dates from Future tab
+- Display completed tasks in category tab grouped by completion date
+- Display completed tasks in project tab grouped by completion date
+- Display no project tab for tasks without projects
+- Group completed tasks by completion date in no project tab
 
 **Export/Import Functionality (7 tests)** — `export-import.spec.js`
 - Have export and import buttons
@@ -189,6 +196,16 @@ The test suite includes **56 tests** organized by functionality:
 - Today group renders with tasks
 - Incomplete and completed tasks are grouped correctly
 - Dragging task without significant position change doesn't move it
+
+**Task Ordering and Auto-Collapse (8 tests)** — `ordering-and-collapse.spec.js`
+- Incomplete tasks appear before completed tasks in Today tab
+- Incomplete tasks with active countdown stay in their original position
+- Task auto-collapses when countdown naturally completes
+- Task stays expanded when user manually clicks unmark done
+- Multiple tasks with different completion states maintain proper order
+- Completed task in category tab maintains order with incomplete tasks
+- Auto-collapse respects expanded state during countdown
+- Incomplete tasks maintain insertion order when no tasks are completed
 
 Tests use **Playwright** for headless browser automation and automatically manage the dev server.
 
@@ -219,7 +236,8 @@ frontend/
 │   │   └── ImportModal.jsx # Import modal dialog
 │   ├── models/
 │   │   ├── Task.js        # Task model and utilities
-│   │   └── Category.js    # Category model (NEW)
+│   │   ├── Category.js    # Category model
+│   │   └── Project.js     # Project model
 │   ├── utils/
 │   │   ├── dateFormat.js        # Date formatting utilities
 │   │   ├── taskGrouping.js      # Task grouping by tab/category
@@ -238,9 +256,10 @@ frontend/
     ├── persistence.spec.js         # Persistence tests (2 tests)
     ├── dates.spec.js               # Date display tests (5 tests)
     ├── countdown.spec.js           # Task removal countdown tests (11 tests)
-    ├── scheduling-categories.spec.js # Scheduling & categories tests (8 tests)
+    ├── scheduling-categories.spec.js # Scheduling & categories tests (18 tests)
     ├── export-import.spec.js       # Export/import tests (7 tests)
-    └── reorder.spec.js             # Task reordering tests (5 tests)
+    ├── reorder.spec.js             # Task reordering tests (5 tests)
+    └── ordering-and-collapse.spec.js # Ordering & auto-collapse tests (8 tests)
 ```
 
 ## Technology Stack
@@ -261,8 +280,10 @@ frontend/
   title: string,                 // Required
   completed: boolean,
   details: string,               // Optional
-  scheduledDate: string|null,    // ISO date (YYYY-MM-DD) for future scheduling
+  scheduleType: string,          // 'none' | 'soon' | 'specific'
+  scheduledDate: string|null,    // ISO date (YYYY-MM-DD) for specific future scheduling
   categoryIds: string[],         // Array of category UUIDs
+  projectIds: string[],          // Array of project UUIDs
   addedDate: string,             // ISO timestamp
   completionDate: string|null,   // ISO timestamp when completed
   removalCountdown: number|null  // Grace period countdown (runtime only)
@@ -303,6 +324,22 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Troubleshooting common issues
 
 ## Release History
+
+### v2.3.0 (2026-04-14)
+- **IMPROVED:** Task ordering in Today tab: incomplete tasks first, then completed tasks
+- **IMPROVED:** Completed tasks with active countdown move to end while staying visible (grace period)
+- **ENHANCED:** Tasks auto-collapse when countdown naturally completes
+- **ENHANCED:** Tasks stay expanded when user manually clicks "Unmark Done" (not auto-collapse)
+- **NEW:** 8 new comprehensive tests for task ordering and auto-collapse behavior
+- All 69 tests passing
+
+### v2.2.0 (2026-04-13)
+- **IMPROVED:** Sidebar task counts now show incomplete tasks only (completed tasks not counted)
+- **IMPROVED:** Completed tasks in category/project/no-project tabs grouped by completion date
+- **IMPROVED:** Future tab excludes tasks scheduled for today or past dates
+- **IMPROVED:** No Project tab always visible for easy access
+- **NEW:** 5 new tests for completed task grouping and future tab filtering
+- All 61 tests passing
 
 ### v2.1.0 (2026-04-09)
 - **NEW:** Projects as explicit entities with IDs and separate storage

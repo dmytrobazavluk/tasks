@@ -4,6 +4,28 @@ Developer-focused guide to understand code patterns, architecture decisions, and
 
 ---
 
+## Version 2.2.0 Changes (2026-04-13)
+
+### Sidebar Count Updates & Grouping Refinements
+
+**What Changed:**
+- Sidebar task counts now show incomplete tasks only (not completed)
+- Completed tasks in category/project/no-project tabs grouped by completion date
+- Future tab excludes tasks scheduled for today or past dates
+- No Project tab always visible, even with 0 incomplete tasks
+
+**Why This Matters:**
+- Sidebar focuses on actionable work (incomplete tasks)
+- Category/project tabs show full work history, properly organized
+- Users can see completed work within their context
+
+**Key Files:**
+- `src/utils/projectUtils.js` — UPDATED: countTasksInProjectId now returns incomplete only
+- `src/utils/categoryUtils.js` — UPDATED: countTasksInCategoryId now returns incomplete only
+- `src/utils/taskGrouping.js` — UPDATED: Completed tasks grouped by completion date in categories/projects/no-project
+
+---
+
 ## Version 2.1.0 Changes (2026-04-09)
 
 ### Major Addition: Projects as Explicit Entities
@@ -196,9 +218,10 @@ Developer-focused guide to understand code patterns, architecture decisions, and
 - `openAddForm(page)` — Opens the task form (now conditionally rendered)
 
 **Test Files Organization**
-- 51 tests across 8 files, 100% pass rate
-- Core, validation, persistence, dates, countdown, scheduling, export, reorder
+- 61 tests across 8 files, 100% pass rate
+- Core, validation, persistence, dates, countdown, scheduling/categories, export, reorder
 - Each test file self-contained with clear patterns
+- Recent additions: tests for completed task grouping by date, future tab filtering, no-project tab
 
 ---
 
@@ -309,18 +332,32 @@ Developer-focused guide to understand code patterns, architecture decisions, and
 ### Sidebar Navigation Logic
 
 **How tabs work:**
-1. Sidebar displays Today, Category tabs (dynamic), and Closed Tasks
-2. `getTasksForToday()` — All incomplete + completed today + tasks with active countdown
-3. `getTasksForCategory(categoryId)` — All tasks with that category ID (any status)
-4. `getTasksForClosedTab()` — Completed tasks WITHOUT active countdown
-5. Click tab to filter TaskList display
-6. Task counts update in real-time
+1. Sidebar displays Today, Future, Category tabs (dynamic), Projects tabs (dynamic), No Project, and Closed Tasks
+2. `getTasksForToday()` — All incomplete + completed today + tasks with active countdown (excluding scheduled tasks)
+3. `getTasksForFutureTab()` — All tasks scheduled "soon" or for future dates (excluding today and past)
+4. `getTasksForCategory(categoryId)` — All tasks with that category ID, grouped by scheduled date (incomplete) and completion date (complete)
+5. `getTasksForProjectTab(projectId)` — All tasks in that project, grouped by scheduled date (incomplete) and completion date (complete)
+6. `getTasksWithoutProject()` — All tasks without any project, grouped by scheduled date (incomplete) and completion date (complete)
+7. `getTasksForClosedTab()` — Completed tasks WITHOUT active countdown
+8. Click tab to filter TaskList display
+9. Task counts in sidebar show incomplete tasks only (not completed)
+
+**Sidebar count behavior:**
+- `countTasksInCategoryId(tasks, categoryId)` — Returns incomplete tasks only
+- `countTasksInProjectId(tasks, projectId)` — Returns incomplete tasks only
+- `countTasksWithoutProject(tasks)` — Returns incomplete tasks only
+- Completed tasks are still visible in the tab content, just not counted in sidebar
 
 **Why separate closed tab:**
 - Shows what's actually complete (not just counting)
 - Completed tasks with countdown stay in their working location
 - Once countdown expires, they move to Closed Tasks
 - User can see the archive separately from active work
+
+**Why completed tasks appear in category/project tabs:**
+- Category/project tabs show all work related to that category/project
+- Incomplete tasks grouped by scheduled date, completed tasks by completion date
+- User can see full task history within a category/project
 
 ### State Management Hierarchy
 
@@ -551,7 +588,7 @@ TaskItem.jsx (view layer)
 npm run dev           # Start dev server at http://localhost:8000
 
 # Testing
-npm test              # Run all 51 tests (headless, fastest)
+npm test              # Run all 61 tests (headless, fastest)
 npm test:ui          # Interactive Playwright UI (debug failures)
 npm test:headed      # Run with visible browser (see what tests do)
 
@@ -563,7 +600,7 @@ npm run build         # Production build to dist/bundle.js
 
 ## Next Session Checklist
 
-- [ ] Run `npm test` — verify all 51 tests pass
+- [ ] Run `npm test` — verify all 61 tests pass
 - [ ] Check memory files at `.claude/projects/.../memory/` for recent context
 - [ ] Review this file if making changes to:
   - Category system (IDs, creation, cleanup)

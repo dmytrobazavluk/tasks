@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formatDate, formatDateOnly } from '../utils/dateFormat';
 import { COUNTDOWN_CONFIG } from '../config';
 
@@ -35,6 +35,9 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
   const [newProject, setNewProject] = useState('');
   const [dateError, setDateError] = useState('');
 
+  // Track if countdown is being manually cancelled vs naturally completing
+  const isManuallyUncompleting = useRef(false);
+
   // Handle countdown timer
   useEffect(() => {
     if (!task.removalCountdown || task.removalCountdown <= 0) {
@@ -52,6 +55,19 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
 
     return () => clearTimeout(timer);
   }, [task.removalCountdown, task.id, onUpdateTask]);
+
+  // Collapse task when countdown naturally completes (not when manually cancelled)
+  useEffect(() => {
+    if (!task.removalCountdown || task.removalCountdown <= 0) {
+      // Only collapse if this wasn't a manual uncomplete
+      if (!isManuallyUncompleting.current) {
+        setIsExpanded(false);
+      } else {
+        // Reset flag for next time
+        isManuallyUncompleting.current = false;
+      }
+    }
+  }, [task.removalCountdown]);
 
   const getMinDate = () => {
     const tomorrow = new Date();
@@ -114,6 +130,7 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
   };
 
   const handleUnmarkDone = () => {
+    isManuallyUncompleting.current = true;
     onUpdateTask(task.id, { removalCountdown: null });
     onToggle(task.id);
   };
@@ -214,7 +231,7 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
       {!isEditing ? (
         <>
           <div
-            className="flex items-start gap-3 p-4 hover:bg-gray-50 transition"
+            className="flex items-start gap-2 p-3 hover:bg-gray-50 transition"
           >
             {isToday && !task.completed && (
               <div
@@ -239,11 +256,11 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
                 }
               }}
             >
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1 flex-wrap">
                 {getProjectNamesFromIds(task.projectIds || []).map((projectName) => (
                   <span
                     key={projectName}
-                    className="inline-block px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-full flex-shrink-0"
+                    className="inline-block px-1.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-full flex-shrink-0"
                   >
                     {projectName}
                   </span>
@@ -263,9 +280,9 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
           </div>
 
           {isExpanded && (
-            <div className="px-4 pb-4 border-t border-gray-200">
-              <div className="pt-3 space-y-3">
-                <div className="text-xs text-gray-500 space-y-1">
+            <div className="px-3 pb-2 border-t border-gray-200">
+              <div className="pt-2 space-y-2">
+                <div className="text-xs text-gray-500 space-y-0.5">
                   <div>
                     <span className="font-medium">Added:</span> {formatDateOnly(task.addedDate)}
                   </div>
@@ -279,41 +296,41 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
 
                 {task.details && (
                   <div>
-                    <div className="text-xs font-medium text-gray-700 mb-1">
+                    <div className="text-xs font-medium text-gray-700 mb-0.5">
                       Details
                     </div>
-                    <div className="text-sm text-gray-600 p-2 bg-gray-50 rounded">
+                    <div className="text-sm text-gray-600 p-1.5 bg-gray-50 rounded">
                       {task.details}
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <div className="flex gap-2">
+                <div className="space-y-1.5">
+                  <div className="flex gap-1.5">
                     {task.completed ? (
                       <button
                         onClick={handleUnmarkDone}
-                        className="flex-1 px-3 py-2 text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-md transition font-medium"
+                        className="flex-1 px-2 py-1.5 text-xs bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-md transition font-medium"
                       >
                         Unmark Done{task.removalCountdown && ` (${(task.removalCountdown * COUNTDOWN_CONFIG.decrement).toFixed(1)})`}
                       </button>
                     ) : (
                       <button
                         onClick={handleMarkDoneClick}
-                        className="flex-1 px-3 py-2 text-sm bg-green-50 text-green-600 hover:bg-green-100 rounded-md transition font-medium"
+                        className="flex-1 px-2 py-1.5 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded-md transition font-medium"
                       >
                         Mark Done
                       </button>
                     )}
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition font-medium"
+                      className="flex-1 px-2 py-1.5 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition font-medium"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => setIsConfirmingDelete(true)}
-                      className="flex-1 px-3 py-2 text-sm bg-red-50 text-red-600 hover:bg-red-100 rounded-md transition font-medium"
+                      className="flex-1 px-2 py-1.5 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded-md transition font-medium"
                     >
                       Delete
                     </button>

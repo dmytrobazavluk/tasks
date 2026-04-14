@@ -120,8 +120,14 @@ export const getTasksForToday = (tasks) => {
     return false;
   });
 
+  // Sort: incomplete + completed-with-active-countdown first (stay in place), then completed-without-countdown (move to end)
+  const hasActiveCountdown = (task) => task.removalCountdown && task.removalCountdown > 0;
+  const activeTasks = todayTasks.filter(task => !task.completed || hasActiveCountdown(task));
+  const completedTasks = todayTasks.filter(task => task.completed && !hasActiveCountdown(task));
+  const sortedTasks = [...activeTasks, ...completedTasks];
+
   // Group by date (Today only)
-  return [{ dateKey: todayDate, tasks: todayTasks }];
+  return [{ dateKey: todayDate, tasks: sortedTasks }];
 };
 
 /**
