@@ -12,7 +12,7 @@ import {
   countTasksWithoutProject
 } from '../utils/projectUtils';
 
-export default function Sidebar({ tasks, categories, projects, selectedTab, onSelectTab }) {
+export default function Sidebar({ tasks, categories, projects, selectedTab, onSelectTab, onExport, onImport }) {
   const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
   const uniqueProjects = getUniqueProjectsFromTasks(tasks, projects);
   const todayCount = countTodayTasks(tasks);
@@ -135,6 +135,24 @@ export default function Sidebar({ tasks, categories, projects, selectedTab, onSe
             Closed Tasks <span className="float-right">({closedCount})</span>
           </button>
         )}
+      </div>
+
+      {/* Export/Import Buttons at Bottom */}
+      <div className="mt-6 pt-4 border-t border-gray-300 space-y-2">
+        <button
+          onClick={onExport}
+          className="w-full px-4 py-2 text-sm font-medium bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
+          title="Download tasks as JSON"
+        >
+          Export
+        </button>
+        <button
+          onClick={onImport}
+          className="w-full px-4 py-2 text-sm font-medium bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
+          title="Upload JSON file to replace tasks"
+        >
+          Import
+        </button>
       </div>
     </div>
   );

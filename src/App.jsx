@@ -223,29 +223,13 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex h-screen">
         {/* Sidebar */}
-        <Sidebar tasks={tasks} categories={categories} projects={projects} selectedTab={selectedTab} onSelectTab={setSelectedTab} />
+        <Sidebar tasks={tasks} categories={categories} projects={projects} selectedTab={selectedTab} onSelectTab={setSelectedTab} onExport={handleExport} onImport={() => setIsImportModalOpen(true)} />
 
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
           <div className="max-w-4xl mx-auto p-6">
-            <div className="mb-4 flex items-center justify-between gap-2">
+            <div className="mb-4">
               <h1 className="text-xl font-bold text-gray-800">{getTabDisplayName()}</h1>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleExport}
-                  className="px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-                  title="Download tasks as JSON"
-                >
-                  Export
-                </button>
-                <button
-                  onClick={() => setIsImportModalOpen(true)}
-                  className="px-4 py-2 text-sm font-medium bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
-                  title="Upload JSON file to replace tasks"
-                >
-                  Import
-                </button>
-              </div>
             </div>
 
             <TaskList
