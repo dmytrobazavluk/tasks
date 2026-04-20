@@ -30,11 +30,11 @@ npm run build        # Build for production
 ## Test Suite
 
 **Framework:** Playwright (headless browser automation)
-- **56 tests total** organized by feature
+- **82 tests total** organized by feature
 - Runs headless by default (no visible browser window)
 - Auto-starts dev server before tests
 - Reuses existing server if already running (speeds up iterations)
-- Average execution time: ~12 seconds
+- Average execution time: ~16 seconds
 
 **Test Coverage by Category:**
 
@@ -106,6 +106,24 @@ npm run build        # Build for production
 - Incomplete and completed tasks are grouped correctly
 - Dragging task without significant position change doesn't move it
 
+**Task Details Checkboxes (9 tests)** — `tests/checkboxes.spec.js`
+- Display checkbox content from `[]` and `[x]` syntax
+- Render mixed checkbox and regular lines in details
+- Persist checkbox state after edit and reload
+- Support both lowercase `[x]` and uppercase `[X]` as checked
+- Toggle individual checkboxes and update task details
+- Apply strikethrough styling to checked items
+- Reflect checkbox changes immediately in edit form
+- Handle multiple checkboxes with independent states
+- Maintain checkbox states through edit cycles
+
+**Categories Display in Task Details (5 tests)** — `tests/categories-display.spec.js`
+- Display categories as comma-separated list in metadata
+- Show multiple categories properly formatted
+- Hide categories section when task has no categories
+- Display categories on same line as Added date with comma separator
+- Display categories in filtered category view
+
 **Config:** `playwright.config.js`
 - Base URL: `http://localhost:8000`
 - Browser: Chromium
@@ -119,7 +137,7 @@ After making code changes:
 npm test
 ```
 
-All 56 tests should pass in ~12 seconds. If any fail:
+All 82 tests should pass in ~16 seconds. If any fail:
 - Check test output for specific failure message
 - Common issues:
   - Form not found: Use `openAddForm(page)` before accessing form inputs
@@ -231,7 +249,7 @@ test('should add a task', async ({ page }) => {
 | `src/persistence/migrations.js` | Auto-migration utilities |
 | `dist/bundle.js` | Compiled app (auto-generated) |
 | `tests/setup.js` | Test helpers and initialization |
-| `tests/*.spec.js` | 8 test files, 51 total tests |
+| `tests/*.spec.js` | 11 test files, 82 total tests |
 | `playwright.config.js` | Test configuration |
 | `dev-server.js` | Dev server with rebuild |
 | `build.js` | Production build script |

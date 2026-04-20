@@ -1,9 +1,9 @@
 # Task Planner - Project Progress
 
-## Current Status: ✅ Feature Complete (All 69 Tests Passing)
+## Current Status: ✅ Feature Complete (All 82 Tests Passing)
 
 **Location:** Frontend repository  
-**Last Updated:** 2026-04-14
+**Last Updated:** 2026-04-20
 
 ---
 
@@ -74,6 +74,18 @@
 - Projects auto-deleted when no longer used (orphan cleanup)
 - Sidebar tabs show project names with task counts
 
+### ✅ Task Detail Formatting (NEW)
+- URLs in details automatically become clickable links (open in new tab)
+- Newlines preserved in expanded details view
+- **Checkbox syntax support:**
+  - `[]` renders as unchecked checkbox
+  - `[x]` or `[X]` renders as checked checkbox
+  - Click to toggle checkbox state (updates task details automatically)
+  - Checked items display with strikethrough styling
+  - Both lowercase and uppercase X supported
+- Categories displayed on same line as Added date with gray comma-separated formatting
+- Removed Details header for cleaner UI
+
 ### ✅ UI/UX Features
 - Form positioned at bottom of page (collapsible)
 - Full task header clickable to expand/collapse
@@ -81,6 +93,7 @@
 - Responsive design with smooth transitions
 - Empty state messaging
 - Drag handle has grab cursor and hover effect
+- Larger resizable textarea in add/edit forms for better usability
 
 ### ✅ Data Persistence
 - Tasks persist to browser localStorage
@@ -95,8 +108,8 @@
 - Pluggable persistence layer (easy to add server backend)
 
 ### ✅ Testing & Automation
-- 69 comprehensive automated tests (Playwright)
-- 9 test files organized by feature
+- 82 comprehensive automated tests (Playwright)
+- 11 test files organized by feature
 - ~16 second test execution
 - Test helpers for common operations
 - 100% test pass rate
@@ -109,7 +122,7 @@
 
 ---
 
-## Test Coverage (69 Tests Total)
+## Test Coverage (82 Tests Total)
 
 | Category | Count | Status |
 |----------|-------|--------|
@@ -122,6 +135,8 @@
 | Export/Import Functionality | 7 | ✅ Passing |
 | Task Reordering | 5 | ✅ Passing |
 | Task Ordering & Auto-Collapse | 8 | ✅ Passing |
+| Task Details Checkboxes | 9 | ✅ Passing |
+| Categories Display | 5 | ✅ Passing |
 
 ---
 
@@ -136,7 +151,7 @@ npm run dev
 
 ### Testing
 ```bash
-npm test              # Run all 56 tests (headless)
+npm test              # Run all 82 tests (headless)
 npm test:ui          # Interactive test UI
 npm test:headed      # See browser during tests
 ```
@@ -179,7 +194,8 @@ frontend/
 │   │   ├── dateFormat.js        # Date formatting utilities
 │   │   ├── taskGrouping.js      # Task grouping by tab/category
 │   │   ├── categoryUtils.js     # Category filtering and aggregation
-│   │   ├── projectUtils.js      # Project filtering and aggregation (NEW)
+│   │   ├── projectUtils.js      # Project filtering and aggregation
+│   │   ├── formatDetails.js     # URL formatting and detail text processing
 │   │   └── taskExportImport.js  # Export/import functionality
 │   └── persistence/
 │       ├── index.js       # Persistence factory
@@ -196,7 +212,9 @@ frontend/
     ├── scheduling-categories.spec.js # 18 tests
     ├── export-import.spec.js       # 7 tests
     ├── reorder.spec.js             # 5 tests
-    └── ordering-and-collapse.spec.js # 8 tests
+    ├── ordering-and-collapse.spec.js # 8 tests
+    ├── checkboxes.spec.js          # 9 tests
+    └── categories-display.spec.js  # 5 tests
 ```
 
 ---
@@ -258,7 +276,40 @@ frontend/
 
 ---
 
-## Recent Changes (v2.3.0 - Session of 2026-04-14)
+## Recent Changes (v2.4.0 - Session of 2026-04-20)
+
+### Interactive Checkboxes in Task Details
+1. **Checkbox syntax support** — Format task details with `[]` for unchecked, `[x]` or `[X]` for checked
+2. **Interactive toggles** — Click checkboxes to toggle state, updates task details automatically
+3. **Visual feedback** — Checked items display with strikethrough styling for clear completion indication
+4. **State persistence** — Checkbox states persist through page reloads and edit cycles
+5. **Implementation:** Added `handleCheckboxChange()` and `renderDetailsWithCheckboxes()` functions in TaskItem.jsx
+
+### Task Detail Text Processing Enhancements
+1. **URL formatting** — URLs in details automatically become clickable links (open in new tab)
+2. **Newline preservation** — Line breaks properly preserved in expanded details view
+3. **Metadata formatting** — Categories display on same line as Added date: "Added: [date], Categories: [list]"
+4. **Formatting function** — Uses `renderLineWithURLs()` to process URLs while preserving checkbox syntax
+
+### UI/UX Improvements
+1. **Larger textarea** — Add/edit forms now use `rows="10"` with `resize-vertical` for better usability
+2. **Cleaner design** — Removed Details header for more compact expanded view
+3. **Better metadata layout** — Categories metadata now matches Added date formatting
+
+### Test Coverage Expansion
+1. **14 new tests** — Comprehensive checkbox functionality and categories display testing
+2. **Test total: 82** — Up from 69, all passing
+3. **Test files: 11** — Added `checkboxes.spec.js` (9 tests) and `categories-display.spec.js` (5 tests)
+4. **Test scenarios:** Checkbox display/toggling, strikethrough styling, state persistence, edit form sync, multiple checkboxes, categories formatting
+
+### Code Changes
+- **src/components/TaskItem.jsx** — Added checkbox detection regex, checkbox rendering, and toggle handling
+- **src/components/TaskForm.jsx** — Updated textarea from rows="2" to rows="10"
+- **src/utils/formatDetails.js** — URL formatting with checkbox compatibility
+- **tests/checkboxes.spec.js** — NEW comprehensive test file with 9 checkbox tests
+- **tests/categories-display.spec.js** — NEW test file with 5 categories display tests
+
+## Previous Changes (v2.3.0 - Session of 2026-04-14)
 
 ### Auto-Collapse on Countdown Complete
 1. **Distinguish collapse triggers** — Using `useRef` to track manual vs natural completion

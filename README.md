@@ -74,9 +74,21 @@ A simple task management app built with React and Tailwind CSS.
   - Add/remove category assignments
   - Save or cancel changes
 
+- ✓ **Interactive Task Details**
+  - Click task title to expand and view full details
+  - URLs in details automatically become clickable links (open in new tab)
+  - Task metadata displays on one line: "Added: [date], Categories: [list]"
+  - **Checkbox syntax:** Format details with checkboxes
+    - `[]` renders as an unchecked checkbox
+    - `[x]` or `[X]` renders as a checked checkbox
+    - Click checkboxes to toggle completion state
+    - Checked items display with strikethrough styling
+    - Checkbox state persists automatically
+
 - 💾 **Persist tasks to browser storage**
   - Tasks survive page reload
   - Categories stored separately with auto-migration from old format
+  - Checkbox states persist in task details
 
 - 📤 **Export/Import**
   - Export all tasks and categories to JSON file
@@ -122,7 +134,7 @@ npm test:headed
 
 ### Test Coverage
 
-The test suite includes **69 tests** organized by functionality:
+The test suite includes **82 tests** organized by functionality:
 
 **Core Functionality (12 tests)** — `core.spec.js`
 - Load app with title, empty state display
@@ -207,6 +219,23 @@ The test suite includes **69 tests** organized by functionality:
 - Auto-collapse respects expanded state during countdown
 - Incomplete tasks maintain insertion order when no tasks are completed
 
+**Task Details Checkboxes (9 tests)** — `checkboxes.spec.js`
+- Display checkbox content from `[]` and `[x]` syntax
+- Render mixed checkbox and regular lines in details
+- Persist checkbox state after edit and reload
+- Support both lowercase `[x]` and uppercase `[X]` as checked
+- Toggle individual checkboxes and update task details
+- Apply strikethrough styling to checked items
+- Reflect checkbox changes immediately in edit form
+- Handle multiple checkboxes with independent states
+
+**Categories Display in Task Details (5 tests)** — `categories-display.spec.js`
+- Display categories as comma-separated list in task metadata
+- Show multiple categories properly formatted
+- Hide categories section when task has no categories
+- Display categories on same line as Added date with comma separator
+- Display categories in filtered category view
+
 Tests use **Playwright** for headless browser automation and automatically manage the dev server.
 
 ## Project Structure
@@ -242,7 +271,8 @@ frontend/
 │   │   ├── dateFormat.js        # Date formatting utilities
 │   │   ├── taskGrouping.js      # Task grouping by tab/category
 │   │   ├── categoryUtils.js     # Category filtering and aggregation
-│   │   ├── projectUtils.js      # Project filtering and aggregation (NEW)
+│   │   ├── projectUtils.js      # Project filtering and aggregation
+│   │   ├── formatDetails.js     # URL formatting and detail text processing
 │   │   └── taskExportImport.js  # Export/import functionality
 │   └── persistence/
 │       ├── index.js           # Persistence factory
@@ -259,7 +289,9 @@ frontend/
     ├── scheduling-categories.spec.js # Scheduling & categories tests (18 tests)
     ├── export-import.spec.js       # Export/import tests (7 tests)
     ├── reorder.spec.js             # Task reordering tests (5 tests)
-    └── ordering-and-collapse.spec.js # Ordering & auto-collapse tests (8 tests)
+    ├── ordering-and-collapse.spec.js # Ordering & auto-collapse tests (8 tests)
+    ├── checkboxes.spec.js          # Checkbox functionality tests (9 tests)
+    └── categories-display.spec.js  # Categories display tests (5 tests)
 ```
 
 ## Technology Stack
@@ -324,6 +356,25 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - Troubleshooting common issues
 
 ## Release History
+
+### v2.4.0 (2026-04-20)
+- **NEW:** Interactive checkboxes in task details
+  - Format details with `[]` for unchecked, `[x]` for checked
+  - Click checkboxes to toggle state (updates task automatically)
+  - Checked items display with strikethrough styling
+  - Both lowercase and uppercase X supported
+- **IMPROVED:** Categories metadata formatting
+  - Display on same line as Added date: "Added: [date], Categories: [list]"
+  - Gray comma-separated format matching metadata style
+- **ENHANCED:** Task detail text processing
+  - URLs automatically become clickable links (open in new tab)
+  - Newlines preserved in expanded details view
+- **IMPROVED:** Textarea sizing in add/edit forms
+  - Larger default height for better usability
+  - Resizable to allow user expansion
+- **REMOVED:** Details header (cleaner UI)
+- **NEW:** 14 comprehensive tests for checkboxes and categories display
+- All 82 tests passing
 
 ### v2.3.0 (2026-04-14)
 - **IMPROVED:** Task ordering in Today tab: incomplete tasks first, then completed tasks
