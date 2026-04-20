@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { formatDate, formatDateOnly } from '../utils/dateFormat';
+import { formatDetailsText } from '../utils/formatDetails';
 import { COUNTDOWN_CONFIG } from '../config';
 
 export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete, onUpdateDetails, onUpdateTask, onDragStart, onDragEnd, allCategories = [], categoryObjects = [], allProjects = [], projectObjects = [] }) {
@@ -299,8 +300,8 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
                     <div className="text-xs font-medium text-gray-700 mb-0.5">
                       Details
                     </div>
-                    <div className="text-sm text-gray-600 p-1.5 bg-gray-50 rounded">
-                      {task.details}
+                    <div className="text-sm text-gray-600 p-1.5 bg-gray-50 rounded whitespace-pre-wrap break-words">
+                      {formatDetailsText(task.details)}
                     </div>
                   </div>
                 )}
