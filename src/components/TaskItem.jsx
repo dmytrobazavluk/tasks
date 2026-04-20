@@ -153,6 +153,19 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
     }
   };
 
+  const handleOpenEdit = () => {
+    setEditTitle(task.title);
+    setEditDetails(task.details);
+    setEditScheduleType(task.scheduleType || 'none');
+    setEditScheduledDate(task.scheduledDate || '');
+    setEditCategories(getCategoryNamesFromIds(task.categoryIds || []));
+    setNewCategory('');
+    setEditProjects(getProjectNamesFromIds(task.projectIds || []));
+    setNewProject('');
+    setDateError('');
+    setIsEditing(true);
+  };
+
   const handleCancelEdit = () => {
     setEditTitle(task.title);
     setEditDetails(task.details);
@@ -173,6 +186,102 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
 
   const handleCancelDelete = () => {
     setIsConfirmingDelete(false);
+  };
+
+  const handleCheckboxChange = (lineIndex, isChecked) => {
+    const lines = task.details.split('\n');
+    const line = lines[lineIndex];
+    const checkboxMatch = line.match(/^\[([xX ]?)\]\s*(.*)/);
+
+    if (checkboxMatch) {
+      const text = checkboxMatch[2];
+      const newCheckbox = isChecked ? '[x]' : '[]';
+      lines[lineIndex] = newCheckbox + (text ? ' ' + text : '');
+      onUpdateDetails(task.id, lines.join('\n'));
+    }
+  };
+
+  const renderLineWithURLs = (text) => {
+    if (!text) return null;
+
+    const urlRegex = /(https?:\/\/[^\s]+|ftp:\/\/[^\s]+|www\.[^\s]+)/gi;
+    const lineParts = [];
+    let lastIndex = 0;
+
+    let match;
+    const urlMatches = [];
+    while ((match = urlRegex.exec(text)) !== null) {
+      urlMatches.push({ url: match[0], index: match.index, length: match[0].length });
+    }
+    urlRegex.lastIndex = 0;
+
+    if (urlMatches.length === 0) {
+      return text;
+    }
+
+    urlMatches.forEach((urlMatch, urlIndex) => {
+      if (urlMatch.index > lastIndex) {
+        lineParts.push(text.substring(lastIndex, urlMatch.index));
+      }
+
+      let href = urlMatch.url;
+      if (!href.startsWith('http://') && !href.startsWith('https://') && !href.startsWith('ftp://')) {
+        href = 'https://' + href;
+      }
+
+      lineParts.push(
+        <a
+          key={`url-${urlIndex}`}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          {urlMatch.url}
+        </a>
+      );
+
+      lastIndex = urlMatch.index + urlMatch.length;
+    });
+
+    if (lastIndex < text.length) {
+      lineParts.push(text.substring(lastIndex));
+    }
+
+    return lineParts;
+  };
+
+  const renderDetailsWithCheckboxes = () => {
+    if (!task.details) return null;
+
+    return task.details.split('\n').map((line, lineIndex) => {
+      const checkboxMatch = line.match(/^\[([xX ]?)\]\s*(.*)/);
+
+      if (checkboxMatch) {
+        const isChecked = checkboxMatch[1].toLowerCase() === 'x';
+        const text = checkboxMatch[2];
+
+        return (
+          <div key={`line-${lineIndex}`} className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={(e) => handleCheckboxChange(lineIndex, e.target.checked)}
+              className="mt-0.5 cursor-pointer flex-shrink-0"
+            />
+            <span className={isChecked ? 'line-through text-gray-400' : ''}>
+              {renderLineWithURLs(text) || text}
+            </span>
+          </div>
+        );
+      }
+
+      return (
+        <div key={`line-${lineIndex}`}>
+          {renderLineWithURLs(line) || line}
+        </div>
+      );
+    });
   };
 
   const getLocalDateString = (date) => {
@@ -302,13 +411,8 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
                 </div>
 
                 {task.details && (
-                  <div>
-                    <div className="text-xs font-medium text-gray-700 mb-0.5">
-                      Details
-                    </div>
-                    <div className="text-sm text-gray-600 p-1.5 bg-gray-50 rounded whitespace-pre-wrap break-words">
-                      {formatDetailsText(task.details)}
-                    </div>
+                  <div className="text-sm text-gray-600 p-1.5 bg-gray-50 rounded space-y-1">
+                    {renderDetailsWithCheckboxes()}
                   </div>
                 )}
 
@@ -330,7 +434,7 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
                       </button>
                     )}
                     <button
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => handleOpenEdit()}
                       className="flex-1 px-2 py-1.5 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition font-medium"
                     >
                       Edit
