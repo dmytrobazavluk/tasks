@@ -120,8 +120,8 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [], exis
           value={details}
           onChange={(e) => setDetails(e.target.value)}
           placeholder="Add details or notes (optional)..."
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-          rows="2"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+          rows="10"
         />
 
         {/* Schedule in the Future */}
