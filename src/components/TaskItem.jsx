@@ -286,6 +286,12 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
                 <div className="text-xs text-gray-500 space-y-0.5">
                   <div>
                     <span className="font-medium">Added:</span> {formatDateOnly(task.addedDate)}
+                    {getCategoryNamesFromIds(task.categoryIds || []).length > 0 && (
+                      <>
+                        <span>,</span> <span className="font-medium">Categories:</span>{' '}
+                        {getCategoryNamesFromIds(task.categoryIds || []).join(', ')}
+                      </>
+                    )}
                   </div>
                   {task.completionDate && (
                     <div>
