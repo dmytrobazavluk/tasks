@@ -105,8 +105,12 @@ test.describe('Categories Display in Task Details', () => {
     await page.click('button:has-text("Add")');
     await page.click('button:has-text("Add Task")');
 
+    // Expand CATEGORIES section in sidebar
+    const categoriesHeader = page.locator('button').filter({ hasText: /Categories/ });
+    await categoriesHeader.click();
+
     // Switch to Work category tab in sidebar
-    const workTab = page.locator('button').filter({ hasText: /^Work \(\d+\)$/ }).first();
+    const workTab = page.locator('button').filter({ hasText: /Work \(/ }).first();
     await workTab.click();
 
     // Expand task
