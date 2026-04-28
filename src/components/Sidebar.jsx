@@ -1,3 +1,4 @@
+import GoogleSignIn from './GoogleSignIn';
 import {
   countTodayTasks,
   countFutureTasks,
@@ -12,7 +13,7 @@ import {
   countTasksWithoutProject
 } from '../utils/projectUtils';
 
-export default function Sidebar({ tasks, categories, projects, selectedTab, onSelectTab, onExport, onImport }) {
+export default function Sidebar({ tasks, categories, projects, selectedTab, onSelectTab, onExport, onImport, driveUser, syncStatus, onDriveSignIn, onDriveSignOut }) {
   const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
   const uniqueProjects = getUniqueProjectsFromTasks(tasks, projects);
   const todayCount = countTodayTasks(tasks);
@@ -137,7 +138,7 @@ export default function Sidebar({ tasks, categories, projects, selectedTab, onSe
         )}
       </div>
 
-      {/* Export/Import Buttons at Bottom */}
+      {/* Export/Import/Google Drive Buttons at Bottom */}
       <div className="mt-6 pt-4 border-t border-gray-300 space-y-2">
         <button
           onClick={onExport}
@@ -153,6 +154,14 @@ export default function Sidebar({ tasks, categories, projects, selectedTab, onSe
         >
           Import
         </button>
+        <div className="pt-2 border-t border-gray-300">
+          <GoogleSignIn
+            user={driveUser}
+            syncStatus={syncStatus}
+            onSignIn={onDriveSignIn}
+            onSignOut={onDriveSignOut}
+          />
+        </div>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
 import ImportModal from './components/ImportModal';
 import Sidebar from './components/Sidebar';
-import { persistence } from './persistence';
+import { persistence, hybridPersistence } from './persistence';
 import { createTask, toggleTaskCompletion } from './models/Task';
 import { createCategory } from './models/Category';
 import { createProject } from './models/Project';
@@ -20,6 +20,8 @@ export default function App() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState('today');
+  const [driveUser, setDriveUser] = useState(null);
+  const [syncStatus, setSyncStatus] = useState('idle');
 
   // Load tasks, categories, and projects from persistence on mount
   useEffect(() => {
@@ -28,6 +30,36 @@ export default function App() {
     setCategories(savedCategories);
     setProjects(savedProjects);
     setLoaded(true);
+
+    // Set up Google Drive callbacks for hybrid persistence
+    if (hybridPersistence) {
+      hybridPersistence.onSync = ({ tasks: driveTasks, categories: driveCategories, projects: driveProjects }) => {
+        setTasks(driveTasks);
+        setCategories(driveCategories);
+        setProjects(driveProjects);
+      };
+
+      hybridPersistence.onSyncStatusChange = setSyncStatus;
+
+      hybridPersistence.onAuthChange = (user) => {
+        setDriveUser(user);
+      };
+
+      // Start auto-sync (if authenticated)
+      hybridPersistence.startAutoSync();
+
+      // Check if already authenticated
+      const user = hybridPersistence.getUser();
+      if (user) {
+        setDriveUser(user);
+      }
+    }
+
+    return () => {
+      if (hybridPersistence) {
+        hybridPersistence.stopAutoSync();
+      }
+    };
   }, []);
 
   // Save tasks, categories, and projects to persistence whenever they change (but skip initial load)
@@ -223,7 +255,19 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="flex h-screen">
         {/* Sidebar */}
-        <Sidebar tasks={tasks} categories={categories} projects={projects} selectedTab={selectedTab} onSelectTab={setSelectedTab} onExport={handleExport} onImport={() => setIsImportModalOpen(true)} />
+        <Sidebar
+          tasks={tasks}
+          categories={categories}
+          projects={projects}
+          selectedTab={selectedTab}
+          onSelectTab={setSelectedTab}
+          onExport={handleExport}
+          onImport={() => setIsImportModalOpen(true)}
+          driveUser={driveUser}
+          syncStatus={syncStatus}
+          onDriveSignIn={() => hybridPersistence.signIn()}
+          onDriveSignOut={() => hybridPersistence.signOut()}
+        />
 
         {/* Main Content */}
         <div className="flex-1 overflow-auto">
