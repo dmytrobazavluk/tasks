@@ -36,7 +36,7 @@ export default function Sidebar({ tasks, categories, projects, selectedTab, onSe
               : 'text-gray-700 hover:bg-gray-200'
           }`}
         >
-          Tooday <span className="float-right">({todayCount})</span>
+          Today <span className="float-right">({todayCount})</span>
         </button>
 
         {/* Future Tab */}
