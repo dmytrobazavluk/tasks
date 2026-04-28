@@ -1,5 +1,5 @@
 const esbuild = require('esbuild');
-const { mkdirSync } = require('fs');
+const { mkdirSync, copyFileSync } = require('fs');
 
 // Ensure dist directory exists
 mkdirSync('dist', { recursive: true });
@@ -20,6 +20,7 @@ esbuild
     jsxImportSource: 'react',
   })
   .then(() => {
+    copyFileSync('index.html', 'dist/index.html');
     console.log('Build complete!');
   })
   .catch(() => process.exit(1));
