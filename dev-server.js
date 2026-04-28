@@ -2,50 +2,23 @@ const esbuild = require('esbuild');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { build } = require('./build-utils');
 
 // Initial build
 console.log('Building...');
-esbuild.buildSync({
-  entryPoints: ['src/main.jsx'],
-  bundle: true,
-  outfile: 'dist/bundle.js',
-  format: 'iife',
-  minify: false,
-  sourcemap: true,
-  loader: {
-    '.js': 'jsx',
-    '.jsx': 'jsx',
-  },
-  jsx: 'automatic',
-  jsxImportSource: 'react',
-});
+const buildConfig = build();
 console.log('Build complete!');
 
 // Watch for changes
-esbuild
-  .context({
-    entryPoints: ['src/main.jsx'],
-    bundle: true,
-    outfile: 'dist/bundle.js',
-    format: 'iife',
-    minify: false,
-    sourcemap: true,
-    loader: {
-      '.js': 'jsx',
-      '.jsx': 'jsx',
-    },
-    jsx: 'automatic',
-    jsxImportSource: 'react',
-  })
-  .then((context) => {
-    context.watch().then(() => {
-      console.log('Watching for changes...');
-    });
+esbuild.context(buildConfig).then((context) => {
+  context.watch().then(() => {
+    console.log('Watching for changes...');
   });
+});
 
 // Simple HTTP server
 const server = http.createServer((req, res) => {
-  let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
+  let filePath = path.join(__dirname, 'dist', req.url === '/' ? 'index.html' : req.url);
 
   // Prevent directory traversal
   if (!filePath.startsWith(__dirname)) {
