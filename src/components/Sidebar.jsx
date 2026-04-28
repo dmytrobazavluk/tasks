@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   countTodayTasks,
   countFutureTasks,
@@ -13,6 +14,9 @@ import {
 } from '../utils/projectUtils';
 
 export default function Sidebar({ tasks, categories, projects, selectedTab, onSelectTab, onExport, onImport }) {
+  const [projectsExpanded, setProjectsExpanded] = useState(false);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
+
   const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
   const uniqueProjects = getUniqueProjectsFromTasks(tasks, projects);
   const todayCount = countTodayTasks(tasks);
@@ -50,41 +54,49 @@ export default function Sidebar({ tasks, categories, projects, selectedTab, onSe
         )}
 
         {/* Divider before projects */}
-        {uniqueProjects.length > 0 && (
+        {(uniqueProjects.length > 0 || noProjectCount > 0) && (
           <div className="my-2 border-t border-gray-300"></div>
         )}
 
         {/* Projects Header and Tabs */}
-        {uniqueProjects.length > 0 && (
+        {(uniqueProjects.length > 0 || noProjectCount > 0) && (
           <>
-            <div className="px-4 py-2 text-xs font-semibold text-gray-600 uppercase">Projects</div>
-            {uniqueProjects.map(project => (
-              <button
-                key={project.id}
-                onClick={() => onSelectTab(`project:${project.id}`)}
-                className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
-                  selectedTab === `project:${project.id}`
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {project.name} <span className="float-right">({countTasksInProjectId(tasks, project.id)})</span>
-              </button>
-            ))}
+            <button
+              onClick={() => setProjectsExpanded(!projectsExpanded)}
+              className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-600 uppercase flex items-center justify-between hover:bg-gray-100 rounded transition"
+            >
+              Projects
+              <span className="text-xs">{projectsExpanded ? '▼' : '▶'}</span>
+            </button>
+            {projectsExpanded && (
+              <>
+                {uniqueProjects.map(project => (
+                  <button
+                    key={project.id}
+                    onClick={() => onSelectTab(`project:${project.id}`)}
+                    className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+                      selectedTab === `project:${project.id}`
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {project.name} <span className="float-right">({countTasksInProjectId(tasks, project.id)})</span>
+                  </button>
+                ))}
+                <button
+                  onClick={() => onSelectTab('no-project')}
+                  className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+                    selectedTab === 'no-project'
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  No Project <span className="float-right">({noProjectCount})</span>
+                </button>
+              </>
+            )}
           </>
         )}
-
-        {/* No Project Tab */}
-        <button
-          onClick={() => onSelectTab('no-project')}
-          className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
-            selectedTab === 'no-project'
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          No Project <span className="float-right">({noProjectCount})</span>
-        </button>
 
         {/* Divider before categories */}
         {categoryNames.length > 0 && (
@@ -94,26 +106,36 @@ export default function Sidebar({ tasks, categories, projects, selectedTab, onSe
         {/* Categories Header and Tabs */}
         {categoryNames.length > 0 && (
           <>
-            <div className="px-4 py-2 text-xs font-semibold text-gray-600 uppercase">Categories</div>
-            {categoryNames.map(categoryName => {
-              // Find the category object by name to get its ID
-              const categoryObj = categories.find(cat => cat.name === categoryName);
-              if (!categoryObj) return null;
+            <button
+              onClick={() => setCategoriesExpanded(!categoriesExpanded)}
+              className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-600 uppercase flex items-center justify-between hover:bg-gray-100 rounded transition"
+            >
+              Categories
+              <span className="text-xs">{categoriesExpanded ? '▼' : '▶'}</span>
+            </button>
+            {categoriesExpanded && (
+              <>
+                {categoryNames.map(categoryName => {
+                  // Find the category object by name to get its ID
+                  const categoryObj = categories.find(cat => cat.name === categoryName);
+                  if (!categoryObj) return null;
 
-              return (
-                <button
-                  key={categoryObj.id}
-                  onClick={() => onSelectTab(`category:${categoryObj.id}`)}
-                  className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
-                    selectedTab === `category:${categoryObj.id}`
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {categoryName} <span className="float-right">({countTasksInCategoryId(tasks, categoryObj.id)})</span>
-                </button>
-              );
-            })}
+                  return (
+                    <button
+                      key={categoryObj.id}
+                      onClick={() => onSelectTab(`category:${categoryObj.id}`)}
+                      className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+                        selectedTab === `category:${categoryObj.id}`
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {categoryName} <span className="float-right">({countTasksInCategoryId(tasks, categoryObj.id)})</span>
+                    </button>
+                  );
+                })}
+              </>
+            )}
           </>
         )}
 

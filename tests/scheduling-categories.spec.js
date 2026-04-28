@@ -30,8 +30,12 @@ test.describe('Task Scheduling & Categories', () => {
     // Verify task appears in Today
     await expect(page.locator('text=Categorized Task')).toBeVisible();
 
+    // Expand CATEGORIES section to verify the tab appears
+    const categoriesHeader = page.locator('button').filter({ hasText: /Categories/ });
+    await categoriesHeader.click();
+
     // Verify "Important" category tab appears in sidebar
-    const importantTab = page.locator('button:has-text("Important")').nth(0);
+    const importantTab = page.locator('button').filter({ hasText: /Important/ }).nth(0);
     await expect(importantTab).toBeVisible();
   });
 
@@ -61,8 +65,12 @@ test.describe('Task Scheduling & Categories', () => {
     await expect(page.locator('text=Buy groceries')).toBeVisible();
     await expect(page.locator('text=Finish report')).toBeVisible();
 
+    // Expand CATEGORIES section
+    const categoriesHeader = page.locator('button').filter({ hasText: /Categories/ });
+    await categoriesHeader.click();
+
     // Click Shopping tab (sidebar button, first occurrence)
-    const shoppingTab = page.locator('button:has-text("Shopping")').nth(0);
+    const shoppingTab = page.locator('button').filter({ hasText: /Shopping/ }).nth(0);
     await shoppingTab.click();
 
     // Only "Buy groceries" should be visible
@@ -70,7 +78,7 @@ test.describe('Task Scheduling & Categories', () => {
     await expect(page.locator('text=Finish report')).not.toBeVisible();
 
     // Click Work tab (sidebar button)
-    const workTab = page.locator('button:has-text("Work")').nth(0);
+    const workTab = page.locator('button').filter({ hasText: /Work/ }).nth(0);
     await workTab.click();
 
     // Only "Finish report" should be visible
@@ -109,8 +117,12 @@ test.describe('Task Scheduling & Categories', () => {
     await addCategoryButton.click();
     await addTaskButton.click();
 
-    // Click Projects tab (sidebar)
-    const projectsTab = page.locator('button:has-text("Projects")').nth(0);
+    // Expand CATEGORIES section
+    const categoriesHeader = page.locator('button').filter({ hasText: /^Categories/ });
+    await categoriesHeader.click();
+
+    // Click Projects tab (sidebar) - look for button with count pattern
+    const projectsTab = page.locator('button').filter({ hasText: /Projects \(/ }).nth(0);
     await projectsTab.click();
 
     // Header should now show "Projects"
@@ -241,8 +253,12 @@ test.describe('Task Scheduling & Categories', () => {
     await addCategoryButton.click();
     await addTaskButton.click();
 
+    // Expand CATEGORIES section
+    const categoriesHeader = page.locator('button').filter({ hasText: /Categories/ });
+    await categoriesHeader.click();
+
     // Verify task is in Work category tab
-    let workTab = page.locator('button:has-text("Work")').nth(0);
+    let workTab = page.locator('button').filter({ hasText: /Work/ }).nth(0);
     await workTab.click();
     await expect(page.locator('text=Categorized Task')).toBeVisible();
 
@@ -581,8 +597,12 @@ test.describe('Task Scheduling & Categories', () => {
     // Verify task is marked done
     await expect(page.locator('span').filter({ hasText: 'Task in Important' }).first()).toHaveClass(/line-through/);
 
+    // Expand CATEGORIES section
+    const categoriesHeader = page.locator('button').filter({ hasText: /Categories/ });
+    await categoriesHeader.click();
+
     // Click Important category tab
-    const importantTab = page.locator('button:has-text("Important")').nth(0);
+    const importantTab = page.locator('button').filter({ hasText: /Important/ }).nth(0);
     await importantTab.click();
 
     // Task should still be visible in category tab (grouped under completion date)
@@ -620,8 +640,12 @@ test.describe('Task Scheduling & Categories', () => {
     // Verify task is marked done
     await expect(page.locator('span').filter({ hasText: 'Task in MyProject' }).first()).toHaveClass(/line-through/);
 
+    // Expand PROJECTS section
+    const projectsHeader = page.locator('button').filter({ hasText: /Projects/ });
+    await projectsHeader.click();
+
     // Click MyProject tab
-    const projectTab = page.locator('button:has-text("MyProject")').nth(0);
+    const projectTab = page.locator('button').filter({ hasText: /MyProject/ }).nth(0);
     await projectTab.click();
 
     // Task should still be visible in project tab (grouped under completion date)
@@ -657,8 +681,12 @@ test.describe('Task Scheduling & Categories', () => {
     await addProjectButton.click();
     await addButton.click();
 
+    // Expand PROJECTS section
+    const projectsHeader = page.locator('button').filter({ hasText: /Projects/ });
+    await projectsHeader.click();
+
     // Verify "No Project" tab appears in sidebar
-    const noProjectTab = page.locator('button:has-text("No Project")').nth(0);
+    const noProjectTab = page.locator('button').filter({ hasText: /No Project/ }).nth(0);
     await expect(noProjectTab).toBeVisible();
     await expect(noProjectTab).toContainText('(1)');
 
@@ -682,16 +710,32 @@ test.describe('Task Scheduling & Categories', () => {
     await titleInput.fill('No project task');
     await addButton.click();
 
-    // Mark it done
-    let expandButton = page.locator('div[role="button"]').first();
-    await expandButton.click();
+    // Add another task with a project to keep PROJECTS section visible
+    await openAddForm(page);
+    titleInput = page.locator('input[placeholder="Task title..."]');
+    addButton = page.locator('button:has-text("Add Task")').first();
+    const newProjectInput = page.locator('input[placeholder="Type new project name..."]');
+    const addProjectButton = newProjectInput.locator('xpath=following-sibling::button[1]');
+    await titleInput.fill('Task with project');
+    await newProjectInput.fill('MyProject');
+    await addProjectButton.click();
+    await addButton.click();
+
+    // Mark the no-project task as done
+    let expandButton = page.locator('span').filter({ hasText: 'No project task' });
+    const taskItem = expandButton.locator('xpath=ancestor::div[@role="button"]').first();
+    await taskItem.click();
     await markTaskDone(page);
 
     // Verify task is marked done
     await expect(page.locator('span').filter({ hasText: 'No project task' }).first()).toHaveClass(/line-through/);
 
+    // Expand PROJECTS section
+    const projectsHeader = page.locator('button').filter({ hasText: /^Projects/ });
+    await projectsHeader.click();
+
     // Click No Project tab
-    const noProjectTab = page.locator('button:has-text("No Project")').nth(0);
+    const noProjectTab = page.locator('button').filter({ hasText: /No Project/ }).nth(0);
     await noProjectTab.click();
 
     // Task should still be visible (grouped under completion date)
