@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function GoogleSignIn({ user, syncStatus, onSignIn, onSignOut }) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -12,10 +12,6 @@ export default function GoogleSignIn({ user, syncStatus, onSignIn, onSignOut }) 
     } finally {
       setIsAuthenticating(false);
     }
-  };
-
-  const handleSignOut = () => {
-    onSignOut();
   };
 
   // Sync status dot color
@@ -42,11 +38,11 @@ export default function GoogleSignIn({ user, syncStatus, onSignIn, onSignOut }) 
       case 'syncing':
         return 'Syncing...';
       case 'error':
-        return 'Sync Error';
+        return 'Error';
       case 'offline':
         return 'Offline';
       default:
-        return '';
+        return 'Idle';
     }
   };
 
@@ -60,31 +56,35 @@ export default function GoogleSignIn({ user, syncStatus, onSignIn, onSignOut }) 
   }
 
   if (user) {
+    // Show reconnect button if sync status is idle (session may have expired)
+    if (syncStatus === 'idle') {
+      return (
+        <div className="space-y-2">
+          <button
+            onClick={handleSignIn}
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition"
+          >
+            Reconnect to Google Drive
+          </button>
+          <button
+            onClick={onSignOut}
+            className="w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition"
+          >
+            Sign Out
+          </button>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex items-center gap-3 px-4 py-2">
-        {user.picture && (
-          <img
-            src={user.picture}
-            alt={user.name}
-            className="w-8 h-8 rounded-full"
-            onError={(e) => {
-              e.target.src = '';
-            }}
-          />
-        )}
-        <div className="flex items-center gap-2">
-          <div>
-            <div className="text-sm font-medium text-gray-900">{user.name}</div>
-            <div className="text-xs text-gray-500">{user.email}</div>
-          </div>
-          <div className="flex items-center gap-1 ml-2">
-            <div className={`w-2 h-2 rounded-full ${getSyncDotColor()}`} />
-            <span className="text-xs text-gray-600">{getSyncStatusText()}</span>
-          </div>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-md">
+          <div className={`w-2 h-2 rounded-full ${getSyncDotColor()}`} />
+          <span className="text-sm font-medium text-gray-900">Google Drive: {getSyncStatusText()}</span>
         </div>
         <button
-          onClick={handleSignOut}
-          className="text-sm text-gray-600 hover:text-gray-900 ml-2"
+          onClick={onSignOut}
+          className="w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition"
         >
           Sign Out
         </button>
@@ -95,7 +95,7 @@ export default function GoogleSignIn({ user, syncStatus, onSignIn, onSignOut }) 
   return (
     <button
       onClick={handleSignIn}
-      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"
+      className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition"
     >
       Sync with Google Drive
     </button>

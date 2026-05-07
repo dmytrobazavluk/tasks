@@ -1,6 +1,8 @@
 // Google Drive persistence layer using Google Identity Services (GIS)
 // Handles OAuth 2.0 PKCE flow and Drive API v3 calls
 
+const DRIVE_USER_KEY = 'taskplanner_driveUser';
+
 export class GoogleDrivePersistence {
   constructor() {
     this.accessToken = null;
@@ -8,78 +10,88 @@ export class GoogleDrivePersistence {
     this.user = null;
     this.tokenClient = null;
     this.initGIS();
+    // Restore user from localStorage if available
+    this.restoreUser();
   }
 
   initGIS() {
-    // Initialize Google Identity Services if available
-    if (typeof window !== 'undefined' && window.google) {
-      const clientId = window.GOOGLE_CLIENT_ID;
-      if (clientId) {
-        this.tokenClient = window.google.accounts.oauth2.initTokenClient({
-          client_id: clientId,
-          scope: 'https://www.googleapis.com/auth/drive.file',
-          callback: (response) => {
-            if (response.access_token) {
-              this.accessToken = response.access_token;
-            } else if (response.error) {
-              console.error('Auth error:', response.error);
-              this.accessToken = null;
-            }
-          },
-        });
-      }
+    // Initialize Google Identity Services if available and Client ID is set
+    if (typeof window === 'undefined' || !window.google) {
+      return;
+    }
+
+    const clientId = window.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return; // Will be initialized when needed
+    }
+
+    try {
+      this.tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: (response) => {
+          if (response.access_token) {
+            this.accessToken = response.access_token;
+          } else if (response.error) {
+            console.error('Auth error:', response.error);
+            this.accessToken = null;
+          }
+        },
+      });
+    } catch (error) {
+      console.error('Failed to init GIS:', error);
     }
   }
 
+  ensureTokenClient() {
+    // Lazy-initialize if not already done
+    if (!this.tokenClient && typeof window !== 'undefined' && window.google && window.GOOGLE_CLIENT_ID) {
+      this.initGIS();
+    }
+    return this.tokenClient;
+  }
+
   async authenticate() {
-    if (!this.tokenClient) {
+    const tokenClient = this.ensureTokenClient();
+    if (!tokenClient) {
       throw new Error('Google Client ID not configured. Set window.GOOGLE_CLIENT_ID in index.html');
     }
 
     return new Promise((resolve, reject) => {
-      const originalCallback = this.tokenClient.callback;
-
-      this.tokenClient.callback = (response) => {
+      tokenClient.callback = (response) => {
         if (response.access_token) {
           this.accessToken = response.access_token;
-          this.getUserInfo()
-            .then((user) => {
-              this.user = user;
-              resolve(user);
-            })
-            .catch(reject);
+          this.user = { authenticated: true };
+          this.persistUser();
+          resolve(this.user);
         } else if (response.error) {
           reject(new Error(`Google OAuth error: ${response.error}`));
         }
       };
 
       // Request access token with user prompt (shows popup if needed)
-      this.tokenClient.requestAccessToken({ prompt: 'consent' });
+      tokenClient.requestAccessToken({ prompt: 'consent' });
     });
   }
 
   async attemptSilentAuth() {
-    if (!this.tokenClient) return false;
+    const tokenClient = this.ensureTokenClient();
+    if (!tokenClient) return false;
 
     return new Promise((resolve) => {
-      const originalCallback = this.tokenClient.callback;
-
-      this.tokenClient.callback = (response) => {
+      tokenClient.callback = (response) => {
         if (response.access_token) {
           this.accessToken = response.access_token;
-          this.getUserInfo()
-            .then((user) => {
-              this.user = user;
-              resolve(true);
-            })
-            .catch(() => resolve(false));
+          this.user = { authenticated: true };
+          this.persistUser();
+          resolve(true);
         } else {
           resolve(false);
         }
       };
 
       // Request with empty prompt = silent (no popup if not already signed in)
-      this.tokenClient.requestAccessToken({ prompt: '' });
+      tokenClient.requestAccessToken({ prompt: '' });
     });
   }
 
@@ -236,18 +248,46 @@ export class GoogleDrivePersistence {
     if (this.tokenClient && this.accessToken) {
       // Revoke token
       google.accounts.oauth2.revoke(this.accessToken, () => {
-        this.accessToken = null;
-        this.fileId = null;
-        this.user = null;
+        this.clearUser();
       });
     } else {
-      this.accessToken = null;
-      this.fileId = null;
-      this.user = null;
+      this.clearUser();
     }
   }
 
   get isAuthenticated() {
     return !!this.accessToken;
+  }
+
+  restoreUser() {
+    try {
+      const stored = localStorage.getItem(DRIVE_USER_KEY);
+      if (stored) {
+        this.user = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Failed to restore user:', error);
+    }
+  }
+
+  persistUser() {
+    try {
+      if (this.user) {
+        localStorage.setItem(DRIVE_USER_KEY, JSON.stringify(this.user));
+      }
+    } catch (error) {
+      console.error('Failed to persist user:', error);
+    }
+  }
+
+  clearUser() {
+    this.user = null;
+    this.accessToken = null;
+    this.fileId = null;
+    try {
+      localStorage.removeItem(DRIVE_USER_KEY);
+    } catch (error) {
+      console.error('Failed to clear user:', error);
+    }
   }
 }

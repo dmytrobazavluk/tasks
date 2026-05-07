@@ -17,15 +17,13 @@ const getConfig = () => {
 
 const getPersistence = () => {
   const config = getConfig();
-  const type = config.persistence || 'localStorage';
+  const type = config.persistence || 'googleDrive';
 
   if (type === 'memory') {
     return memoryPersistence;
   }
-  if (type === 'googleDrive') {
-    return hybridPersistence;
-  }
-  return localStoragePersistence;
+  // Default to hybrid (uses localStorage locally, syncs to Drive when authenticated)
+  return hybridPersistence;
 };
 
 export const persistence = getPersistence();
