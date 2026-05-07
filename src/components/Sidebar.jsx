@@ -14,7 +14,23 @@ import {
   countTasksWithoutProject
 } from '../utils/projectUtils';
 
-export default function Sidebar({ tasks, categories, projects, selectedTab, onSelectTab, onExport, onImport, driveUser, syncStatus, onDriveSignIn, onDriveSignOut }) {
+export default function Sidebar({
+  tasks,
+  categories,
+  projects,
+  selectedTab,
+  onSelectTab,
+  onExport,
+  onImport,
+  driveUser,
+  syncStatus,
+  workspaces,
+  activeWorkspaceId,
+  onDriveSignIn,
+  onDriveSignOut,
+  onSelectWorkspace,
+  onCreateWorkspace,
+}) {
   const [projectsExpanded, setProjectsExpanded] = useState(false);
   const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   const categoryNames = getUniqueCategoriesFromTasks(tasks, categories);
@@ -179,8 +195,12 @@ export default function Sidebar({ tasks, categories, projects, selectedTab, onSe
           <GoogleSignIn
             user={driveUser}
             syncStatus={syncStatus}
+            workspaces={workspaces}
+            activeWorkspaceId={activeWorkspaceId}
             onSignIn={onDriveSignIn}
             onSignOut={onDriveSignOut}
+            onSelectWorkspace={onSelectWorkspace}
+            onCreateWorkspace={onCreateWorkspace}
           />
         </div>
       </div>

@@ -1,7 +1,18 @@
 import { useState } from 'react';
 
-export default function GoogleSignIn({ user, syncStatus, onSignIn, onSignOut }) {
+export default function GoogleSignIn({
+  user,
+  syncStatus,
+  workspaces = [],
+  activeWorkspaceId,
+  onSignIn,
+  onSignOut,
+  onSelectWorkspace,
+  onCreateWorkspace,
+}) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState('');
 
   const handleSignIn = async () => {
     setIsAuthenticating(true);
@@ -11,6 +22,19 @@ export default function GoogleSignIn({ user, syncStatus, onSignIn, onSignOut }) 
       console.error('Sign-in error:', error);
     } finally {
       setIsAuthenticating(false);
+    }
+  };
+
+  const handleCreateWorkspace = async () => {
+    if (!newWorkspaceName.trim()) return;
+    try {
+      setIsCreatingWorkspace(true);
+      await onCreateWorkspace(newWorkspaceName);
+      setNewWorkspaceName('');
+    } catch (error) {
+      console.error('Failed to create workspace:', error);
+    } finally {
+      setIsCreatingWorkspace(false);
     }
   };
 
@@ -82,6 +106,58 @@ export default function GoogleSignIn({ user, syncStatus, onSignIn, onSignOut }) 
           <div className={`w-2 h-2 rounded-full ${getSyncDotColor()}`} />
           <span className="text-sm font-medium text-gray-900">Google Drive: {getSyncStatusText()}</span>
         </div>
+
+        {/* Workspace Selector */}
+        {workspaces.length > 0 && (
+          <div className="space-y-2 pt-2 border-t border-gray-200">
+            <select
+              value={activeWorkspaceId || ''}
+              onChange={(e) => onSelectWorkspace(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition"
+            >
+              {workspaces.map((ws) => (
+                <option key={ws.id} value={ws.id}>
+                  {ws.name}
+                </option>
+              ))}
+            </select>
+
+            {isCreatingWorkspace ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="New workspace..."
+                  value={newWorkspaceName}
+                  onChange={(e) => setNewWorkspaceName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleCreateWorkspace();
+                    } else if (e.key === 'Escape') {
+                      setIsCreatingWorkspace(false);
+                      setNewWorkspaceName('');
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md"
+                  autoFocus
+                />
+                <button
+                  onClick={handleCreateWorkspace}
+                  className="px-3 py-2 text-sm font-medium text-white bg-green-500 hover:bg-green-600 rounded-md transition"
+                >
+                  ✓
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsCreatingWorkspace(true)}
+                className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition"
+              >
+                + New Workspace
+              </button>
+            )}
+          </div>
+        )}
+
         <button
           onClick={onSignOut}
           className="w-full px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition"

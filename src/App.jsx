@@ -22,6 +22,8 @@ export default function App() {
   const [selectedTab, setSelectedTab] = useState('today');
   const [driveUser, setDriveUser] = useState(null);
   const [syncStatus, setSyncStatus] = useState('idle');
+  const [workspaces, setWorkspaces] = useState([]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
 
   // Load tasks, categories, and projects from persistence on mount
   useEffect(() => {
@@ -43,6 +45,11 @@ export default function App() {
 
       hybridPersistence.onAuthChange = (user) => {
         setDriveUser(user);
+      };
+
+      hybridPersistence.onWorkspacesChange = (ws, activeId) => {
+        setWorkspaces(ws);
+        setActiveWorkspaceId(activeId);
       };
 
       // Start auto-sync (if authenticated)
@@ -265,8 +272,12 @@ export default function App() {
           onImport={() => setIsImportModalOpen(true)}
           driveUser={driveUser}
           syncStatus={syncStatus}
+          workspaces={workspaces}
+          activeWorkspaceId={activeWorkspaceId}
           onDriveSignIn={() => hybridPersistence.signIn()}
           onDriveSignOut={() => hybridPersistence.signOut()}
+          onSelectWorkspace={(id) => hybridPersistence.switchWorkspace(id)}
+          onCreateWorkspace={(name) => hybridPersistence.createWorkspace(name)}
         />
 
         {/* Main Content */}

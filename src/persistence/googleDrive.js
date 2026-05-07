@@ -116,17 +116,17 @@ export class GoogleDrivePersistence {
     }
   }
 
-  async findOrCreateFile() {
+  async findOrCreateFile(fileName = 'task-planner-data.json') {
     if (!this.accessToken) {
       throw new Error('Not authenticated');
     }
 
-    if (this.fileId) return this.fileId;
-
     try {
-      // Search for existing file
+      // Always search by name to support multiple workspaces
+      // Don't use this.fileId cache since we can have multiple files
+      const encodedName = encodeURIComponent(fileName);
       const listResponse = await fetch(
-        'https://www.googleapis.com/drive/v3/files?q=name%3D%22task-planner-data.json%22&spaces=drive&fields=files(id,name)',
+        `https://www.googleapis.com/drive/v3/files?q=name%3D%22${encodedName}%22&spaces=drive&fields=files(id,name)`,
         {
           headers: { Authorization: `Bearer ${this.accessToken}` },
         }
@@ -141,16 +141,16 @@ export class GoogleDrivePersistence {
       }
 
       // File doesn't exist, create it
-      return await this.createFile();
+      return await this.createFile(fileName);
     } catch (error) {
       console.error('Error finding/creating file:', error);
       throw error;
     }
   }
 
-  async createFile() {
+  async createFile(fileName = 'task-planner-data.json') {
     const metadata = {
-      name: 'task-planner-data.json',
+      name: fileName,
       mimeType: 'application/json',
     };
 
@@ -289,5 +289,36 @@ export class GoogleDrivePersistence {
     } catch (error) {
       console.error('Failed to clear user:', error);
     }
+  }
+
+  async listWorkspaces() {
+    if (!this.accessToken) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      // List all JSON files created by this app (drive.file scope limits to files this app created)
+      const listResponse = await fetch(
+        "https://www.googleapis.com/drive/v3/files?q=mimeType='application/json'&spaces=drive&fields=files(id,name)&pageSize=100",
+        {
+          headers: { Authorization: `Bearer ${this.accessToken}` },
+        }
+      );
+
+      if (!listResponse.ok) throw new Error('Failed to list workspaces');
+      const listData = await listResponse.json();
+
+      return (listData.files || []).map(file => ({
+        id: file.id,
+        name: file.name,
+      }));
+    } catch (error) {
+      console.error('Error listing workspaces:', error);
+      throw error;
+    }
+  }
+
+  setActiveFile(fileId) {
+    this.fileId = fileId;
   }
 }

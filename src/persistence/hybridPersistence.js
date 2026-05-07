@@ -6,6 +6,8 @@ import { GoogleDrivePersistence } from './googleDrive';
 
 const LAST_MODIFIED_KEY = 'taskplanner_lastModified';
 const PENDING_SYNC_KEY = 'taskplanner_pendingSync';
+const ACTIVE_WORKSPACE_ID_KEY = 'taskplanner_activeWorkspaceId';
+const ACTIVE_WORKSPACE_NAME_KEY = 'taskplanner_activeWorkspaceName';
 
 export class HybridPersistence {
   constructor() {
@@ -17,10 +19,16 @@ export class HybridPersistence {
     this.syncInterval = null;
     this.retryTimeout = null;
 
+    // Workspace state
+    this.workspaces = [];
+    this.activeWorkspaceId = localStorage.getItem(ACTIVE_WORKSPACE_ID_KEY);
+    this.activeWorkspaceName = localStorage.getItem(ACTIVE_WORKSPACE_NAME_KEY);
+
     // Callbacks to be set by App.jsx
     this.onSync = null;
     this.onSyncStatusChange = null;
     this.onAuthChange = null;
+    this.onWorkspacesChange = null;
 
     // Attempt silent auth on init
     this.attemptSilentAuth();
@@ -108,15 +116,54 @@ export class HybridPersistence {
       const user = await this.drive.authenticate();
       this.user = user;
 
-      // Get file ID (find or create)
-      const fileId = await this.drive.findOrCreateFile();
-      console.log('✅ File ID obtained:', fileId);
+      // List available workspaces
+      let workspaces = [];
+      try {
+        workspaces = await this.drive.listWorkspaces();
+        console.log('📁 Workspaces found:', workspaces.length);
+      } catch (error) {
+        console.error('Failed to list workspaces:', error);
+        workspaces = [];
+      }
+
+      this.workspaces = workspaces;
+
+      // If no workspaces exist, create default "My Tasks"
+      if (workspaces.length === 0) {
+        console.log('📁 No workspaces found, creating "My Tasks"');
+        const fileId = await this.drive.findOrCreateFile('My Tasks');
+        this.drive.setActiveFile(fileId);
+        this.activeWorkspaceId = fileId;
+        this.activeWorkspaceName = 'My Tasks';
+        this.workspaces = [{ id: fileId, name: 'My Tasks' }];
+      } else {
+        // Select previously active workspace, or first one
+        let selectedWorkspace = null;
+        if (this.activeWorkspaceId) {
+          selectedWorkspace = workspaces.find(ws => ws.id === this.activeWorkspaceId);
+        }
+        selectedWorkspace = selectedWorkspace || workspaces[0];
+
+        this.activeWorkspaceId = selectedWorkspace.id;
+        this.activeWorkspaceName = selectedWorkspace.name;
+        this.drive.setActiveFile(selectedWorkspace.id);
+        console.log('📁 Selected workspace:', selectedWorkspace.name);
+      }
+
+      // Save active workspace to localStorage
+      localStorage.setItem(ACTIVE_WORKSPACE_ID_KEY, this.activeWorkspaceId);
+      localStorage.setItem(ACTIVE_WORKSPACE_NAME_KEY, this.activeWorkspaceName);
 
       // Try to load from Drive on first sign-in
       await this.checkDriveAndMerge();
 
       if (this.onAuthChange) {
         this.onAuthChange(user);
+      }
+
+      // Notify about workspaces
+      if (this.onWorkspacesChange) {
+        this.onWorkspacesChange(this.workspaces, this.activeWorkspaceId);
       }
 
       console.log('✅ Sign-in successful, sync enabled');
@@ -132,11 +179,108 @@ export class HybridPersistence {
   signOut() {
     this.drive.logout();
     this.user = null;
+    this.workspaces = [];
+    this.activeWorkspaceId = null;
+    this.activeWorkspaceName = null;
+    localStorage.removeItem(ACTIVE_WORKSPACE_ID_KEY);
+    localStorage.removeItem(ACTIVE_WORKSPACE_NAME_KEY);
     this.stopAutoSync();
     this.setPendingSync(false);
     this.setSyncStatus('idle');
     if (this.onAuthChange) {
       this.onAuthChange(null);
+    }
+  }
+
+  async createWorkspace(name) {
+    if (!this.drive.isAuthenticated) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      // Create the new file
+      const fileId = await this.drive.findOrCreateFile(name);
+      console.log('📁 Workspace created:', name);
+
+      // Refresh workspaces list from Drive
+      this.workspaces = await this.drive.listWorkspaces();
+
+      // Switch to the new workspace
+      await this.switchWorkspace(fileId);
+
+      return { id: fileId, name };
+    } catch (error) {
+      console.error('Failed to create workspace:', error);
+      throw error;
+    }
+  }
+
+  async switchWorkspace(fileId) {
+    if (!this.drive.isAuthenticated) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      // If we have pending changes, flush them first
+      if (this.hasPendingSync()) {
+        console.log('💾 Flushing pending sync before switching workspace');
+        await this.syncToDrive(
+          this.local.load().tasks,
+          this.local.load().categories,
+          this.local.load().projects
+        );
+      }
+
+      // Clear local storage data
+      this.local.clear();
+      localStorage.removeItem(LAST_MODIFIED_KEY);
+      localStorage.removeItem(PENDING_SYNC_KEY);
+
+      // Switch to new file
+      this.drive.setActiveFile(fileId);
+      this.activeWorkspaceId = fileId;
+
+      // Find workspace name from current list
+      let workspace = this.workspaces.find(ws => ws.id === fileId);
+
+      // If not found, fetch the latest workspaces list
+      if (!workspace) {
+        try {
+          this.workspaces = await this.drive.listWorkspaces();
+          workspace = this.workspaces.find(ws => ws.id === fileId);
+        } catch (error) {
+          console.warn('Failed to refresh workspaces list:', error);
+        }
+      }
+
+      this.activeWorkspaceName = workspace?.name || 'Unknown';
+
+      // Save active workspace to localStorage
+      localStorage.setItem(ACTIVE_WORKSPACE_ID_KEY, this.activeWorkspaceId);
+      localStorage.setItem(ACTIVE_WORKSPACE_NAME_KEY, this.activeWorkspaceName);
+
+      // Load from Drive
+      const driveData = await this.drive.load();
+
+      // Always update local with Drive data (even if empty) and notify UI
+      this.local.save(driveData.tasks, driveData.categories, driveData.projects);
+      this.setLastModified(driveData._metadata?.lastModified || new Date().toISOString());
+
+      // Always fire onSync to update React state
+      if (this.onSync) {
+        this.onSync(driveData);
+      }
+
+      // Notify about workspace change
+      if (this.onWorkspacesChange) {
+        this.onWorkspacesChange(this.workspaces, this.activeWorkspaceId);
+      }
+
+      this.setSyncStatus('synced');
+      console.log('📁 Switched to workspace:', this.activeWorkspaceName);
+    } catch (error) {
+      console.error('Failed to switch workspace:', error);
+      throw error;
     }
   }
 
