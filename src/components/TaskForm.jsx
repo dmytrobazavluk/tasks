@@ -104,8 +104,8 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [], exis
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 bg-white p-4 rounded-lg shadow">
-      <div className="space-y-3">
+    <form onSubmit={handleSubmit} className="mt-4 md:mt-6 bg-white p-3 md:p-4 rounded-lg shadow">
+      <div className="space-y-3 md:space-y-3">
         {/* Title */}
         <input
           type="text"
@@ -121,7 +121,7 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [], exis
           onChange={(e) => setDetails(e.target.value)}
           placeholder="Add details or notes (optional)..."
           className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
-          rows="10"
+          rows={6}
         />
 
         {/* Schedule in the Future */}
@@ -329,17 +329,17 @@ export default function TaskForm({ onAdd, onClose, existingCategories = [], exis
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 pt-2">
           <button
             type="submit"
-            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+            className="flex-1 px-4 md:px-6 py-3 md:py-3 text-sm md:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
           >
             Add Task
           </button>
           <button
             type="button"
             onClick={handleCancel}
-            className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium"
+            className="flex-1 px-4 md:px-6 py-3 md:py-3 text-sm md:text-base bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium"
           >
             Cancel
           </button>

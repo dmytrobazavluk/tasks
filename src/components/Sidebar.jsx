@@ -41,12 +41,12 @@ export default function Sidebar({
   const closedCount = countClosedTasksWithoutCountdown(tasks);
 
   return (
-    <div className="w-48 bg-gray-50 border-r border-gray-200 p-4 overflow-y-auto">
+    <div className="w-full md:w-48 bg-gray-50 border-r border-gray-200 p-3 md:p-4 overflow-y-auto">
       <div className="space-y-1">
         {/* Today Tab */}
         <button
           onClick={() => onSelectTab('today')}
-          className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+          className={`w-full text-left px-3 md:px-4 py-2 md:py-2 rounded-md transition text-xs md:text-sm font-medium ${
             selectedTab === 'today'
               ? 'bg-blue-600 text-white'
               : 'text-gray-700 hover:bg-gray-200'
@@ -59,7 +59,7 @@ export default function Sidebar({
         {futureCount > 0 && (
           <button
             onClick={() => onSelectTab('future')}
-            className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+            className={`w-full text-left px-3 md:px-4 py-2 md:py-2 rounded-md transition text-xs md:text-sm font-medium ${
               selectedTab === 'future'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-700 hover:bg-gray-200'
@@ -79,7 +79,7 @@ export default function Sidebar({
           <>
             <button
               onClick={() => setProjectsExpanded(!projectsExpanded)}
-              className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-600 uppercase flex items-center justify-between hover:bg-gray-100 rounded transition"
+              className="w-full text-left px-3 md:px-4 py-2 md:py-2 text-xs font-semibold text-gray-600 uppercase flex items-center justify-between hover:bg-gray-100 rounded transition"
             >
               Projects
               <span className="text-xs">{projectsExpanded ? '▼' : '▶'}</span>
@@ -90,7 +90,7 @@ export default function Sidebar({
                   <button
                     key={project.id}
                     onClick={() => onSelectTab(`project:${project.id}`)}
-                    className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+                    className={`w-full text-left px-3 md:px-4 py-2 md:py-2 rounded-md transition text-xs md:text-sm font-medium ${
                       selectedTab === `project:${project.id}`
                         ? 'bg-blue-600 text-white'
                         : 'text-gray-700 hover:bg-gray-200'
@@ -101,7 +101,7 @@ export default function Sidebar({
                 ))}
                 <button
                   onClick={() => onSelectTab('no-project')}
-                  className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+                  className={`w-full text-left px-3 md:px-4 py-2 md:py-2 rounded-md transition text-xs md:text-sm font-medium ${
                     selectedTab === 'no-project'
                       ? 'bg-blue-600 text-white'
                       : 'text-gray-700 hover:bg-gray-200'
@@ -124,7 +124,7 @@ export default function Sidebar({
           <>
             <button
               onClick={() => setCategoriesExpanded(!categoriesExpanded)}
-              className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-600 uppercase flex items-center justify-between hover:bg-gray-100 rounded transition"
+              className="w-full text-left px-3 md:px-4 py-2 md:py-2 text-xs font-semibold text-gray-600 uppercase flex items-center justify-between hover:bg-gray-100 rounded transition"
             >
               Categories
               <span className="text-xs">{categoriesExpanded ? '▼' : '▶'}</span>
@@ -140,7 +140,7 @@ export default function Sidebar({
                     <button
                       key={categoryObj.id}
                       onClick={() => onSelectTab(`category:${categoryObj.id}`)}
-                      className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+                      className={`w-full text-left px-3 md:px-4 py-2 md:py-2 rounded-md transition text-xs md:text-sm font-medium ${
                         selectedTab === `category:${categoryObj.id}`
                           ? 'bg-blue-600 text-white'
                           : 'text-gray-700 hover:bg-gray-200'
@@ -164,7 +164,7 @@ export default function Sidebar({
         {closedCount > 0 && (
           <button
             onClick={() => onSelectTab('closed')}
-            className={`w-full text-left px-4 py-2 rounded-md transition text-sm font-medium ${
+            className={`w-full text-left px-3 md:px-4 py-2 md:py-2 rounded-md transition text-xs md:text-sm font-medium ${
               selectedTab === 'closed'
                 ? 'bg-blue-600 text-white'
                 : 'text-gray-700 hover:bg-gray-200'
@@ -179,14 +179,14 @@ export default function Sidebar({
       <div className="mt-6 pt-4 border-t border-gray-300 space-y-2">
         <button
           onClick={onExport}
-          className="w-full px-4 py-2 text-sm font-medium bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
+          className="w-full px-3 md:px-4 py-2 md:py-2 text-xs md:text-sm font-medium bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
           title="Download tasks as JSON"
         >
           Export
         </button>
         <button
           onClick={onImport}
-          className="w-full px-4 py-2 text-sm font-medium bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
+          className="w-full px-3 md:px-4 py-2 md:py-2 text-xs md:text-sm font-medium bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
           title="Upload JSON file to replace tasks"
         >
           Import

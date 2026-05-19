@@ -24,6 +24,7 @@ export default function App() {
   const [syncStatus, setSyncStatus] = useState('idle');
   const [workspaces, setWorkspaces] = useState([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Load tasks, categories, and projects from persistence on mount
   useEffect(() => {
@@ -260,31 +261,86 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="flex h-screen">
-        {/* Sidebar */}
-        <Sidebar
-          tasks={tasks}
-          categories={categories}
-          projects={projects}
-          selectedTab={selectedTab}
-          onSelectTab={setSelectedTab}
-          onExport={handleExport}
-          onImport={() => setIsImportModalOpen(true)}
-          driveUser={driveUser}
-          syncStatus={syncStatus}
-          workspaces={workspaces}
-          activeWorkspaceId={activeWorkspaceId}
-          onDriveSignIn={() => hybridPersistence.signIn()}
-          onDriveSignOut={() => hybridPersistence.signOut()}
-          onSelectWorkspace={(id) => hybridPersistence.switchWorkspace(id)}
-          onCreateWorkspace={(name) => hybridPersistence.createWorkspace(name)}
-        />
+      <div className="flex flex-col md:flex-row h-screen">
+        {/* Sidebar - hidden on mobile, visible on tablet+ */}
+        <div className="hidden md:block md:w-48">
+          <Sidebar
+            tasks={tasks}
+            categories={categories}
+            projects={projects}
+            selectedTab={selectedTab}
+            onSelectTab={setSelectedTab}
+            onExport={handleExport}
+            onImport={() => setIsImportModalOpen(true)}
+            driveUser={driveUser}
+            syncStatus={syncStatus}
+            workspaces={workspaces}
+            activeWorkspaceId={activeWorkspaceId}
+            onDriveSignIn={() => hybridPersistence.signIn()}
+            onDriveSignOut={() => hybridPersistence.signOut()}
+            onSelectWorkspace={(id) => hybridPersistence.switchWorkspace(id)}
+            onCreateWorkspace={(name) => hybridPersistence.createWorkspace(name)}
+          />
+        </div>
+
+        {/* Mobile Sidebar Drawer */}
+        <div className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setSidebarOpen(false)}
+          ></div>
+          {/* Drawer */}
+          <div className={`absolute inset-y-0 left-0 w-48 bg-gray-50 border-r border-gray-200 z-50 overflow-y-auto transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="w-full text-right p-4 text-gray-600 hover:text-gray-900"
+            >
+              ✕
+            </button>
+            <div className="px-3">
+              <Sidebar
+                tasks={tasks}
+                categories={categories}
+                projects={projects}
+                selectedTab={selectedTab}
+                onSelectTab={(tab) => {
+                  setSelectedTab(tab);
+                  setSidebarOpen(false);
+                }}
+                onExport={handleExport}
+                onImport={() => {
+                  setIsImportModalOpen(true);
+                  setSidebarOpen(false);
+                }}
+                driveUser={driveUser}
+                syncStatus={syncStatus}
+                workspaces={workspaces}
+                activeWorkspaceId={activeWorkspaceId}
+                onDriveSignIn={() => hybridPersistence.signIn()}
+                onDriveSignOut={() => hybridPersistence.signOut()}
+                onSelectWorkspace={(id) => hybridPersistence.switchWorkspace(id)}
+                onCreateWorkspace={(name) => hybridPersistence.createWorkspace(name)}
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto">
-          <div className="max-w-4xl mx-auto p-6">
-            <div className="mb-4">
-              <h1 className="text-xl font-bold text-gray-800">{getTabDisplayName()}</h1>
+        <div className="flex-1 overflow-auto flex flex-col">
+          <div className="max-w-4xl mx-auto w-full p-2 sm:p-3 md:p-6">
+            <div className="mb-3 md:mb-4 flex items-center gap-3">
+              {/* Hamburger Menu - visible on mobile only */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden p-2 text-gray-600 hover:text-gray-900 flex-shrink-0"
+                title="Toggle menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              <h1 className="text-base sm:text-lg md:text-2xl font-bold text-gray-800">{getTabDisplayName()}</h1>
             </div>
 
             <TaskList
@@ -311,7 +367,7 @@ export default function App() {
             {!isFormOpen && (
               <button
                 onClick={() => setIsFormOpen(true)}
-                className="w-full mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                className="w-full mt-4 md:mt-6 px-4 md:px-6 py-3 text-base md:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
               >
                 + Add Task
               </button>

@@ -341,7 +341,7 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
       {!isEditing ? (
         <>
           <div
-            className="flex items-start gap-2 p-3 hover:bg-gray-50 transition"
+            className="flex items-start gap-2 p-2 md:p-3 hover:bg-gray-50 transition"
           >
             {isToday && !task.completed && (
               <div
@@ -370,13 +370,13 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
                 {getProjectNamesFromIds(task.projectIds || []).map((projectName) => (
                   <span
                     key={projectName}
-                    className="inline-block px-1.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-full flex-shrink-0"
+                    className="inline-block px-1.5 py-0.5 text-xs md:text-xs font-medium bg-orange-100 text-orange-700 rounded-full flex-shrink-0"
                   >
                     {projectName}
                   </span>
                 ))}
                 <span
-                  className={`block ${
+                  className={`block text-sm md:text-base ${
                     task.completed ? 'line-through text-gray-400' : 'text-gray-800'
                   }`}
                 >
@@ -421,27 +421,27 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
                     {task.completed ? (
                       <button
                         onClick={handleUnmarkDone}
-                        className="flex-1 px-2 py-1.5 text-xs bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-md transition font-medium"
+                        className="flex-1 px-2 md:px-2 py-2 md:py-1.5 text-xs md:text-xs bg-gray-50 text-gray-600 hover:bg-gray-100 rounded-md transition font-medium"
                       >
                         Unmark Done{task.removalCountdown && ` (${(task.removalCountdown * COUNTDOWN_CONFIG.decrement).toFixed(1)})`}
                       </button>
                     ) : (
                       <button
                         onClick={handleMarkDoneClick}
-                        className="flex-1 px-2 py-1.5 text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded-md transition font-medium"
+                        className="flex-1 px-2 md:px-2 py-2 md:py-1.5 text-xs md:text-xs bg-green-50 text-green-600 hover:bg-green-100 rounded-md transition font-medium"
                       >
                         Mark Done
                       </button>
                     )}
                     <button
                       onClick={() => handleOpenEdit()}
-                      className="flex-1 px-2 py-1.5 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition font-medium"
+                      className="flex-1 px-2 md:px-2 py-2 md:py-1.5 text-xs md:text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition font-medium"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => setIsConfirmingDelete(true)}
-                      className="flex-1 px-2 py-1.5 text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded-md transition font-medium"
+                      className="flex-1 px-2 md:px-2 py-2 md:py-1.5 text-xs md:text-xs bg-red-50 text-red-600 hover:bg-red-100 rounded-md transition font-medium"
                     >
                       Delete
                     </button>
@@ -452,7 +452,7 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
           )}
         </>
       ) : (
-        <div className="p-4 space-y-3">
+        <div className="p-3 md:p-4 space-y-3">
           {/* Title */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -699,16 +699,16 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2">
             <button
               onClick={handleSaveEdit}
-              className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium"
+              className="flex-1 px-3 md:px-3 py-2 md:py-2 text-sm md:text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition font-medium"
             >
               Save
             </button>
             <button
               onClick={handleCancelEdit}
-              className="flex-1 px-3 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition font-medium"
+              className="flex-1 px-3 md:px-3 py-2 md:py-2 text-sm md:text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition font-medium"
             >
               Cancel
             </button>
@@ -717,22 +717,22 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
       )}
 
       {isConfirmingDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-4">
-            <h2 className="text-lg font-bold text-gray-800 mb-2">Delete Task?</h2>
-            <p className="text-gray-600 mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg p-4 md:p-6 max-w-sm w-full">
+            <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-2">Delete Task?</h2>
+            <p className="text-gray-600 mb-6 text-sm md:text-base">
               Are you sure you want to delete this task? This cannot be undone.
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2 md:gap-3">
               <button
                 onClick={handleCancelDelete}
-                className="flex-1 px-4 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition font-medium"
+                className="flex-1 px-3 md:px-4 py-2 md:py-2 text-xs md:text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition font-medium"
+                className="flex-1 px-3 md:px-4 py-2 md:py-2 text-xs md:text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition font-medium"
               >
                 Delete
               </button>
@@ -742,9 +742,9 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
       )}
 
       {isSelectingCompletionDate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-4">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">When was this completed?</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg p-4 md:p-6 max-w-sm w-full">
+            <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-4">When was this completed?</h2>
 
             <input
               type="date"
@@ -759,19 +759,19 @@ export default function TaskItem({ task, isToday, isDragged, onToggle, onDelete,
             />
 
             {validationError && (
-              <p className="text-red-600 text-sm mb-3">{validationError}</p>
+              <p className="text-red-600 text-xs md:text-sm mb-3">{validationError}</p>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-2 md:gap-3">
               <button
                 onClick={handleCancelCompletion}
-                className="flex-1 px-4 py-2 text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition font-medium"
+                className="flex-1 px-3 md:px-4 py-2 md:py-2 text-xs md:text-sm bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmCompletion}
-                className="flex-1 px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition font-medium"
+                className="flex-1 px-3 md:px-4 py-2 md:py-2 text-xs md:text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition font-medium"
               >
                 Confirm
               </button>

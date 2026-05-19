@@ -113,7 +113,7 @@ export default function GoogleSignIn({
             <select
               value={activeWorkspaceId || ''}
               onChange={(e) => onSelectWorkspace(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition"
+              className="w-full px-3 py-2 text-xs md:text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition"
             >
               {workspaces.map((ws) => (
                 <option key={ws.id} value={ws.id}>
