@@ -1,14 +1,6 @@
 import { isValidTask } from '../models/Task';
 
-/**
- * Export tasks, categories, and projects to JSON
- * @param {Array} tasks - Tasks to export
- * @param {Array} categories - Categories to export
- * @param {Array} projects - Projects to export
- * @returns {string} JSON string with { version, tasks, categories, projects }
- */
 export const exportTasks = (tasks, categories = [], projects = []) => {
-  // Create a clean export without runtime state (removalCountdown)
   const exportData = {
     version: 1,
     tasks: tasks.map(task => ({

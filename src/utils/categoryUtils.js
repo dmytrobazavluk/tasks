@@ -51,46 +51,6 @@ export const getTasksByCategoryId = (tasks, categoryId) => {
 };
 
 /**
- * Get only incomplete tasks (for Today and category tabs)
- * @param {Array} tasks - Array of task objects
- * @returns {Array} Incomplete tasks
- */
-export const getIncompleteTasks = (tasks) => {
-  return tasks.filter(task => !task.completed);
-};
-
-/**
- * Get completed tasks grouped by completion date
- * @param {Array} tasks - Array of task objects
- * @returns {Object} Structure: { groups: [{ dateKey, date, tasks }], singularTasks: [] }
- */
-export const getClosedTasksGroupedByDate = (tasks) => {
-  const completedTasks = tasks.filter(task => task.completed);
-
-  const groupMap = new Map();
-
-  completedTasks.forEach(task => {
-    if (task.completionDate) {
-      const dateKey = task.completionDate.split('T')[0]; // YYYY-MM-DD
-      if (!groupMap.has(dateKey)) {
-        groupMap.set(dateKey, []);
-      }
-      groupMap.get(dateKey).push(task);
-    }
-  });
-
-  // Sort groups by date (most recent first)
-  const groups = Array.from(groupMap.entries())
-    .map(([dateKey, taskList]) => ({
-      dateKey,
-      tasks: taskList
-    }))
-    .sort((a, b) => new Date(b.dateKey) - new Date(a.dateKey));
-
-  return { groups };
-};
-
-/**
  * Get today's date as YYYY-MM-DD string
  */
 const getTodayDateKey = () => {

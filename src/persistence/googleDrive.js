@@ -95,27 +95,6 @@ export class GoogleDrivePersistence {
     });
   }
 
-  async getUserInfo() {
-    if (!this.accessToken) return null;
-
-    try {
-      const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
-        headers: { Authorization: `Bearer ${this.accessToken}` },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch user info');
-      const data = await response.json();
-      return {
-        name: data.name,
-        email: data.email,
-        picture: data.picture,
-      };
-    } catch (error) {
-      console.error('Failed to get user info:', error);
-      return null;
-    }
-  }
-
   async findOrCreateFile(fileName = 'task-planner-data.json') {
     if (!this.accessToken) {
       throw new Error('Not authenticated');

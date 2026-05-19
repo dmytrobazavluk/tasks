@@ -65,18 +65,6 @@ export const countTasksInProjectId = (tasks, projectId) => {
 };
 
 /**
- * Count all tasks with any project assignment
- * @param {Array} tasks - Array of task objects
- * @returns {number} Count of tasks that have at least one project
- */
-export const countProjectTasks = (tasks) => {
-  return tasks.filter(task => {
-    const projectIds = task.projectIds || [];
-    return Array.isArray(projectIds) && projectIds.length > 0 && !task.completed;
-  }).length;
-};
-
-/**
  * Get project IDs used in tasks
  * @param {Array} tasks - Array of task objects
  * @returns {Set} Set of used project IDs
